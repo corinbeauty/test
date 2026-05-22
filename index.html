@@ -179,7 +179,6 @@
                                     <div class="flex items-start">
                                         <span class="font-bold flex-shrink-0 text-base select-none mr-2 flex flex-col items-center">
                                             訪：
-                                            <!-- 隱藏的 AI 潤飾按鈕 -->
                                             <button onclick="polishText('visit1', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture ai-feature hidden" title="AI 智能潤飾">✨</button>
                                         </span>
                                         <textarea id="visit1" oninput="autoResizeTextarea(this)" class="w-full border-none resize-none overflow-hidden focus:outline-none focus:bg-blue-50 leading-relaxed text-sm p-0 m-0 min-h-[40px]" rows="2"></textarea>
@@ -531,13 +530,13 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ============================
-        // 🔮 Firebase 與環境配置
+        // 🔮 Firebase 與環境配置 (依照用戶提供硬編碼)
         // ============================
-        const fallbackConfig = {
+        const firebaseConfig = {
             apiKey: "AIzaSyBdkQiNgK6SfL2N6XQZJUa_P_vi0ZoUby0",
             authDomain: "monthly-interview2.firebaseapp.com",
             projectId: "monthly-interview2",
@@ -546,23 +545,21 @@
             appId: "1:131621180409:web:75216e05fd2fb58db62328",
             measurementId: "G-5C434E2TTM"
         };
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : fallbackConfig;
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const activeAppId = typeof __app_id !== 'undefined' ? __app_id : firebaseConfig.appId;
+        
+        // 保留相容性，路徑統一寫入自己專案的 ID 節點下
+        const activeAppId = firebaseConfig.appId;
 
         // ============================
-        // 🔮 Gemini API 設定區
+        // 🔮 Gemini API 設定區 (已寫死金鑰並修復 404 問題)
         // ============================
-        let geminiApiKey = localStorage.getItem('gemini_api_key') || ""; 
+        const geminiApiKey = "AIzaSyBqWzW8d1qGX9QaB5cmENOW8gTvCNAINjc"; 
         
         async function callGeminiAPI(prompt, retries = 3) {
-            if (!geminiApiKey) {
-                window.requestApiKey();
-                throw new Error("API Key 未設定");
-            }
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${geminiApiKey}`;
+            // 💡 關鍵修復：將模型替換為穩定公開版本 gemini-1.5-flash，解決 API 404 未找到的問題
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
             const payload = { contents: [{ parts: [{ text: prompt }] }] };
             
             for (let i = 0; i < retries; i++) {
@@ -572,43 +569,17 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
-                    if (!response.ok) {
-                        if (response.status === 400 || response.status === 403) {
-                             throw new Error("API Key 無效或遭拒絕存取");
-                        }
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
+                    
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    
                     const data = await response.json();
                     let text = data.candidates[0].content.parts[0].text;
                     return text.replace(/```html\n?/g, '').replace(/```\n?/g, '');
                 } catch (error) {
-                    if (error.message.includes("API Key")) {
-                        localStorage.removeItem('gemini_api_key');
-                        geminiApiKey = "";
-                        window.showErrorModal("AI 設定錯誤", "您提供的 API Key 無效，請重新輸入。", error.message);
-                        throw error;
-                    }
                     if (i === retries - 1) throw error;
                     await new Promise(res => setTimeout(res, Math.pow(2, i) * 1000));
                 }
             }
-        }
-
-        window.requestApiKey = () => {
-             window.pendingDelete = { type: 'set_api_key', id: 'all' };
-             document.getElementById('passwordModalTitle').innerText = "設定 AI API Key";
-             document.getElementById('passwordModalDesc').innerHTML = "請輸入您的 Google Gemini API Key 以啟用 AI 功能。<br>這將安全地保存在您的瀏覽器中。";
-             const passField = document.getElementById('deletePasscodeField');
-             passField.type = "text";
-             passField.value = "";
-             passField.placeholder = "AIzaSy...";
-             
-             document.getElementById('deletePasswordModal').classList.remove('hidden');
-             setTimeout(() => {
-                 document.querySelector('#deletePasswordModal > div').classList.remove('scale-95', 'opacity-0');
-                 document.querySelector('#deletePasswordModal > div').classList.add('scale-100', 'opacity-100');
-                 passField.focus();
-             }, 10);
         }
 
         // ============================
@@ -695,7 +666,7 @@
 
             if (e.key === 'Enter') {
                 if (isPasswordModalOpen) {
-                    e.preventDefault(); // 防止預設表單提交行為
+                    e.preventDefault(); 
                     submitDeletePasscode();
                 } else if (isWarningModalOpen) {
                     closeWarningModal();
@@ -810,18 +781,6 @@
         window.submitDeletePasscode = async () => {
             const pass = document.getElementById('deletePasscodeField').value;
             const { type, id, extra } = window.pendingDelete;
-            
-            if (type === 'set_api_key') {
-                if (pass && pass.length > 20) {
-                    localStorage.setItem('gemini_api_key', pass.trim());
-                    geminiApiKey = pass.trim();
-                    window.closeDeletePasswordModal();
-                    window.showMsg("✅ API Key 設定成功！", "success");
-                } else {
-                     window.showMsg("❌ API Key 格式似乎不正確！", "error");
-                }
-                return;
-            }
 
             // 處理 8888 解鎖 AI 功能
             if (type === 'unlock_manager' && pass === '8888') {
@@ -833,11 +792,7 @@
                 // 顯示所有 AI 元素
                 document.querySelectorAll('.ai-feature').forEach(el => el.classList.remove('hidden'));
                 
-                if(!geminiApiKey) {
-                     window.requestApiKey();
-                } else {
-                    window.showMsg("✨ 管理權限與 AI 智能輔助已解鎖！", "success");
-                }
+                window.showMsg("✨ 管理權限與 AI 智能輔助已解鎖！", "success");
                 return;
             }
 
@@ -951,11 +906,7 @@
 
             const initAuth = async () => {
                 try {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
+                    await signInAnonymously(auth);
                     document.getElementById('syncStatusText').innerText = "雲端連線成功";
                     document.getElementById('syncStatusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-green-500";
                 } catch (e) { 
