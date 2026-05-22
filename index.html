@@ -40,9 +40,14 @@
             <span class="flex items-center gap-2">
                 ⚙️ 訪談系統-<span class="text-blue-600 font-bold">中清行館 (專用版)</span>
             </span>
-            <div class="flex items-center gap-1.5 text-xs text-slate-500">
-                <span id="syncStatusIndicator" class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-                <span id="syncStatusText">正在連接雲端...</span>
+            <div class="flex items-center gap-3">
+                <button onclick="handleManagerModeToggle()" id="managerModeBtn" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full transition flex items-center gap-1 shadow-sm border">
+                    🔒 解鎖管理者模式
+                </button>
+                <div class="flex items-center gap-1.5 text-xs text-slate-500">
+                    <span id="syncStatusIndicator" class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span id="syncStatusText">正在連接雲端...</span>
+                </div>
             </div>
         </h2>
         
@@ -104,7 +109,8 @@
             <button onclick="generateScreenshot()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow transition flex items-center justify-center gap-1.5">
                 📸 生成手機截圖
             </button>
-            <button id="aiInsightBtn" onclick="generateQuarterlyInsights()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg shadow transition flex items-center justify-center gap-1.5 no-capture">
+            <!-- 藏有 8888 密碼鎖的 AI 按鈕 -->
+            <button id="aiInsightBtn" onclick="generateQuarterlyInsights()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg shadow transition flex items-center justify-center gap-1.5 no-capture ai-feature hidden">
                 ✨ AI 季度洞察
             </button>
         </div>
@@ -173,14 +179,15 @@
                                     <div class="flex items-start">
                                         <span class="font-bold flex-shrink-0 text-base select-none mr-2 flex flex-col items-center">
                                             訪：
-                                            <button onclick="polishText('visit1', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture" title="AI 智能潤飾">✨</button>
+                                            <!-- 隱藏的 AI 潤飾按鈕 -->
+                                            <button onclick="polishText('visit1', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture ai-feature hidden" title="AI 智能潤飾">✨</button>
                                         </span>
                                         <textarea id="visit1" oninput="autoResizeTextarea(this)" class="w-full border-none resize-none overflow-hidden focus:outline-none focus:bg-blue-50 leading-relaxed text-sm p-0 m-0 min-h-[40px]" rows="2"></textarea>
                                     </div>
                                     <div class="flex items-start border-t border-dashed border-gray-300 pt-3">
                                         <span class="font-bold flex-shrink-0 text-base select-none mr-2 flex flex-col items-center">
                                             回：
-                                            <button onclick="polishText('feedback1', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture" title="AI 智能潤飾">✨</button>
+                                            <button onclick="polishText('feedback1', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture ai-feature hidden" title="AI 智能潤飾">✨</button>
                                         </span>
                                         <textarea id="feedback1" oninput="autoResizeTextarea(this)" class="w-full border-none resize-none overflow-hidden focus:outline-none focus:bg-blue-50 leading-relaxed text-sm p-0 m-0 min-h-[40px]" rows="2"></textarea>
                                     </div>
@@ -218,14 +225,14 @@
                                     <div class="flex items-start">
                                         <span class="font-bold flex-shrink-0 text-base select-none mr-2 flex flex-col items-center">
                                             訪：
-                                            <button onclick="polishText('visit2', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture" title="AI 智能潤飾">✨</button>
+                                            <button onclick="polishText('visit2', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture ai-feature hidden" title="AI 智能潤飾">✨</button>
                                         </span>
                                         <textarea id="visit2" oninput="autoResizeTextarea(this)" class="w-full border-none resize-none overflow-hidden focus:outline-none focus:bg-blue-50 leading-relaxed text-sm p-0 m-0 min-h-[40px]" rows="2"></textarea>
                                     </div>
                                     <div class="flex items-start border-t border-dashed border-gray-300 pt-3">
                                         <span class="font-bold flex-shrink-0 text-base select-none mr-2 flex flex-col items-center">
                                             回：
-                                            <button onclick="polishText('feedback2', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture" title="AI 智能潤飾">✨</button>
+                                            <button onclick="polishText('feedback2', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture ai-feature hidden" title="AI 智能潤飾">✨</button>
                                         </span>
                                         <textarea id="feedback2" oninput="autoResizeTextarea(this)" class="w-full border-none resize-none overflow-hidden focus:outline-none focus:bg-blue-50 leading-relaxed text-sm p-0 m-0 min-h-[40px]" rows="2"></textarea>
                                     </div>
@@ -263,14 +270,14 @@
                                     <div class="flex items-start">
                                         <span class="font-bold flex-shrink-0 text-base select-none mr-2 flex flex-col items-center">
                                             訪：
-                                            <button onclick="polishText('visit3', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture" title="AI 智能潤飾">✨</button>
+                                            <button onclick="polishText('visit3', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture ai-feature hidden" title="AI 智能潤飾">✨</button>
                                         </span>
                                         <textarea id="visit3" oninput="autoResizeTextarea(this)" class="w-full border-none resize-none overflow-hidden focus:outline-none focus:bg-blue-50 leading-relaxed text-sm p-0 m-0 min-h-[40px]" rows="2"></textarea>
                                     </div>
                                     <div class="flex items-start border-t border-dashed border-gray-300 pt-3">
                                         <span class="font-bold flex-shrink-0 text-base select-none mr-2 flex flex-col items-center">
                                             回：
-                                            <button onclick="polishText('feedback3', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture" title="AI 智能潤飾">✨</button>
+                                            <button onclick="polishText('feedback3', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture ai-feature hidden" title="AI 智能潤飾">✨</button>
                                         </span>
                                         <textarea id="feedback3" oninput="autoResizeTextarea(this)" class="w-full border-none resize-none overflow-hidden focus:outline-none focus:bg-blue-50 leading-relaxed text-sm p-0 m-0 min-h-[40px]" rows="2"></textarea>
                                     </div>
@@ -397,7 +404,7 @@
 
     <!-- 歷史紀錄 -->
     <div id="historyModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-3xl w-full p-5 max-h-[80vh] flex flex-col">
+        <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full p-5 max-h-[80vh] flex flex-col">
             <h3 class="text-lg font-bold text-gray-800 mb-3 flex justify-between items-center">
                 <span>📂 雲端歷史紀錄管理列表</span>
                 <button onclick="toggleHistoryModal(false)" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
@@ -412,8 +419,14 @@
                         <button onclick="setHistoryQuarterFilter('3', this)" class="q-btn px-3 py-1.5 text-xs rounded-full bg-white border text-slate-600 hover:bg-slate-100 transition font-bold shadow-sm">Q3</button>
                         <button onclick="setHistoryQuarterFilter('4', this)" class="q-btn px-3 py-1.5 text-xs rounded-full bg-white border text-slate-600 hover:bg-slate-100 transition font-bold shadow-sm">Q4</button>
                     </div>
-                    <div class="text-xs font-bold text-indigo-700 bg-indigo-100 px-3 py-1.5 rounded-lg shadow-sm border border-indigo-200">
-                        總數: <span id="historyTotalCount" class="text-sm">0</span> 筆
+                    <div class="flex items-center gap-3">
+                        <div class="text-xs font-bold text-indigo-700 bg-indigo-100 px-3 py-1.5 rounded-lg shadow-sm border border-indigo-200">
+                            總數: <span id="historyTotalCount" class="text-sm">0</span> 筆
+                        </div>
+                        <!-- ★ 匯出 Excel 按鈕 ★ -->
+                        <button onclick="exportHistoryToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition flex items-center gap-1">
+                            📊 匯出 Excel
+                        </button>
                     </div>
                 </div>
                 <input type="text" id="historySearch" oninput="filterHistoryList()" placeholder="輸入姓名或編號快速過濾..." class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm">
@@ -459,12 +472,12 @@
             <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4 shadow-inner">
                 <svg class="h-8 w-8 text-red-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
             </div>
-            <h3 class="text-xl font-black text-gray-900 mb-2 tracking-wide">機密資料刪除驗證</h3>
-            <p class="text-xs text-gray-500 mb-5 leading-relaxed font-medium">刪除資料為不可逆之操作。<br>請輸入安全密碼以核實身分。</p>
-            <input type="password" id="deletePasscodeField" maxlength="4" placeholder="請輸入密碼" class="w-full text-center text-2xl tracking-[0.5em] border-2 border-gray-200 rounded-xl py-3 px-3 focus:ring-4 focus:ring-red-500/20 focus:border-red-500 focus:outline-none mb-6 font-bold bg-gray-50 text-gray-800 transition-all">
+            <h3 class="text-xl font-black text-gray-900 mb-2 tracking-wide">系統安全驗證</h3>
+            <p class="text-xs text-gray-500 mb-5 leading-relaxed font-medium">請輸入您的最高權限密碼。<br>管理者與解除隱藏功能專用。</p>
+            <input type="password" id="deletePasscodeField" maxlength="4" placeholder="請輸入密碼" class="w-full text-center text-2xl tracking-[0.5em] border-2 border-gray-200 rounded-xl py-3 px-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none mb-6 font-bold bg-gray-50 text-gray-800 transition-all">
             <div class="flex gap-3">
                 <button onclick="closeDeletePasswordModal()" class="flex-1 bg-white border-2 border-gray-200 hover:bg-gray-50 text-gray-700 font-bold py-3 px-4 rounded-xl text-sm transition-all active:scale-95">取消</button>
-                <button onclick="submitDeletePasscode()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-lg shadow-red-600/30 active:scale-95">確認刪除</button>
+                <button onclick="submitDeletePasscode()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-lg shadow-blue-600/30 active:scale-95">確認送出</button>
             </div>
         </div>
     </div>
@@ -522,9 +535,9 @@
         import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ============================
-        // 🔮 Gemini API 設定區
+        // 🔮 Gemini API 設定區 (已寫入金鑰)
         // ============================
-        const geminiApiKey = ""; // 請在環境變數注入或填寫您的 Gemini API Key
+        const geminiApiKey = "AIzaSyBqWzW8d1qGX9QaB5cmENOW8gTvCNAINjc"; 
         
         async function callGeminiAPI(prompt, retries = 5) {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${geminiApiKey}`;
@@ -540,7 +553,6 @@
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     const data = await response.json();
                     let text = data.candidates[0].content.parts[0].text;
-                    // 移除可能產生的 markdown html 標記
                     return text.replace(/```html\n?/g, '').replace(/```\n?/g, '');
                 } catch (error) {
                     if (i === retries - 1) throw error;
@@ -557,9 +569,12 @@
         let loadedRecords = []; 
         let savedSignatures = []; 
         let successModalCallback = null;
+        let isManagerMode = false;
         
         window.currentZoom = 1.0;
         window.currentHistoryQuarterFilter = 'ALL';
+        // 儲存當前過濾後的紀錄，供 Excel 匯出使用
+        window.currentFilteredRecords = [];
 
         const STORE_ID = "store_zhongqing";
         const STORE_NAME = "中清行館";
@@ -626,86 +641,68 @@
         window.polishText = async (elementId, btnElement) => {
             const textarea = document.getElementById(elementId);
             const originalText = textarea.value.trim();
-            
-            if (!originalText) {
-                window.showMsg("請先輸入內容才能使用 AI 潤飾！", "warning");
-                return;
-            }
+            if (!originalText) { window.showMsg("請先輸入內容才能使用 AI 潤飾！", "warning"); return; }
             
             const originalBtnHTML = btnElement.innerHTML;
-            btnElement.innerHTML = "⏳";
-            btnElement.disabled = true;
+            btnElement.innerHTML = "⏳"; btnElement.disabled = true;
             
             try {
                 const prompt = `你是一位專業的企業人力資源(HR)與管理專家。請將以下主管與員工的面談紀錄或回饋內容進行文字潤飾，使其語氣更加專業、客觀、具建設性，並修飾錯別字或不順暢的語法。請保持原本的語意，直接輸出潤飾後的純文字結果，不要包含任何其他的解釋或問候語。\n\n原始內容：\n${originalText}`;
                 const polishedText = await callGeminiAPI(prompt);
-                textarea.value = polishedText;
-                window.autoResizeTextarea(textarea);
+                textarea.value = polishedText; window.autoResizeTextarea(textarea);
                 window.showMsg("✨ AI 潤飾完成！", "success");
             } catch (error) {
-                window.showMsg("❌ AI 潤飾失敗，請稍後再試", "error");
-                console.error("Gemini API Error:", error);
-            } finally {
-                btnElement.innerHTML = originalBtnHTML;
-                btnElement.disabled = false;
-            }
+                window.showMsg("❌ AI 潤飾失敗，請稍後再試", "error"); console.error("Gemini API Error:", error);
+            } finally { btnElement.innerHTML = originalBtnHTML; btnElement.disabled = false; }
         };
 
         window.generateQuarterlyInsights = async () => {
             const btn = document.getElementById('aiInsightBtn');
             const empName = document.getElementById('empName').value || '未知員工';
             const empTitle = document.getElementById('empTitle').value || '未知職稱';
+            const data = [1,2,3].map(i => ({ visit: document.getElementById(`visit${i}`).value.trim(), feedback: document.getElementById(`feedback${i}`).value.trim() }));
             
-            const data = [1,2,3].map(i => ({
-                visit: document.getElementById(`visit${i}`).value.trim(),
-                feedback: document.getElementById(`feedback${i}`).value.trim()
-            }));
-            
-            if (data.every(m => !m.visit && !m.feedback)) {
-                window.showWarningModal("資料不足", "請至少填寫一個月的訪談紀錄或回饋，AI 才能進行分析！");
-                return;
-            }
+            if (data.every(m => !m.visit && !m.feedback)) { window.showWarningModal("資料不足", "請至少填寫一個月的訪談紀錄或回饋，AI 才能進行分析！"); return; }
 
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = "⏳ 分析中...";
-            btn.disabled = true;
+            const originalHTML = btn.innerHTML; btn.innerHTML = "⏳ 分析中..."; btn.disabled = true;
 
             try {
-                const prompt = `你是一位資深的人資(HR)與企業管理顧問。這是一份關於員工「${empName}」(職稱: ${empTitle}) 的季度訪談紀錄。請根據以下三個月的訪談紀錄(訪)與員工回饋(回)，為主管撰寫一份簡潔扼要的「本季狀態總結」與「下季管理建議」。
-
-第一個月：
-- 主管訪談：${data[0].visit || '無'}
-- 員工回饋：${data[0].feedback || '無'}
-第二個月：
-- 主管訪談：${data[1].visit || '無'}
-- 員工回饋：${data[1].feedback || '無'}
-第三個月：
-- 主管訪談：${data[2].visit || '無'}
-- 員工回饋：${data[2].feedback || '無'}
-
-請以專業、鼓勵且具建設性的語氣輸出，並使用 HTML 格式標籤（例如 <b>, <ul>, <li>, <br>）進行排版，使其重點分明、易於閱讀。請直接輸出 HTML 結果，不需要額外的說明。`;
-
+                const prompt = `你是一位資深的人資(HR)與企業管理顧問。這是一份關於員工「${empName}」(職稱: ${empTitle}) 的季度訪談紀錄。請根據以下三個月的訪談紀錄(訪)與員工回饋(回)，為主管撰寫一份簡潔扼要的「本季狀態總結」與「下季管理建議」。\n\n第一個月：\n- 主管訪談：${data[0].visit || '無'}\n- 員工回饋：${data[0].feedback || '無'}\n第二個月：\n- 主管訪談：${data[1].visit || '無'}\n- 員工回饋：${data[1].feedback || '無'}\n第三個月：\n- 主管訪談：${data[2].visit || '無'}\n- 員工回饋：${data[2].feedback || '無'}\n\n請以專業、鼓勵且具建設性的語氣輸出，並使用 HTML 格式標籤（例如 <b>, <ul>, <li>, <br>）進行排版，使其重點分明、易於閱讀。請直接輸出 HTML 結果，不需要額外的說明。`;
                 const insightHTML = await callGeminiAPI(prompt);
-                
                 document.getElementById('aiInsightContent').innerHTML = insightHTML;
                 document.getElementById('aiInsightModal').classList.remove('hidden');
                 setTimeout(() => { document.querySelector('#aiInsightModal > div').classList.remove('scale-95'); document.querySelector('#aiInsightModal > div').classList.add('scale-100'); }, 10);
-                
-            } catch(err) {
-                window.showErrorModal("AI 分析失敗", "呼叫 Gemini API 時發生錯誤", err.message);
-            } finally {
-                btn.innerHTML = originalHTML;
-                btn.disabled = false;
-            }
+            } catch(err) { window.showErrorModal("AI 分析失敗", "呼叫 Gemini API 時發生錯誤", err.message);
+            } finally { btn.innerHTML = originalHTML; btn.disabled = false; }
         };
 
         window.closeAiInsightModal = () => {
-            document.querySelector('#aiInsightModal > div').classList.remove('scale-100');
-            document.querySelector('#aiInsightModal > div').classList.add('scale-95');
+            document.querySelector('#aiInsightModal > div').classList.remove('scale-100'); document.querySelector('#aiInsightModal > div').classList.add('scale-95');
             setTimeout(() => { document.getElementById('aiInsightModal').classList.add('hidden'); }, 300);
         };
 
-        // --- ★ 1016 全域機密刪除調度系統 (生命週期修復) ★ ---
+        // --- ★ 解鎖管理者模式與隱藏 AI 引擎 ★ ---
+        window.handleManagerModeToggle = () => {
+            if (isManagerMode) {
+                isManagerMode = false;
+                document.getElementById('managerModeBtn').innerText = "🔒 解鎖管理者模式";
+                document.getElementById('managerModeBtn').className = "text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full transition flex items-center gap-1 shadow-sm border";
+                // 隱藏所有 AI 元素
+                document.querySelectorAll('.ai-feature').forEach(el => el.classList.add('hidden'));
+                window.showMsg("🔒 已重置鎖定。系統進階權限已隱藏。");
+            } else {
+                window.pendingDelete = { type: 'unlock_manager', id: 'all' }; // 借用密碼框
+                document.getElementById('deletePasscodeField').value = '';
+                document.getElementById('deletePasswordModal').classList.remove('hidden');
+                setTimeout(() => {
+                    document.querySelector('#deletePasswordModal > div').classList.remove('scale-95', 'opacity-0');
+                    document.querySelector('#deletePasswordModal > div').classList.add('scale-100', 'opacity-100');
+                    document.getElementById('deletePasscodeField').focus();
+                }, 10);
+            }
+        };
+
+        // --- ★ 1016 (刪除) 與 8888 (解鎖) 共用驗證系統 ★ ---
         window.pendingDelete = { type: null, id: null, extra: null };
         
         window.requestDelete = (type, id, extra = null) => {
@@ -727,13 +724,27 @@
 
         window.submitDeletePasscode = async () => {
             const pass = document.getElementById('deletePasscodeField').value;
+            const { type, id, extra } = window.pendingDelete;
+            
+            // 處理 8888 解鎖 AI 功能
+            if (type === 'unlock_manager' && pass === '8888') {
+                isManagerMode = true;
+                window.closeDeletePasswordModal();
+                window.pendingDelete = { type: null, id: null, extra: null };
+                document.getElementById('managerModeBtn').innerText = "🔓 已解鎖進階權限";
+                document.getElementById('managerModeBtn').className = "text-xs bg-purple-100 text-purple-700 border-purple-300 px-2.5 py-1 rounded-full font-bold shadow-sm border";
+                // 顯示所有 AI 元素
+                document.querySelectorAll('.ai-feature').forEach(el => el.classList.remove('hidden'));
+                window.showMsg("✨ 管理權限與 AI 智能輔助已解鎖！", "success");
+                return;
+            }
+
+            // 處理 1016 刪除邏輯
             if (pass !== '1016') {
                 window.showMsg("❌ 安全密碼錯誤，拒絕執行！", "error");
                 return;
             }
 
-            // ★ 修復：先提取任務狀態，再關閉視窗 (避免變數提早被清空)
-            const { type, id, extra } = window.pendingDelete;
             window.closeDeletePasswordModal();
             window.pendingDelete = { type: null, id: null, extra: null };
 
@@ -929,6 +940,55 @@
             });
         };
 
+        // --- ★ 匯出 Excel (CSV UTF-8 BOM) 報表 ★ ---
+        window.exportHistoryToExcel = () => {
+            if (!window.currentFilteredRecords || window.currentFilteredRecords.length === 0) {
+                window.showMsg("沒有資料可匯出", "warning");
+                return;
+            }
+
+            // 加入 UTF-8 BOM 讓 Excel 正確識別中文
+            let csvContent = "\uFEFF"; 
+            csvContent += "年度,季度,區域,店別,員工編號,員工姓名,職稱,第一個月訪談,第一個月回饋,第二個月訪談,第二個月回饋,第三個月訪談,第三個月回饋\n";
+
+            window.currentFilteredRecords.forEach(r => {
+                const escapeCSV = (str) => {
+                    if (str == null) return '""';
+                    // 替換雙引號並將換行符號改為空格以保持 CSV 結構乾淨
+                    return '"' + String(str).replace(/"/g, '""').replace(/\n/g, '  ') + '"';
+                };
+                
+                const row = [
+                    r.year,
+                    r.quarter,
+                    r.area,
+                    r.store,
+                    r.empId,
+                    r.empName,
+                    r.empTitle,
+                    r.months && r.months[0] ? r.months[0].visitContent : '',
+                    r.months && r.months[0] ? r.months[0].empFeedback : '',
+                    r.months && r.months[1] ? r.months[1].visitContent : '',
+                    r.months && r.months[1] ? r.months[1].empFeedback : '',
+                    r.months && r.months[2] ? r.months[2].visitContent : '',
+                    r.months && r.months[2] ? r.months[2].empFeedback : '',
+                ].map(escapeCSV).join(",");
+                
+                csvContent += row + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `訪談歷史紀錄報表_${new Date().getTime()}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.showMsg("✅ Excel 報表匯出成功！", "success");
+        };
+
         // --- 其他員工操作 ---
         window.addEmployee = async (e) => {
             e.preventDefault();
@@ -980,6 +1040,9 @@
             if(queryVal !== "") allRecs = allRecs.filter(r => (r.empName && r.empName.toLowerCase().includes(queryVal)) || (r.empId && r.empId.toLowerCase().includes(queryVal)) || (r.year && String(r.year).includes(queryVal)));
 
             document.getElementById('historyTotalCount').innerText = allRecs.length;
+            
+            // 將結果儲存供 Excel 匯出使用
+            window.currentFilteredRecords = allRecs;
 
             if(allRecs.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">查無對應紀錄</td></tr>`; return; }
             
