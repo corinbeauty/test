@@ -38,15 +38,15 @@
     <div id="controlPanel" class="max-w-4xl mx-auto mb-6 bg-white rounded-xl p-4 shadow-md w-full no-capture">
         <h2 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2 flex flex-wrap items-center justify-between gap-2">
             <span class="flex items-center gap-2">
-                ⚙️ 訪談系統-<span class="text-blue-600 font-bold">中清行館 (本機專用版)</span>
+                ⚙️ 訪談系統-<span class="text-blue-600 font-bold">中清行館 (專用版)</span>
             </span>
             <div class="flex items-center gap-3">
                 <button onclick="handleManagerModeToggle()" id="managerModeBtn" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full transition flex items-center gap-1 shadow-sm border">
                     🔒 解鎖管理者模式
                 </button>
                 <div class="flex items-center gap-1.5 text-xs text-slate-500">
-                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500"></span>
-                    <span>本機儲存模式 (資料保存在您的裝置上)</span>
+                    <span id="syncStatusIndicator" class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span id="syncStatusText">正在連接雲端...</span>
                 </div>
             </div>
         </h2>
@@ -82,7 +82,7 @@
         <div class="mb-4 bg-gray-50 p-3 rounded-lg border grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <h3 class="text-sm font-bold text-gray-700 mb-2 flex items-center justify-between">
-                    <span>👥 員工資料庫 (本機)</span>
+                    <span>👥 雲端員工資料庫</span>
                     <div class="flex gap-2">
                         <button onclick="toggleRosterModal(true)" class="text-xs text-indigo-600 font-bold hover:underline">📋 名單比對表</button>
                         <button onclick="toggleEmpModal(true)" class="text-xs text-blue-600 hover:underline">+ 編輯員工</button>
@@ -92,7 +92,7 @@
             </div>
             <div class="border-t md:border-t-0 md:border-l md:pl-4 pt-2 md:pt-0">
                 <h3 class="text-sm font-bold text-gray-700 mb-2 flex items-center justify-between">
-                    <span>✍️ 固定電子簽名檔 (本機)</span>
+                    <span>✍️ 雲端固定電子簽名檔</span>
                     <button onclick="toggleSigManagerModal(true)" class="text-xs text-blue-600 hover:underline font-bold">+ 新增/管理簽名檔</button>
                 </h3>
                 <div id="sigListBrief" class="text-xs text-gray-500 flex flex-wrap gap-1.5 max-h-24 overflow-y-auto"></div>
@@ -100,8 +100,8 @@
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
-            <button onclick="saveRecordToLocal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow transition flex items-center justify-center gap-1.5">
-                💾 儲存紀錄
+            <button onclick="saveRecordToCloud()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow transition flex items-center justify-center gap-1.5">
+                💾 儲存至雲端
             </button>
             <button onclick="toggleHistoryModal(true)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow transition flex items-center justify-center gap-1.5">
                 📂 歷史紀錄列表
@@ -406,7 +406,7 @@
     <div id="historyModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full p-5 max-h-[80vh] flex flex-col">
             <h3 class="text-lg font-bold text-gray-800 mb-3 flex justify-between items-center">
-                <span>📂 歷史紀錄管理列表 (本機)</span>
+                <span>📂 雲端歷史紀錄管理列表</span>
                 <button onclick="toggleHistoryModal(false)" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
             </h3>
             
@@ -529,7 +529,29 @@
     <!-- 頂部 Toast -->
     <div id="msgBox" class="fixed top-6 left-1/2 transform -translate-x-1/2 -translate-y-10 opacity-0 transition-all duration-300 z-[200] pointer-events-none flex items-center gap-2 px-5 py-3.5 rounded-full shadow-2xl font-bold text-sm bg-gray-900 text-white"></div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ============================
+        // 🔮 Firebase 與環境配置
+        // ============================
+        const fallbackConfig = {
+            apiKey: "AIzaSyBdkQiNgK6SfL2N6XQZJUa_P_vi0ZoUby0",
+            authDomain: "monthly-interview2.firebaseapp.com",
+            projectId: "monthly-interview2",
+            storageBucket: "monthly-interview2.firebasestorage.app",
+            messagingSenderId: "131621180409",
+            appId: "1:131621180409:web:75216e05fd2fb58db62328",
+            measurementId: "G-5C434E2TTM"
+        };
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : fallbackConfig;
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const activeAppId = typeof __app_id !== 'undefined' ? __app_id : firebaseConfig.appId;
+
         // ============================
         // 🔮 Gemini API 設定區
         // ============================
@@ -592,6 +614,7 @@
         // ============================
         // 全域變數與系統設定
         // ============================
+        let user = null;
         let employees = [];
         let loadedRecords = []; 
         let savedSignatures = []; 
@@ -600,7 +623,6 @@
         
         window.currentZoom = 1.0;
         window.currentHistoryQuarterFilter = 'ALL';
-        // 儲存當前過濾後的紀錄，供 Excel 匯出使用
         window.currentFilteredRecords = [];
 
         const STORE_ID = "store_zhongqing";
@@ -648,6 +670,42 @@
             const m = [[1,2,3], [4,5,6], [7,8,9], [10,11,12]][q-1];
             for(let i=1; i<=3; i++) document.getElementById(`monthTitle${i}`).innerText = `${text} ${m[i-1]}月`;
         };
+
+        // ============================
+        // 🔮 鍵盤監聽器 (Enter / Esc)
+        // ============================
+        document.addEventListener('keydown', (e) => {
+            const isPasswordModalOpen = !document.getElementById('deletePasswordModal').classList.contains('hidden');
+            const isWarningModalOpen = !document.getElementById('warningModal').classList.contains('hidden');
+            const isSuccessModalOpen = !document.getElementById('successModal').classList.contains('hidden');
+            const isErrorModalOpen = !document.getElementById('errorModal').classList.contains('hidden');
+
+            if (e.key === 'Escape') {
+                if (isPasswordModalOpen) closeDeletePasswordModal();
+                if (!document.getElementById('rosterModal').classList.contains('hidden')) toggleRosterModal(false);
+                if (!document.getElementById('empModal').classList.contains('hidden')) toggleEmpModal(false);
+                if (!document.getElementById('historyModal').classList.contains('hidden')) toggleHistoryModal(false);
+                if (!document.getElementById('screenshotModal').classList.contains('hidden')) toggleScreenshotModal(false);
+                if (isWarningModalOpen) closeWarningModal();
+                if (isSuccessModalOpen) closeSuccessModal();
+                if (isErrorModalOpen) closeErrorModal();
+                if (!document.getElementById('aiInsightModal').classList.contains('hidden')) closeAiInsightModal();
+                if (document.getElementById('sigManagerModal').classList.contains('flex')) toggleSigManagerModal(false);
+            }
+
+            if (e.key === 'Enter') {
+                if (isPasswordModalOpen) {
+                    e.preventDefault(); // 防止預設表單提交行為
+                    submitDeletePasscode();
+                } else if (isWarningModalOpen) {
+                    closeWarningModal();
+                } else if (isSuccessModalOpen) {
+                    closeSuccessModal();
+                } else if (isErrorModalOpen) {
+                    closeErrorModal();
+                }
+            }
+        });
 
         // ============================
         // 🔮 AI 功能區塊 (潤飾 & 季度洞察)
@@ -797,26 +855,26 @@
 
             try {
                 if (type === 'record') {
-                    localStorage.removeItem(id);
-                    loadLocalData();
-                    window.showSuccessModal("紀錄銷毀完成", "指定的訪談紀錄已成功徹底刪除。");
+                    const isOff = extra;
+                    if (isOff) {
+                        localStorage.removeItem(`offline_record_${id}`);
+                        window.filterHistoryList();
+                    } else {
+                        await deleteDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'records', id));
+                        localStorage.removeItem(`offline_record_${id}`);
+                    }
+                    window.showSuccessModal("紀錄銷毀完成", "指定的訪談紀錄已成功從系統與雲端徹底刪除。");
                 } 
                 else if (type === 'employee') {
-                    let emps = JSON.parse(localStorage.getItem('hr_employees') || '[]');
-                    emps = emps.filter(e => e.id !== id);
-                    localStorage.setItem('hr_employees', JSON.stringify(emps));
-                    loadLocalData();
-                    window.showSuccessModal("員工名單銷毀完成", `員工 (ID: ${id}) 已成功抹除。`);
+                    await deleteDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'employees', `${STORE_ID}_${id}`));
+                    window.showSuccessModal("員工名單銷毀完成", `員工 (ID: ${id}) 已成功從雲端資料庫抹除。`);
                 } 
                 else if (type === 'signature') {
-                    let sigs = JSON.parse(localStorage.getItem('hr_signatures') || '[]');
-                    sigs = sigs.filter(s => s.id !== id);
-                    localStorage.setItem('hr_signatures', JSON.stringify(sigs));
-                    loadLocalData();
-                    window.showSuccessModal("簽名檔銷毀完成", "指定的主管電子簽章已永久移除。");
+                    await deleteDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'signatures', id));
+                    window.showSuccessModal("簽名檔銷毀完成", "指定的主管電子簽章已永久從雲端移除。");
                 }
             } catch (err) {
-                window.showErrorModal("銷毀失敗", "資料刪除過程中發生異常", err.message || err.toString());
+                window.showErrorModal("銷毀失敗", "資料刪除過程中發生異常，請確認 Firebase 網路連線與權限。", err.message || err.toString());
             }
         };
 
@@ -886,36 +944,50 @@
             else { document.getElementById('empName').value = ""; document.getElementById('empTitle').value = ""; document.getElementById('empSelectInline').value = ""; }
         };
 
-        // --- 本機資料載入機制 ---
-        function loadLocalData() {
-            // 載入員工
-            employees = JSON.parse(localStorage.getItem('hr_employees') || '[]');
-            renderEmployeeBrief(); updateEmpSelectInlineDropdown(); renderRosterTable();
-            
-            // 載入簽名檔
-            savedSignatures = JSON.parse(localStorage.getItem('hr_signatures') || '[]');
-            updateMonthlySigSelectors(); renderSigManagerList();
-            
-            // 載入紀錄
-            loadedRecords = [];
-            for(let i=0; i<localStorage.length; i++) {
-                const k = localStorage.key(i); 
-                if(k && k.startsWith(`offline_record_${STORE_ID}`)) {
-                    try {
-                        loadedRecords.push(JSON.parse(localStorage.getItem(k)));
-                    } catch(e) {}
-                }
-            }
-            if(!document.getElementById('historyModal').classList.contains('hidden')) window.filterHistoryList();
-        }
-
-        // --- 載入與初始化 ---
+        // --- 雲端初始化與連線監聽 ---
         window.addEventListener('load', async () => {
             const screenWidth = window.innerWidth;
             if(screenWidth < 900) { window.currentZoom = (screenWidth - 16) / 850; window.applyZoom(); }
+
+            const initAuth = async () => {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    document.getElementById('syncStatusText').innerText = "雲端連線成功";
+                    document.getElementById('syncStatusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-green-500";
+                } catch (e) { 
+                    document.getElementById('syncStatusText').innerText = "驗證失敗 (本機模式)"; 
+                    document.getElementById('syncStatusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-red-500";
+                }
+            };
             
-            loadLocalData();
+            await initAuth();
+            
+            onAuthStateChanged(auth, (u) => { 
+                user = u; 
+                if(u) initCloudListeners(); 
+            });
         });
+
+        function initCloudListeners() {
+            if(!db || !user) return;
+            
+            onSnapshot(collection(db, 'artifacts', activeAppId, 'public', 'data', 'employees'), s => {
+                employees = s.docs.map(d => d.data()); renderEmployeeBrief(); updateEmpSelectInlineDropdown(); renderRosterTable();
+            });
+            
+            onSnapshot(collection(db, 'artifacts', activeAppId, 'public', 'data', 'records'), s => { 
+                loadedRecords = s.docs.map(d => d.data()); 
+                if(!document.getElementById('historyModal').classList.contains('hidden')) window.filterHistoryList();
+            });
+            
+            onSnapshot(collection(db, 'artifacts', activeAppId, 'public', 'data', 'signatures'), s => { 
+                savedSignatures = s.docs.map(d => d.data()); updateMonthlySigSelectors(); renderSigManagerList();
+            });
+        }
 
         function getSelectedSignatureData(monthIdx) {
             const sigId = document.getElementById(`sigSelect${monthIdx}`).value;
@@ -924,7 +996,7 @@
         }
 
         // --- 核心寫入與截圖 ---
-        window.saveRecordToLocal = () => {
+        window.saveRecordToCloud = async () => {
             const year = document.getElementById('yearInput').value.trim();
             const quarter = document.getElementById('quarterSelect').value;
             const empId = document.getElementById('empId').value.trim();
@@ -945,12 +1017,20 @@
                 })), updatedAt: new Date().toLocaleString()
             };
 
+            // 保留離線暫存機制
+            localStorage.setItem(`offline_record_${recordId}`, JSON.stringify(payload));
+            if(!user || !db) {
+                window.showSuccessModal("本機暫存成功", "雲端未連線，資料已安全暫存於本機！\n待網路恢復後將自動同步，點擊確定將重置全新空白頁面。", () => window.location.reload());
+                return;
+            }
+
+            window.showMsg("💾 傳輸至 Firebase...", "info");
             try {
-                localStorage.setItem(`offline_record_${recordId}`, JSON.stringify(payload));
-                loadLocalData();
-                window.showSuccessModal("儲存成功", "🎉 訪談紀錄已安全保存在您的裝置中！\n點擊下方「確定」將為您清空選取，載入全新空白表單。", () => window.location.reload());
+                await setDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'records', recordId), payload);
+                window.showSuccessModal("雲端儲存成功", "🎉 訪談紀錄已完美同步至雲端！\n點擊下方「確定」將為您清空選取，載入全新空白表單。", () => window.location.reload());
             } catch (err) {
-                 window.showErrorModal("儲存失敗", "可能是瀏覽器儲存空間不足", err.message);
+                document.getElementById('errorModalCode').innerText = err.message || err.toString();
+                document.getElementById('errorModal').classList.remove('hidden');
             }
         };
 
@@ -1035,9 +1115,7 @@
             const newEmp = { id, name, title, storeId: STORE_ID };
             
             try {
-                employees.push(newEmp);
-                localStorage.setItem('hr_employees', JSON.stringify(employees));
-                loadLocalData();
+                await setDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'employees', `${STORE_ID}_${id}`), newEmp);
                 window.showMsg("🎉 員工新增成功", "success");
                 document.getElementById('newId').value = ""; document.getElementById('newName').value = ""; document.getElementById('newTitle').value = "";
             } catch(err) { window.showErrorModal("新增失敗", "無法寫入員工資料。", err.message); }
@@ -1068,7 +1146,14 @@
             const queryVal = document.getElementById('historySearch').value.toLowerCase().trim();
             const tbody = document.getElementById('historyTableBody'); tbody.innerHTML = "";
             
-            let allRecs = loadedRecords;
+            let allRecs = [];
+            const cloudRecs = loadedRecords;
+            const offRecs = [];
+            for(let i=0; i<localStorage.length; i++) {
+                const k = localStorage.key(i); if(k && k.startsWith(`offline_record_${STORE_ID}`)) offRecs.push(JSON.parse(localStorage.getItem(k)));
+            }
+            const map = new Map(); offRecs.forEach(r => map.set(r.id, {...r, off: true})); cloudRecs.forEach(r => map.set(r.id, {...r, off: false}));
+            allRecs = Array.from(map.values());
 
             if(window.currentHistoryQuarterFilter !== 'ALL') allRecs = allRecs.filter(r => String(r.quarter) === window.currentHistoryQuarterFilter);
             if(queryVal !== "") allRecs = allRecs.filter(r => (r.empName && r.empName.toLowerCase().includes(queryVal)) || (r.empId && r.empId.toLowerCase().includes(queryVal)) || (r.year && String(r.year).includes(queryVal)));
@@ -1082,15 +1167,15 @@
             
             allRecs.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
             allRecs.forEach(r => {
-                const badge = `<span class="ml-1 text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">本機</span>`;
+                const badge = r.off ? `<span class="ml-1 text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">本機</span>` : `<span class="ml-1 text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">雲端</span>`;
                 tbody.innerHTML += `<tr class="border-b hover:bg-slate-50 transition"><td class="p-3">${r.year}年 Q${r.quarter}</td><td class="p-3 font-bold text-indigo-700">${r.empName} (${r.empId}) ${badge}</td><td class="p-3 text-gray-500">${r.store}</td>
-                <td class="p-3 text-center flex justify-center"><button onclick="loadSelectedRecord('${r.id}')" class="bg-indigo-50 text-indigo-600 font-bold hover:bg-indigo-100 py-1 px-3 rounded-lg mr-2 transition">載入</button>
-                <button onclick="requestDelete('record', 'offline_record_${r.id}')" class="bg-red-50 text-red-600 font-bold hover:bg-red-100 py-1 px-3 rounded-lg transition">刪除</button></td></tr>`;
+                <td class="p-3 text-center flex justify-center"><button onclick="loadSelectedRecord('${r.id}', ${r.off})" class="bg-indigo-50 text-indigo-600 font-bold hover:bg-indigo-100 py-1 px-3 rounded-lg mr-2 transition">載入</button>
+                <button onclick="requestDelete('record', '${r.id}', ${r.off})" class="bg-red-50 text-red-600 font-bold hover:bg-red-100 py-1 px-3 rounded-lg transition">刪除</button></td></tr>`;
             });
         };
 
-        window.loadSelectedRecord = (id) => {
-            const target = loadedRecords.find(r => r.id === id);
+        window.loadSelectedRecord = (id, isOff) => {
+            const target = isOff ? JSON.parse(localStorage.getItem(`offline_record_${id}`)) : loadedRecords.find(r => r.id === id);
             if(!target) return;
             document.getElementById('quarterSelect').value = target.quarter; document.getElementById('yearInput').value = target.year;
             document.getElementById('empId').value = target.empId; document.getElementById('empName').value = target.empName; document.getElementById('empTitle').value = target.empTitle;
@@ -1143,15 +1228,11 @@
             
             const id = 'sig_'+Date.now();
             try {
-                const newSig = { id, name, imageData: url };
-                savedSignatures.push(newSig);
-                localStorage.setItem('hr_signatures', JSON.stringify(savedSignatures));
-                loadLocalData();
-                
+                await setDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'signatures', id), { id, name, imageData: url });
                 document.getElementById('newSigName').value = ""; window.clearManagerSigCanvas(); 
-                window.showSuccessModal("簽名檔錄入成功", `🎉 主管「${name}」的電子簽章已安全存入本機！`);
+                window.showSuccessModal("簽名檔錄入成功", `🎉 主管「${name}」的電子簽章已安全存入雲端！`);
             } catch (err) {
-                window.showErrorModal("儲存失敗", "可能是瀏覽器儲存空間不足", err.message || err.toString());
+                window.showErrorModal("雲端儲存失敗", "簽名檔寫入過程遭到 Firebase 阻擋。", err.message || err.toString());
             }
         };
         window.clearManagerSigCanvas = () => { if(managerSigPad) managerSigPad.ctx.clearRect(0,0,managerSigPad.canvas.width, managerSigPad.canvas.height); };
