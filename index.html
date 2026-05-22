@@ -179,6 +179,7 @@
                                     <div class="flex items-start">
                                         <span class="font-bold flex-shrink-0 text-base select-none mr-2 flex flex-col items-center">
                                             訪：
+                                            <!-- 隱藏的 AI 潤飾按鈕 -->
                                             <button onclick="polishText('visit1', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture ai-feature hidden" title="AI 智能潤飾">✨</button>
                                         </span>
                                         <textarea id="visit1" oninput="autoResizeTextarea(this)" class="w-full border-none resize-none overflow-hidden focus:outline-none focus:bg-blue-50 leading-relaxed text-sm p-0 m-0 min-h-[40px]" rows="2"></textarea>
@@ -558,8 +559,8 @@
         const geminiApiKey = "AIzaSyBqWzW8d1qGX9QaB5cmENOW8gTvCNAINjc"; 
         
         async function callGeminiAPI(prompt, retries = 3) {
-            // 💡 關鍵修復：將模型替換為穩定公開版本 gemini-1.5-flash，解決 API 404 未找到的問題
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+            // 💡 關鍵修復：將模型替換為最新的 gemini-2.5-flash-lite
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`;
             const payload = { contents: [{ parts: [{ text: prompt }] }] };
             
             for (let i = 0; i < retries; i++) {
