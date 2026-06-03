@@ -102,7 +102,7 @@
 
         <div class="mb-4 bg-gray-50 p-3 rounded-lg border">
             <h3 class="text-sm font-bold text-gray-700 mb-3 flex flex-wrap items-center justify-between border-b pb-2 gap-2">
-                <span>👥 雲端員工資料庫進度 (當月)</span>
+                <span>👥 雲端員工資料庫進度 (<span id="currentMonthDisplay"></span>月)</span>
                 <div class="flex gap-2">
                     <button onclick="toggleSigManagerModal(true)" class="text-xs text-blue-600 font-bold hover:underline border border-blue-200 bg-blue-50 px-2 py-1 rounded transition hover:bg-blue-100">✍️ 管理簽名檔</button>
                     <button onclick="toggleRosterModal(true)" class="text-xs text-indigo-600 font-bold hover:underline border border-indigo-200 bg-indigo-50 px-2 py-1 rounded transition hover:bg-indigo-100">📋 名單比對表</button>
@@ -111,11 +111,11 @@
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="border border-red-200 rounded bg-white p-2 shadow-sm relative">
-                    <div class="font-bold text-red-800 bg-red-50 px-2 py-1.5 rounded text-xs mb-2 border-l-4 border-red-500 shadow-sm" id="titleNotDone">❌ 未達標 / 未訪談</div>
+                    <div class="font-bold text-red-800 bg-red-50 px-2 py-1.5 rounded text-xs mb-2 border-l-4 border-red-500 shadow-sm" id="titleNotDone">❌ 未訪談</div>
                     <div id="empListNotDone" class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto"></div>
                 </div>
                 <div class="border border-green-200 rounded bg-white p-2 shadow-sm relative">
-                    <div class="font-bold text-green-800 bg-green-50 px-2 py-1.5 rounded text-xs mb-2 border-l-4 border-green-500 shadow-sm" id="titleDone">✅ 當月已達標</div>
+                    <div class="font-bold text-green-800 bg-green-50 px-2 py-1.5 rounded text-xs mb-2 border-l-4 border-green-500 shadow-sm" id="titleDone">✅ 當月已訪談</div>
                     <div id="empListDone" class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto"></div>
                 </div>
             </div>
@@ -163,15 +163,8 @@
                 <table class="print-table text-sm">
                     <thead>
                         <tr>
-                            <th class="w-[12%] text-center bg-gray-50 font-bold p-2">
-                                <div>姓名</div>
-                                <div class="no-capture mt-1 px-1" data-html2canvas-ignore="true">
-                                    <select id="empSelectInline" onchange="handleEmpSelect(this.value); window.currentLoadedRecordId = null;" class="w-full text-[10px] border border-gray-300 rounded px-1 py-0.5 bg-white font-normal text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                                        <option value="">快速選擇...</option>
-                                    </select>
-                                </div>
-                            </th>
-                            <td class="w-[20%] p-0"><input type="text" id="empName" class="input-flat text-center font-bold text-lg" placeholder="姓名或選取"></td>
+                            <th class="w-[12%] text-center bg-gray-50 font-bold p-2">姓名</th>
+                            <td class="w-[20%] p-0"><input type="text" id="empName" class="input-flat text-center font-bold text-lg" placeholder="選取或輸入"></td>
                             <th class="w-[14%] text-center bg-gray-50 font-bold p-2">編號</th>
                             <td class="w-[18%] p-0"><input type="text" id="empId" oninput="handleIdInput(); window.currentLoadedRecordId = null;" class="input-flat text-center font-bold text-lg" placeholder="輸入編號"></td>
                             <td class="w-[11%] p-0"><input type="text" id="extraCol" class="input-flat text-center font-bold text-lg" placeholder="備註"></td>
@@ -202,14 +195,14 @@
                                 </div>
                                 <div class="border-t border-black px-3 py-2 flex justify-between items-end bg-gray-50 gap-2 min-h-[80px]">
                                     <div class="text-[11px] text-gray-500 font-bold self-start mt-1">訪談原因 / 回饋重點 / 建議與改善</div>
-                                    <div class="flex flex-col items-end gap-1.5">
-                                        <div class="flex items-center gap-1 no-capture" data-html2canvas-ignore="true">
+                                    <div class="flex flex-col items-end gap-1.5 w-[200px]">
+                                        <div class="flex items-center gap-1 no-capture w-full justify-end" data-html2canvas-ignore="true">
                                             <span class="text-[10px] text-gray-500 font-normal">套用簽名檔:</span>
                                             <select id="sigSelect1" onchange="applySavedSignatureToCanvas(1, this.value)" class="text-[10px] border rounded p-1 bg-white w-[100px] focus:outline-none"><option value="">-- 選擇 --</option></select>
                                         </div>
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-bold text-xs">訪談主管簽名：</span>
-                                            <div class="relative w-40 h-16 border border-dashed border-gray-400 bg-white rounded overflow-hidden shadow-sm flex items-center justify-center p-0.5">
+                                        <div class="flex items-center gap-2 w-full justify-end">
+                                            <span class="font-bold text-xs whitespace-nowrap">訪談主管簽名：</span>
+                                            <div class="relative w-full h-16 border border-dashed border-gray-400 bg-white rounded overflow-hidden shadow-sm flex items-center justify-center p-0.5">
                                                 <span id="sigPlaceholder1" class="text-gray-300 text-xs font-medium">未選擇</span>
                                                 <img id="sigImg1" class="w-full h-full object-contain scale-[1.5] origin-center hidden" alt="簽名">
                                             </div>
@@ -241,14 +234,14 @@
                                 </div>
                                 <div class="border-t border-black px-3 py-2 flex justify-between items-end bg-gray-50 gap-2 min-h-[80px]">
                                     <div class="text-[11px] text-gray-500 font-bold self-start mt-1">訪談原因 / 回饋重點 / 建議與改善</div>
-                                    <div class="flex flex-col items-end gap-1.5">
-                                        <div class="flex items-center gap-1 no-capture" data-html2canvas-ignore="true">
+                                    <div class="flex flex-col items-end gap-1.5 w-[200px]">
+                                        <div class="flex items-center gap-1 no-capture w-full justify-end" data-html2canvas-ignore="true">
                                             <span class="text-[10px] text-gray-500 font-normal">套用簽名檔:</span>
                                             <select id="sigSelect2" onchange="applySavedSignatureToCanvas(2, this.value)" class="text-[10px] border rounded p-1 bg-white w-[100px] focus:outline-none"><option value="">-- 選擇 --</option></select>
                                         </div>
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-bold text-xs">訪談主管簽名：</span>
-                                            <div class="relative w-40 h-16 border border-dashed border-gray-400 bg-white rounded overflow-hidden shadow-sm flex items-center justify-center p-0.5">
+                                        <div class="flex items-center gap-2 w-full justify-end">
+                                            <span class="font-bold text-xs whitespace-nowrap">訪談主管簽名：</span>
+                                            <div class="relative w-full h-16 border border-dashed border-gray-400 bg-white rounded overflow-hidden shadow-sm flex items-center justify-center p-0.5">
                                                 <span id="sigPlaceholder2" class="text-gray-300 text-xs font-medium">未選擇</span>
                                                 <img id="sigImg2" class="w-full h-full object-contain scale-[1.5] origin-center hidden" alt="簽名">
                                             </div>
@@ -280,14 +273,14 @@
                                 </div>
                                 <div class="border-t border-black px-3 py-2 flex justify-between items-end bg-gray-50 gap-2 min-h-[80px]">
                                     <div class="text-[11px] text-gray-500 font-bold self-start mt-1">訪談原因 / 回饋重點 / 建議與改善</div>
-                                    <div class="flex flex-col items-end gap-1.5">
-                                        <div class="flex items-center gap-1 no-capture" data-html2canvas-ignore="true">
+                                    <div class="flex flex-col items-end gap-1.5 w-[200px]">
+                                        <div class="flex items-center gap-1 no-capture w-full justify-end" data-html2canvas-ignore="true">
                                             <span class="text-[10px] text-gray-500 font-normal">套用簽名檔:</span>
                                             <select id="sigSelect3" onchange="applySavedSignatureToCanvas(3, this.value)" class="text-[10px] border rounded p-1 bg-white w-[100px] focus:outline-none"><option value="">-- 選擇 --</option></select>
                                         </div>
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-bold text-xs">訪談主管簽名：</span>
-                                            <div class="relative w-40 h-16 border border-dashed border-gray-400 bg-white rounded overflow-hidden shadow-sm flex items-center justify-center p-0.5">
+                                        <div class="flex items-center gap-2 w-full justify-end">
+                                            <span class="font-bold text-xs whitespace-nowrap">訪談主管簽名：</span>
+                                            <div class="relative w-full h-16 border border-dashed border-gray-400 bg-white rounded overflow-hidden shadow-sm flex items-center justify-center p-0.5">
                                                 <span id="sigPlaceholder3" class="text-gray-300 text-xs font-medium">未選擇</span>
                                                 <img id="sigImg3" class="w-full h-full object-contain scale-[1.5] origin-center hidden" alt="簽名">
                                             </div>
@@ -303,7 +296,7 @@
     </div>
 
     <!-- Modals -->
-    <!-- 名單比對表 -->
+    <!-- 名單比উট對表 -->
     <div id="rosterModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-5 max-h-[80vh] flex flex-col">
             <h3 class="text-lg font-bold text-indigo-800 mb-3 flex justify-between items-center border-b pb-2">
@@ -457,7 +450,7 @@
                 <svg class="h-10 w-10 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             </div>
             <h3 class="text-xl font-bold text-gray-900 mb-2" id="warningModalTitle">系統提示</h3>
-            <p class="text-sm text-gray-500 mb-6 leading-relaxed" id="warningModalMsg">請確認相關資訊。</p>
+            <p class="text-sm text-gray-500 mb-6 leading-relaxed whitespace-pre-line" id="warningModalMsg">請確認相關資訊。</p>
             <button onclick="closeWarningModal()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all duration-200 active:scale-98">我知道了</button>
         </div>
     </div>
@@ -529,11 +522,12 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // 初始化匯出年份與月份區間
+        // 初始化匯出年份與月份區間，並設定標題當月份
         const todayRealDate = new Date();
         document.getElementById('exportYear').value = todayRealDate.getFullYear() - 1911;
         document.getElementById('exportMonthStart').value = todayRealDate.getMonth() + 1;
         document.getElementById('exportMonthEnd').value = todayRealDate.getMonth() + 1;
+        document.getElementById('currentMonthDisplay').innerText = todayRealDate.getMonth() + 1;
 
         // --- 全域 Toast ---
         window.showMsg = (text, type="info") => {
@@ -860,7 +854,7 @@
 
             // 防覆寫機制: 若已在雲端建檔，且尚未被 Load，則阻擋
             if (loadedRecords.some(r => r.id === recordId) && window.currentLoadedRecordId !== recordId) {
-                return window.showWarningModal("資料已存在防覆寫", `該員工 (${empName}) 本季資料已經在雲端建檔過了。\n\n請先從「歷史紀錄列表」載入該筆資料，然後再進行編輯與儲存，避免覆蓋掉原有資料！`);
+                return window.showWarningModal("資料已存在防覆寫", `該員工 (${empName}) 本季資料已經在雲端建檔過了。\n\n請先從「歷史紀錄列表」載入該筆資料，然後再進行編輯與儲存，避免覆蓋掉原有資料！\n\n(若您確定要輸入新資料，請先清空「姓名」與「編號」欄位)`);
             }
 
             const payload = {
@@ -926,9 +920,9 @@
             const curQ = Math.ceil(curM / 3);
             const mIdx = (curM - 1) % 3;
 
-            // 標題與人數更新
-            document.getElementById('titleNotDone').innerText = `❌ ${curM}月 未達標 / 未訪談`;
-            document.getElementById('titleDone').innerText = `✅ ${curM}月 已達標`;
+            // 標題與人數更新 (已移除"未達標")
+            document.getElementById('titleNotDone').innerText = `❌ 未訪談`;
+            document.getElementById('titleDone').innerText = `✅ 當月已訪談`;
 
             getSortedEmployees(false).forEach(e => {
                 const rec = loadedRecords.find(r => r.empId === e.id && parseInt(r.year) === curY && parseInt(r.quarter) === curQ);
@@ -939,6 +933,7 @@
                 }
 
                 const elHtml = document.createElement('span');
+                // 加入員工編號顯示
                 elHtml.className = `border rounded px-2 py-1 cursor-pointer hover:opacity-80 font-bold shadow-sm transition text-xs ${isDone ? 'bg-green-100 text-green-800 border-green-300' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`;
                 elHtml.innerText = `${e.id} ${e.name}`;
                 elHtml.onclick = () => { 
