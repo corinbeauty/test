@@ -3,21 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>休閒部門店師傅/員工 訪談紀錄表 - 安全升級版</title>
+    <title>休閒部門店師傅/員工 訪談紀錄表 - 中清行館專用版</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- html2canvas -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- SheetJS (xlsx) for Excel Export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f4f8; overflow-x: hidden; }
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f0f4f8;
+            overflow-x: hidden;
+        }
         .print-table { border-collapse: collapse; width: 100%; table-layout: fixed; }
         .print-table thead th, .print-table thead td { border: 1.5px solid #000000; color: #000000; vertical-align: middle; box-sizing: border-box; height: 48px; }
         .print-table tbody td { border: 1.5px solid #000000; color: #000000; vertical-align: middle; box-sizing: border-box; height: auto; }
         .input-flat { width: 100%; height: 48px; border: none; outline: none; background: transparent; color: #000000; padding: 4px 8px; text-align: center; box-sizing: border-box; display: block; }
         .input-flat:focus { background-color: #f0f7ff; }
+        
         #zoomArea { transform-origin: top left; transition: transform 0.25s ease-out; }
+        .sig-canvas { background-color: #ffffff; cursor: crosshair; touch-action: none; }
+        
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+        
         .q-btn.active { background-color: #4f46e5 !important; color: white !important; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4); }
     </style>
 </head>
@@ -26,12 +37,28 @@
     <!-- 主操作控制面板 -->
     <div id="controlPanel" class="max-w-4xl mx-auto mb-6 bg-white rounded-xl p-4 shadow-md w-full no-capture">
         <h2 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2 flex flex-wrap items-center justify-between gap-2">
-            <span class="flex items-center gap-2">⚙️ 訪談系統-<span class="text-blue-600 font-bold">中清行館 (專用版)</span></span>
-            <div class="flex items-center gap-3">
-                <button onclick="handleManagerModeToggle()" id="managerModeBtn" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full transition flex items-center gap-1 shadow-sm border">
-                    🔒 解鎖管理者模式
-                </button>
-                <div class="flex items-center gap-1.5 text-xs text-slate-500">
+            <span class="flex items-center gap-2">
+                ⚙️ 訪談系統-<span class="text-blue-600 font-bold">中清行館 (專用版)</span>
+            </span>
+            <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                <div class="flex items-center gap-1 border border-gray-200 rounded p-1 bg-gray-50 shadow-sm">
+                    <span class="font-bold text-gray-700 px-1">資料匯出</span>
+                    <select id="exportYear" class="border rounded bg-white text-gray-700 py-0.5 outline-none focus:ring-1 focus:ring-green-500">
+                        <option value="113">113年</option>
+                        <option value="114">114年</option>
+                        <option value="115" selected>115年</option>
+                        <option value="116">116年</option>
+                        <option value="117">117年</option>
+                    </select>
+                    <select id="exportMonth" class="border rounded bg-white text-gray-700 py-0.5 outline-none focus:ring-1 focus:ring-green-500">
+                        <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+                        <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+                        <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+                        <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+                    </select>
+                    <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 text-white px-2 py-0.5 rounded font-bold transition">Excel</button>
+                </div>
+                <div class="flex items-center gap-1.5 ml-2 border-l pl-2">
                     <span id="syncStatusIndicator" class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
                     <span id="syncStatusText">正在連接雲端...</span>
                 </div>
@@ -41,17 +68,19 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">選擇季度</label>
-                <select id="quarterSelect" onchange="updateQuarterLayout()" class="w-full border rounded p-2 bg-gray-50 text-gray-800 focus:ring-2 focus:ring-blue-500">
+                <select id="quarterSelect" onchange="updateQuarterLayout(); window.currentLoadedRecordId = null; if(!document.getElementById('rosterModal').classList.contains('hidden')){renderRosterTable();}" class="w-full border rounded p-2 bg-gray-50 text-gray-800 focus:ring-2 focus:ring-blue-500">
                     <option value="1">第一季 (1 - 3 月)</option>
                     <option value="2" selected>第二季 (4 - 6 月)</option>
                     <option value="3">第三季 (7 - 9 月)</option>
                     <option value="4">第四季 (10 - 12 月)</option>
                 </select>
             </div>
+            
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">年度 (民國)</label>
-                <input type="number" id="yearInput" value="115" class="w-full border rounded p-2 bg-gray-50 text-gray-800 focus:ring-2 focus:ring-blue-500" oninput="document.getElementById('titleYear').innerText = this.value || '   '">
+                <input type="number" id="yearInput" value="115" class="w-full border rounded p-2 bg-gray-50 text-gray-800 focus:ring-2 focus:ring-blue-500" oninput="document.getElementById('titleYear').innerText = this.value || '   '; window.currentLoadedRecordId = null; if(!document.getElementById('rosterModal').classList.contains('hidden')){renderRosterTable();}">
             </div>
+
             <div class="grid grid-cols-2 gap-2 relative">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">區域</label>
@@ -73,22 +102,24 @@
                         <button onclick="toggleEmpModal(true)" class="text-xs text-blue-600 hover:underline">+ 編輯員工</button>
                     </div>
                 </h3>
-                <div id="empListBrief" class="text-xs text-gray-500 flex flex-wrap gap-1.5 max-h-24 overflow-y-auto"></div>
+                <div id="empListBrief" class="text-xs text-gray-500 max-h-32 overflow-y-auto space-y-1 bg-white p-2 rounded border border-gray-200"></div>
             </div>
             <div class="border-t md:border-t-0 md:border-l md:pl-4 pt-2 md:pt-0">
                 <h3 class="text-sm font-bold text-gray-700 mb-2 flex items-center justify-between">
                     <span>✍️ 雲端固定電子簽名檔</span>
                     <button onclick="toggleSigManagerModal(true)" class="text-xs text-blue-600 hover:underline font-bold">+ 新增/管理簽名檔</button>
                 </h3>
-                <div id="sigListBrief" class="text-xs text-gray-500 flex flex-wrap gap-1.5 max-h-24 overflow-y-auto"></div>
+                <div id="sigListBrief" class="text-xs text-gray-500 flex flex-wrap gap-1.5 max-h-16 overflow-y-auto bg-white p-2 rounded border border-gray-200"></div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
-            <button onclick="saveRecordToCloud()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow transition flex items-center justify-center gap-1.5">💾 儲存至雲端</button>
-            <button onclick="toggleHistoryModal(true)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow transition flex items-center justify-center gap-1.5">📂 歷史紀錄列表</button>
-            <button onclick="generateScreenshot()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow transition flex items-center justify-center gap-1.5">📸 生成手機截圖</button>
-            <button id="aiInsightBtn" onclick="generateQuarterlyInsights()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg shadow transition flex items-center justify-center gap-1.5 no-capture ai-feature hidden">✨ AI 季度洞察</button>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button onclick="saveRecordToCloud()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow transition flex items-center justify-center gap-1.5">
+                💾 儲存至雲端
+            </button>
+            <button onclick="toggleHistoryModal(true)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow transition flex items-center justify-center gap-1.5">
+                📂 歷史紀錄列表
+            </button>
         </div>
     </div>
 
@@ -127,14 +158,14 @@
                             <th class="w-[12%] text-center bg-gray-50 font-bold p-2">
                                 <div>姓名</div>
                                 <div class="no-capture mt-1 px-1" data-html2canvas-ignore="true">
-                                    <select id="empSelectInline" onchange="handleEmpSelect(this.value)" class="w-full text-[10px] border border-gray-300 rounded px-1 py-0.5 bg-white font-normal text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                    <select id="empSelectInline" onchange="handleEmpSelect(this.value); window.currentLoadedRecordId = null;" class="w-full text-[10px] border border-gray-300 rounded px-1 py-0.5 bg-white font-normal text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                                         <option value="">快速選擇...</option>
                                     </select>
                                 </div>
                             </th>
                             <td class="w-[20%] p-0"><input type="text" id="empName" class="input-flat text-center font-bold text-lg" placeholder="姓名或選取"></td>
                             <th class="w-[14%] text-center bg-gray-50 font-bold p-2">編號</th>
-                            <td class="w-[18%] p-0"><input type="text" id="empId" oninput="handleIdInput()" class="input-flat text-center font-bold text-lg" placeholder="輸入編號"></td>
+                            <td class="w-[18%] p-0"><input type="text" id="empId" oninput="handleIdInput(); window.currentLoadedRecordId = null;" class="input-flat text-center font-bold text-lg" placeholder="輸入編號"></td>
                             <td class="w-[11%] p-0"><input type="text" id="extraCol" class="input-flat text-center font-bold text-lg" placeholder="備註"></td>
                             <th class="w-[11%] text-center bg-gray-50 font-bold p-2">職稱</th>
                             <td class="w-[14%] p-0"><input type="text" id="empTitle" class="input-flat text-center font-bold text-lg" placeholder="櫃台"></td>
@@ -153,17 +184,11 @@
                                 </div>
                                 <div class="p-3 bg-white space-y-3">
                                     <div class="flex items-start">
-                                        <span class="font-bold flex-shrink-0 text-base select-none mr-2 flex flex-col items-center">
-                                            訪：
-                                            <button onclick="polishText('visit1', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture ai-feature hidden" title="AI 智能潤飾">✨</button>
-                                        </span>
+                                        <span class="font-bold flex-shrink-0 text-base select-none mr-2">訪：</span>
                                         <textarea id="visit1" oninput="autoResizeTextarea(this)" class="w-full border-none resize-none overflow-hidden focus:outline-none focus:bg-blue-50 leading-relaxed text-sm p-0 m-0 min-h-[40px]" rows="2"></textarea>
                                     </div>
                                     <div class="flex items-start border-t border-dashed border-gray-300 pt-3">
-                                        <span class="font-bold flex-shrink-0 text-base select-none mr-2 flex flex-col items-center">
-                                            回：
-                                            <button onclick="polishText('feedback1', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture ai-feature hidden" title="AI 智能潤飾">✨</button>
-                                        </span>
+                                        <span class="font-bold flex-shrink-0 text-base select-none mr-2">回：</span>
                                         <textarea id="feedback1" oninput="autoResizeTextarea(this)" class="w-full border-none resize-none overflow-hidden focus:outline-none focus:bg-blue-50 leading-relaxed text-sm p-0 m-0 min-h-[40px]" rows="2"></textarea>
                                     </div>
                                 </div>
@@ -178,7 +203,7 @@
                                             <span class="font-bold text-xs">訪談主管簽名：</span>
                                             <div class="relative w-40 h-16 border border-dashed border-gray-400 bg-white rounded overflow-hidden shadow-sm flex items-center justify-center">
                                                 <span id="sigPlaceholder1" class="text-gray-300 text-xs font-medium">未選擇</span>
-                                                <img id="sigImg1" class="max-w-full max-h-full hidden" alt="簽名">
+                                                <img id="sigImg1" class="w-full h-full object-contain hidden" alt="簽名">
                                             </div>
                                         </div>
                                     </div>
@@ -198,17 +223,11 @@
                                 </div>
                                 <div class="p-3 bg-white space-y-3">
                                     <div class="flex items-start">
-                                        <span class="font-bold flex-shrink-0 text-base select-none mr-2 flex flex-col items-center">
-                                            訪：
-                                            <button onclick="polishText('visit2', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture ai-feature hidden" title="AI 智能潤飾">✨</button>
-                                        </span>
+                                        <span class="font-bold flex-shrink-0 text-base select-none mr-2">訪：</span>
                                         <textarea id="visit2" oninput="autoResizeTextarea(this)" class="w-full border-none resize-none overflow-hidden focus:outline-none focus:bg-blue-50 leading-relaxed text-sm p-0 m-0 min-h-[40px]" rows="2"></textarea>
                                     </div>
                                     <div class="flex items-start border-t border-dashed border-gray-300 pt-3">
-                                        <span class="font-bold flex-shrink-0 text-base select-none mr-2 flex flex-col items-center">
-                                            回：
-                                            <button onclick="polishText('feedback2', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture ai-feature hidden" title="AI 智能潤飾">✨</button>
-                                        </span>
+                                        <span class="font-bold flex-shrink-0 text-base select-none mr-2">回：</span>
                                         <textarea id="feedback2" oninput="autoResizeTextarea(this)" class="w-full border-none resize-none overflow-hidden focus:outline-none focus:bg-blue-50 leading-relaxed text-sm p-0 m-0 min-h-[40px]" rows="2"></textarea>
                                     </div>
                                 </div>
@@ -223,7 +242,7 @@
                                             <span class="font-bold text-xs">訪談主管簽名：</span>
                                             <div class="relative w-40 h-16 border border-dashed border-gray-400 bg-white rounded overflow-hidden shadow-sm flex items-center justify-center">
                                                 <span id="sigPlaceholder2" class="text-gray-300 text-xs font-medium">未選擇</span>
-                                                <img id="sigImg2" class="max-w-full max-h-full hidden" alt="簽名">
+                                                <img id="sigImg2" class="w-full h-full object-contain hidden" alt="簽名">
                                             </div>
                                         </div>
                                     </div>
@@ -243,17 +262,11 @@
                                 </div>
                                 <div class="p-3 bg-white space-y-3">
                                     <div class="flex items-start">
-                                        <span class="font-bold flex-shrink-0 text-base select-none mr-2 flex flex-col items-center">
-                                            訪：
-                                            <button onclick="polishText('visit3', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture ai-feature hidden" title="AI 智能潤飾">✨</button>
-                                        </span>
+                                        <span class="font-bold flex-shrink-0 text-base select-none mr-2">訪：</span>
                                         <textarea id="visit3" oninput="autoResizeTextarea(this)" class="w-full border-none resize-none overflow-hidden focus:outline-none focus:bg-blue-50 leading-relaxed text-sm p-0 m-0 min-h-[40px]" rows="2"></textarea>
                                     </div>
                                     <div class="flex items-start border-t border-dashed border-gray-300 pt-3">
-                                        <span class="font-bold flex-shrink-0 text-base select-none mr-2 flex flex-col items-center">
-                                            回：
-                                            <button onclick="polishText('feedback3', this)" class="mt-1 text-[12px] hover:scale-110 transition-transform no-capture ai-feature hidden" title="AI 智能潤飾">✨</button>
-                                        </span>
+                                        <span class="font-bold flex-shrink-0 text-base select-none mr-2">回：</span>
                                         <textarea id="feedback3" oninput="autoResizeTextarea(this)" class="w-full border-none resize-none overflow-hidden focus:outline-none focus:bg-blue-50 leading-relaxed text-sm p-0 m-0 min-h-[40px]" rows="2"></textarea>
                                     </div>
                                 </div>
@@ -268,7 +281,7 @@
                                             <span class="font-bold text-xs">訪談主管簽名：</span>
                                             <div class="relative w-40 h-16 border border-dashed border-gray-400 bg-white rounded overflow-hidden shadow-sm flex items-center justify-center">
                                                 <span id="sigPlaceholder3" class="text-gray-300 text-xs font-medium">未選擇</span>
-                                                <img id="sigImg3" class="max-w-full max-h-full hidden" alt="簽名">
+                                                <img id="sigImg3" class="w-full h-full object-contain hidden" alt="簽名">
                                             </div>
                                         </div>
                                     </div>
@@ -281,44 +294,35 @@
         </div>
     </div>
 
-    <!-- ★ AI 季度洞察報告 Modal ★ -->
-    <div id="aiInsightModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] flex items-center justify-center hidden p-4 transition-all duration-300">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 flex flex-col max-h-[90vh] transform scale-95 transition-transform duration-300">
-            <h3 class="text-xl font-bold text-purple-900 mb-4 flex items-center gap-2 border-b pb-3">
-                <span class="text-2xl">✨</span> AI 季度管理洞察報告
-            </h3>
-            <div id="aiInsightContent" class="overflow-y-auto flex-1 text-sm text-gray-700 leading-relaxed p-2 space-y-4">
-                <!-- 報告內容載入區 -->
-            </div>
-            <div class="mt-5 flex justify-end pt-3 border-t">
-                <button onclick="closeAiInsightModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-6 rounded-xl shadow transition-all duration-200 active:scale-98">關閉洞察報告</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 其餘 Modals (名單比對、編輯員工、簽名管理、歷史紀錄、截圖預覽、密碼驗證、成功/失敗提示) -->
-    <!-- 為了不占篇幅，這裡保持與您上一版完全相同的 Modal HTML 結構 -->
+    <!-- Modals -->
     <!-- 名單比對表 -->
     <div id="rosterModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-5 max-h-[80vh] flex flex-col">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-5 max-h-[80vh] flex flex-col">
             <h3 class="text-lg font-bold text-indigo-800 mb-3 flex justify-between items-center border-b pb-2">
-                <span>📋 當前行館名單比對表</span>
+                <span>📋 當前行館名單比對表 (季進度)</span>
                 <button onclick="toggleRosterModal(false)" class="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
             </h3>
             <div class="overflow-y-auto flex-1 border rounded-lg">
                 <table class="w-full text-sm text-left">
                     <thead class="bg-indigo-50 uppercase text-xs text-indigo-700 sticky top-0 shadow-sm">
-                        <tr><th class="p-3 border-b">編號</th><th class="p-3 border-b">姓名</th><th class="p-3 border-b">職稱</th></tr>
+                        <tr>
+                            <th class="p-3 border-b">編號</th>
+                            <th class="p-3 border-b">姓名</th>
+                            <th class="p-3 border-b text-center" id="roster-m1">M1</th>
+                            <th class="p-3 border-b text-center" id="roster-m2">M2</th>
+                            <th class="p-3 border-b text-center" id="roster-m3">M3</th>
+                        </tr>
                     </thead>
                     <tbody id="rosterTableBody"></tbody>
                 </table>
             </div>
-            <div class="mt-4 flex justify-end">
+            <div class="mt-4 flex justify-between items-center text-xs text-gray-500">
+                <span>* 註: 單月訪談紀錄中文字數達 20 字以上即顯示 ✅ 達標。</span>
                 <button onclick="toggleRosterModal(false)" class="bg-indigo-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-indigo-700 text-sm shadow">關閉比對表</button>
             </div>
         </div>
     </div>
-    
+
     <!-- 編輯員工 -->
     <div id="empModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-5 max-h-[80vh] flex flex-col">
@@ -337,7 +341,7 @@
             <div class="overflow-y-auto flex-1 border rounded-lg">
                 <table class="w-full text-xs text-left">
                     <thead class="bg-gray-100 uppercase sticky top-0 shadow-sm">
-                        <tr><th class="p-2 border-b">編號</th><th class="p-2 border-b">姓名</th><th class="p-2 border-b">職稱</th><th class="p-2 border-b text-center">操作</th></tr>
+                        <tr><th class="p-2 border-b">編號</th><th class="p-2 border-b">姓名</th><th class="p-2 border-b text-center">狀態</th><th class="p-2 border-b text-center">操作</th></tr>
                     </thead>
                     <tbody id="empTableBody"></tbody>
                 </table>
@@ -380,11 +384,12 @@
 
     <!-- 歷史紀錄 -->
     <div id="historyModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full p-5 max-h-[80vh] flex flex-col">
+        <div class="bg-white rounded-xl shadow-xl max-w-3xl w-full p-5 max-h-[80vh] flex flex-col">
             <h3 class="text-lg font-bold text-gray-800 mb-3 flex justify-between items-center">
                 <span>📂 雲端歷史紀錄管理列表</span>
                 <button onclick="toggleHistoryModal(false)" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
             </h3>
+            
             <div class="mb-3 flex flex-col gap-3">
                 <div class="flex flex-wrap justify-between items-center gap-2 bg-gray-50 p-2 rounded-lg border">
                     <div class="flex flex-wrap gap-1" id="quarterFilterBtns">
@@ -394,13 +399,13 @@
                         <button onclick="setHistoryQuarterFilter('3', this)" class="q-btn px-3 py-1.5 text-xs rounded-full bg-white border text-slate-600 hover:bg-slate-100 transition font-bold shadow-sm">Q3</button>
                         <button onclick="setHistoryQuarterFilter('4', this)" class="q-btn px-3 py-1.5 text-xs rounded-full bg-white border text-slate-600 hover:bg-slate-100 transition font-bold shadow-sm">Q4</button>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <div class="text-xs font-bold text-indigo-700 bg-indigo-100 px-3 py-1.5 rounded-lg shadow-sm border border-indigo-200">總數: <span id="historyTotalCount" class="text-sm">0</span> 筆</div>
-                        <button onclick="exportHistoryToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition flex items-center gap-1">📊 匯出 Excel</button>
+                    <div class="text-xs font-bold text-indigo-700 bg-indigo-100 px-3 py-1.5 rounded-lg shadow-sm border border-indigo-200">
+                        總數: <span id="historyTotalCount" class="text-sm">0</span> 筆
                     </div>
                 </div>
                 <input type="text" id="historySearch" oninput="filterHistoryList()" placeholder="輸入姓名或編號快速過濾..." class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm">
             </div>
+
             <div class="overflow-y-auto flex-1 border rounded-lg bg-white">
                 <table class="w-full text-sm text-left">
                     <thead class="bg-slate-50 uppercase text-xs text-slate-700 font-bold border-b sticky top-0 z-10 shadow-sm">
@@ -415,43 +420,23 @@
         </div>
     </div>
 
-    <!-- 截圖預覽 -->
-    <div id="screenshotModal" class="fixed inset-0 bg-black/80 z-[150] flex flex-col items-center justify-center hidden p-4">
-        <div class="bg-white rounded-xl shadow-2xl p-4 max-w-full md:max-w-2xl w-full flex flex-col max-h-[90vh]">
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="font-bold text-gray-800 text-base">🎉 訪談紀錄截圖已完成！</h3>
-                <button onclick="toggleScreenshotModal(false)" class="text-gray-500 hover:text-gray-800 font-bold text-xl p-1">✕</button>
-            </div>
-            <div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs p-2.5 rounded mb-3 flex items-center gap-2">
-                <span>📱 <strong>手機存圖秘訣：</strong>請在下方圖片上<strong>「長按 2-3 秒」</strong>儲存圖片。</span>
-            </div>
-            <div class="overflow-auto flex-1 border rounded-lg bg-gray-100 flex items-start justify-center p-2">
-                <img id="screenshotPreview" src="" alt="訪談表截圖" class="max-w-full h-auto shadow-md">
-            </div>
-            <div class="mt-3 flex gap-2">
-                <a id="downloadBtn" href="#" download="訪談紀錄表.png" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center font-bold py-2.5 px-4 rounded text-xs transition">⬇️ 電腦直接下載</a>
-                <button onclick="toggleScreenshotModal(false)" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2.5 px-4 rounded text-xs transition">關閉</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ★ 密碼驗證 Modal ★ -->
+    <!-- ★ 1016 機密刪除驗證密碼 Modal ★ -->
     <div id="deletePasswordModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[160] flex items-center justify-center hidden p-4 transition-all duration-300">
         <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center transform scale-95 opacity-0 transition-all duration-300">
             <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4 shadow-inner">
                 <svg class="h-8 w-8 text-red-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
             </div>
-            <h3 class="text-xl font-black text-gray-900 mb-2 tracking-wide" id="passwordModalTitle">系統安全驗證</h3>
-            <p class="text-xs text-gray-500 mb-5 leading-relaxed font-medium" id="passwordModalDesc">請輸入密碼。</p>
-            <input type="password" id="deletePasscodeField" placeholder="請輸入密碼" class="w-full text-center text-2xl tracking-[0.2em] border-2 border-gray-200 rounded-xl py-3 px-3 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none mb-6 font-bold bg-gray-50 text-gray-800 transition-all">
+            <h3 class="text-xl font-black text-gray-900 mb-2 tracking-wide">機密資料刪除驗證</h3>
+            <p class="text-xs text-gray-500 mb-5 leading-relaxed font-medium">刪除資料為不可逆之操作。<br>請輸入安全密碼以核實身分。</p>
+            <input type="password" id="deletePasscodeField" maxlength="4" placeholder="請輸入密碼" class="w-full text-center text-2xl tracking-[0.5em] border-2 border-gray-200 rounded-xl py-3 px-3 focus:ring-4 focus:ring-red-500/20 focus:border-red-500 focus:outline-none mb-6 font-bold bg-gray-50 text-gray-800 transition-all">
             <div class="flex gap-3">
                 <button onclick="closeDeletePasswordModal()" class="flex-1 bg-white border-2 border-gray-200 hover:bg-gray-50 text-gray-700 font-bold py-3 px-4 rounded-xl text-sm transition-all active:scale-95">取消</button>
-                <button onclick="submitDeletePasscode()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-lg shadow-blue-600/30 active:scale-95">確認送出</button>
+                <button onclick="submitDeletePasscode()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-lg shadow-red-600/30 active:scale-95">確認刪除</button>
             </div>
         </div>
     </div>
 
-    <!-- 警告/提示 Modal -->
+    <!-- 動態專業提示與成功 Modal -->
     <div id="warningModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] flex items-center justify-center hidden p-4 transition-all duration-300">
         <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center transform scale-95 transition-transform duration-300">
             <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-amber-100 mb-4 animate-pulse">
@@ -463,19 +448,17 @@
         </div>
     </div>
 
-    <!-- 成功 Modal -->
     <div id="successModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] flex items-center justify-center hidden p-4 transition-all duration-300">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center transform scale-95 transition-transform duration-300">
             <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4 animate-bounce">
                 <svg class="h-10 w-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
             </div>
             <h3 class="text-xl font-bold text-gray-900 mb-2" id="successModalTitle">處理成功</h3>
-            <p class="text-sm text-gray-500 mb-6 leading-relaxed" id="successModalMsg">您的要求已成功執行！</p>
+            <p class="text-sm text-gray-500 mb-6 leading-relaxed whitespace-pre-line" id="successModalMsg">您的要求已成功執行！</p>
             <button onclick="closeSuccessModal()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all duration-200 active:scale-98">確定</button>
         </div>
     </div>
 
-    <!-- 錯誤與診斷 Modal -->
     <div id="errorModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] flex items-center justify-center hidden p-4 transition-all duration-300">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]">
             <div class="text-center pb-3 border-b">
@@ -500,12 +483,24 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ============================
-        // 🔮 Firebase 與環境配置
-        // ============================
+        let user = null;
+        let employees = [];
+        let loadedRecords = []; 
+        let savedSignatures = []; 
+        
+        let successModalCallback = null;
+        
+        window.currentZoom = 1.0;
+        window.currentHistoryQuarterFilter = 'ALL';
+        window.currentLoadedRecordId = null; // 防覆寫機制
+
+        const STORE_ID = "store_zhongqing";
+        const STORE_NAME = "中清行館";
+        const STORE_AREA = "中二區"; 
+
         const firebaseConfig = {
             apiKey: "AIzaSyBdkQiNgK6SfL2N6XQZJUa_P_vi0ZoUby0",
             authDomain: "monthly-interview2.firebaseapp.com",
@@ -518,127 +513,11 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const activeAppId = firebaseConfig.appId;
 
-        // ============================
-        // 🔮 AI 核心模組 (改用後端 API)
-        // ============================
-        
-        // 核心呼叫函數：將原有的直接對接 Google，改為對接您的後端 API
-        async function callGeminiAPI(prompt) {
-            // 注意：這裡呼叫的是相對路徑 "/api/polish"，這代表前端和後端必須部署在同一個網域下
-            // 如果後端部署在不同網域（例如 render.com），請將這裡替換為完整的 URL
-            // 例如：const response = await fetch("https://your-backend.onrender.com/api/polish", { ...
-            
-            const response = await fetch("/api/polish", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ prompt })
-            });
-
-            const data = await response.json();
-            
-            // 開發除錯用，上線後可考慮移除
-            console.log("Backend API Response:", data);
-
-            if (!response.ok) {
-                // 如果後端回傳 400, 429 或 500，拋出後端設定的錯誤訊息
-                throw new Error(data.error?.message || data.error || "後端 API 或 Gemini 發生錯誤");
-            }
-
-            // 後端應直接回傳乾淨的文字，但我們這裡仍然加上安全檢查
-            const text = data.text || data.result || data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-            if (!text) {
-                throw new Error("後端沒有回傳有效的內容");
-            }
-
-            return text;
-        }
-
-        // --- 1. AI 單句潤飾 ---
-        window.polishText = async (elementId, btnElement) => {
-            const textarea = document.getElementById(elementId);
-            const originalText = textarea.value.trim();
-            if (!originalText) { window.showMsg("請先輸入內容才能使用 AI 潤飾！", "warning"); return; }
-            
-            const originalBtnHTML = btnElement.innerHTML;
-            btnElement.innerHTML = "⏳"; btnElement.disabled = true;
-            
-            try {
-                // 組合 Prompt，送往後端
-                const prompt = `請將以下文字潤飾為專業、自然、具建設性的繁體中文：\n\n${originalText}`;
-                
-                const polishedText = await callGeminiAPI(prompt);
-                
-                textarea.value = polishedText.trim(); 
-                window.autoResizeTextarea(textarea);
-                window.showMsg("✨ AI 潤飾完成！", "success");
-                
-            } catch (error) {
-                console.error("Gemini/Backend Error:", error);
-                window.showMsg(`❌ AI 潤飾失敗：${error.message || error}`, "error"); 
-            } finally { 
-                btnElement.innerHTML = originalBtnHTML; 
-                btnElement.disabled = false; 
-            }
-        };
-
-        // --- 2. AI 季度報告洞察 ---
-        window.generateQuarterlyInsights = async () => {
-            const btn = document.getElementById('aiInsightBtn');
-            const empName = document.getElementById('empName').value || '未知員工';
-            const empTitle = document.getElementById('empTitle').value || '未知職稱';
-            const data = [1,2,3].map(i => ({ visit: document.getElementById(`visit${i}`).value.trim(), feedback: document.getElementById(`feedback${i}`).value.trim() }));
-            
-            if (data.every(m => !m.visit && !m.feedback)) { window.showWarningModal("資料不足", "請至少填寫一個月的訪談紀錄或回饋，AI 才能進行分析！"); return; }
-
-            const originalHTML = btn.innerHTML; btn.innerHTML = "⏳ 分析中..."; btn.disabled = true;
-
-            try {
-                const prompt = `你是一位資深的人資(HR)與企業管理顧問。這是一份關於員工「${empName}」(職稱: ${empTitle}) 的季度訪談紀錄。請根據以下三個月的訪談紀錄(訪)與員工回饋(回)，為主管撰寫一份簡潔扼要的「本季狀態總結」與「下季管理建議」。\n\n第一個月：\n- 主管訪談：${data[0].visit || '無'}\n- 員工回饋：${data[0].feedback || '無'}\n第二個月：\n- 主管訪談：${data[1].visit || '無'}\n- 員工回饋：${data[1].feedback || '無'}\n第三個月：\n- 主管訪談：${data[2].visit || '無'}\n- 員工回饋：${data[2].feedback || '無'}\n\n請以專業、鼓勵且具建設性的語氣輸出，並使用 HTML 格式標籤（例如 <b>, <ul>, <li>, <br>）進行排版，使其重點分明、易於閱讀。請直接輸出 HTML 結果，不需要額外的說明。`;
-                
-                const insightHTML = await callGeminiAPI(prompt);
-                
-                // 清理可能附帶的 markdown 標籤
-                const cleaned = insightHTML
-                    .replace(/```html/g, "")
-                    .replace(/```/g, "");
-
-                document.getElementById('aiInsightContent').innerHTML = cleaned;
-                document.getElementById('aiInsightModal').classList.remove('hidden');
-                setTimeout(() => { document.querySelector('#aiInsightModal > div').classList.remove('scale-95'); document.querySelector('#aiInsightModal > div').classList.add('scale-100'); }, 10);
-            } catch(err) { 
-                window.showErrorModal("AI 分析失敗", "呼叫後端 API 時發生錯誤", err.message);
-            } finally { 
-                btn.innerHTML = originalHTML; btn.disabled = false; 
-            }
-        };
-
-        window.closeAiInsightModal = () => {
-            document.querySelector('#aiInsightModal > div').classList.remove('scale-100'); document.querySelector('#aiInsightModal > div').classList.add('scale-95');
-            setTimeout(() => { document.getElementById('aiInsightModal').classList.add('hidden'); }, 300);
-        };
-
-        // ============================
-        // 全域變數與系統設定
-        // ============================
-        let user = null;
-        let employees = [];
-        let loadedRecords = []; 
-        let savedSignatures = []; 
-        let successModalCallback = null;
-        let isManagerMode = false;
-        
-        window.currentZoom = 1.0;
-        window.currentHistoryQuarterFilter = 'ALL';
-        window.currentFilteredRecords = [];
-
-        const STORE_ID = "store_zhongqing";
-        const STORE_NAME = "中清行館";
-        const STORE_AREA = "中二區"; 
+        // 初始化匯出年份與月份
+        const todayRealDate = new Date();
+        document.getElementById('exportYear').value = todayRealDate.getFullYear() - 1911;
+        document.getElementById('exportMonth').value = todayRealDate.getMonth() + 1;
 
         // --- 全域 Toast ---
         window.showMsg = (text, type="info") => {
@@ -682,87 +561,17 @@
             for(let i=1; i<=3; i++) document.getElementById(`monthTitle${i}`).innerText = `${text} ${m[i-1]}月`;
         };
 
-        // ============================
-        // 🔮 鍵盤監聽器 (Enter / Esc)
-        // ============================
-        document.addEventListener('keydown', (e) => {
-            const isPasswordModalOpen = !document.getElementById('deletePasswordModal').classList.contains('hidden');
-            const isWarningModalOpen = !document.getElementById('warningModal').classList.contains('hidden');
-            const isSuccessModalOpen = !document.getElementById('successModal').classList.contains('hidden');
-            const isErrorModalOpen = !document.getElementById('errorModal').classList.contains('hidden');
-
-            if (e.key === 'Escape') {
-                if (isPasswordModalOpen) closeDeletePasswordModal();
-                if (!document.getElementById('rosterModal').classList.contains('hidden')) toggleRosterModal(false);
-                if (!document.getElementById('empModal').classList.contains('hidden')) toggleEmpModal(false);
-                if (!document.getElementById('historyModal').classList.contains('hidden')) toggleHistoryModal(false);
-                if (!document.getElementById('screenshotModal').classList.contains('hidden')) toggleScreenshotModal(false);
-                if (isWarningModalOpen) closeWarningModal();
-                if (isSuccessModalOpen) closeSuccessModal();
-                if (isErrorModalOpen) closeErrorModal();
-                if (!document.getElementById('aiInsightModal').classList.contains('hidden')) closeAiInsightModal();
-                if (document.getElementById('sigManagerModal').classList.contains('flex')) toggleSigManagerModal(false);
-            }
-
-            if (e.key === 'Enter') {
-                if (isPasswordModalOpen) {
-                    e.preventDefault(); 
-                    submitDeletePasscode();
-                } else if (isWarningModalOpen) {
-                    closeWarningModal();
-                } else if (isSuccessModalOpen) {
-                    closeSuccessModal();
-                } else if (isErrorModalOpen) {
-                    closeErrorModal();
-                }
-            }
-        });
-
-        // --- ★ 解鎖管理者模式與隱藏 AI 引擎 ★ ---
-        window.handleManagerModeToggle = () => {
-            if (isManagerMode) {
-                isManagerMode = false;
-                document.getElementById('managerModeBtn').innerText = "🔒 解鎖管理者模式";
-                document.getElementById('managerModeBtn').className = "text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full transition flex items-center gap-1 shadow-sm border";
-                // 隱藏所有 AI 元素
-                document.querySelectorAll('.ai-feature').forEach(el => el.classList.add('hidden'));
-                window.showMsg("🔒 已重置鎖定。系統進階權限已隱藏。");
-            } else {
-                window.pendingDelete = { type: 'unlock_manager', id: 'all' }; 
-                document.getElementById('passwordModalTitle').innerText = "系統安全驗證";
-                document.getElementById('passwordModalDesc').innerHTML = "請輸入您的最高權限密碼。<br>管理者與解除隱藏功能專用。";
-                const passField = document.getElementById('deletePasscodeField');
-                passField.type = "password";
-                passField.value = '';
-                passField.placeholder = "請輸入密碼";
-                
-                document.getElementById('deletePasswordModal').classList.remove('hidden');
-                setTimeout(() => {
-                    document.querySelector('#deletePasswordModal > div').classList.remove('scale-95', 'opacity-0');
-                    document.querySelector('#deletePasswordModal > div').classList.add('scale-100', 'opacity-100');
-                    passField.focus();
-                }, 10);
-            }
-        };
-
-        // --- ★ 1016 (刪除) 與 8888 (解鎖) 共用驗證系統 ★ ---
+        // --- ★ 1016 全域機密刪除調度系統 ---
         window.pendingDelete = { type: null, id: null, extra: null };
         
         window.requestDelete = (type, id, extra = null) => {
             window.pendingDelete = { type, id, extra };
-            
-            document.getElementById('passwordModalTitle').innerText = "系統安全驗證";
-            document.getElementById('passwordModalDesc').innerHTML = "請輸入您的最高權限密碼。<br>確認執行刪除操作。";
-            const passField = document.getElementById('deletePasscodeField');
-            passField.type = "password";
-            passField.value = '';
-            passField.placeholder = "請輸入密碼";
-
+            document.getElementById('deletePasscodeField').value = '';
             document.getElementById('deletePasswordModal').classList.remove('hidden');
             setTimeout(() => {
                 document.querySelector('#deletePasswordModal > div').classList.remove('scale-95', 'opacity-0');
                 document.querySelector('#deletePasswordModal > div').classList.add('scale-100', 'opacity-100');
-                passField.focus();
+                document.getElementById('deletePasscodeField').focus();
             }, 10);
         };
 
@@ -774,28 +583,12 @@
 
         window.submitDeletePasscode = async () => {
             const pass = document.getElementById('deletePasscodeField').value;
-            const { type, id, extra } = window.pendingDelete;
-
-            // 處理 8888 解鎖 AI 功能
-            if (type === 'unlock_manager' && pass === '8888') {
-                isManagerMode = true;
-                window.closeDeletePasswordModal();
-                window.pendingDelete = { type: null, id: null, extra: null };
-                document.getElementById('managerModeBtn').innerText = "🔓 已解鎖進階權限";
-                document.getElementById('managerModeBtn').className = "text-xs bg-purple-100 text-purple-700 border-purple-300 px-2.5 py-1 rounded-full font-bold shadow-sm border";
-                // 顯示所有 AI 元素
-                document.querySelectorAll('.ai-feature').forEach(el => el.classList.remove('hidden'));
-                
-                window.showMsg("✨ 管理權限與 AI 智能輔助已解鎖！", "success");
-                return;
-            }
-
-            // 處理 1016 刪除邏輯
             if (pass !== '1016') {
                 window.showMsg("❌ 安全密碼錯誤，拒絕執行！", "error");
                 return;
             }
 
+            const { type, id, extra } = window.pendingDelete;
             window.closeDeletePasswordModal();
             window.pendingDelete = { type: null, id: null, extra: null };
 
@@ -805,31 +598,33 @@
             try {
                 if (type === 'record') {
                     const isOff = extra;
-                    if (isOff) {
+                    if(isOff) {
                         localStorage.removeItem(`offline_record_${id}`);
                         window.filterHistoryList();
                     } else {
-                        await deleteDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'records', id));
+                        await deleteDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'records', id));
                         localStorage.removeItem(`offline_record_${id}`);
                     }
                     window.showSuccessModal("紀錄銷毀完成", "指定的訪談紀錄已成功從系統與雲端徹底刪除。");
                 } 
                 else if (type === 'employee') {
-                    await deleteDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'employees', `${STORE_ID}_${id}`));
+                    await deleteDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'employees', `${STORE_ID}_${id}`));
                     window.showSuccessModal("員工名單銷毀完成", `員工 (ID: ${id}) 已成功從雲端資料庫抹除。`);
                 } 
                 else if (type === 'signature') {
-                    await deleteDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'signatures', id));
+                    await deleteDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'signatures', id));
                     window.showSuccessModal("簽名檔銷毀完成", "指定的主管電子簽章已永久從雲端移除。");
                 }
             } catch (err) {
-                window.showErrorModal("銷毀失敗", "資料刪除過程中發生異常，請確認 Firebase 網路連線與權限。", err.message || err.toString());
+                window.showErrorModal("銷毀失敗", "資料刪除過程中發生異常，請確認 Firebase Rules 設定為允許寫入。", err.message || err.toString());
             }
         };
 
-        // --- 智慧排序引擎 ---
-        function getSortedEmployees() {
-            return employees.slice().sort((a, b) => {
+        // --- 智慧排序引擎 (支援隱藏離職員工) ---
+        function getSortedEmployees(includeHidden = false) {
+            let filtered = employees;
+            if (!includeHidden) filtered = employees.filter(e => !e.isHidden);
+            return filtered.slice().sort((a, b) => {
                 const numA = parseInt(a.id, 10);
                 const numB = parseInt(b.id, 10);
                 if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
@@ -865,9 +660,33 @@
         window.toggleRosterModal = (show) => { document.getElementById('rosterModal').classList[show ? 'remove' : 'add']('hidden'); if(show) renderRosterTable(); };
         function renderRosterTable() {
             const tbody = document.getElementById('rosterTableBody'); tbody.innerHTML = "";
-            const sortedEmps = getSortedEmployees();
-            if(sortedEmps.length === 0) { tbody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-400">當前無任何名單紀錄</td></tr>`; return; }
-            sortedEmps.forEach(e => { tbody.innerHTML += `<tr class="border-b hover:bg-indigo-50/30 transition"><td class="p-3 font-bold text-gray-700">${e.id}</td><td class="p-3 font-semibold text-indigo-700">${e.name}</td><td class="p-3 text-gray-500">${e.title||'無'}</td></tr>`; });
+            const q = parseInt(document.getElementById('quarterSelect').value);
+            const y = document.getElementById('yearInput').value;
+            const m = [[1,2,3], [4,5,6], [7,8,9], [10,11,12]][q-1];
+            
+            document.getElementById('roster-m1').innerText = m[0] + "月";
+            document.getElementById('roster-m2').innerText = m[1] + "月";
+            document.getElementById('roster-m3').innerText = m[2] + "月";
+
+            const sortedEmps = getSortedEmployees(false);
+            if(sortedEmps.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">當前無任何正常名單紀錄</td></tr>`; return; }
+            
+            sortedEmps.forEach(e => { 
+                const record = loadedRecords.find(r => r.empId === e.id && r.year === y && parseInt(r.quarter) === q);
+                const status = [0,1,2].map(idx => {
+                    if(!record || !record.months || !record.months[idx]) return '❌';
+                    const chars = (record.months[idx].visitContent + record.months[idx].empFeedback).replace(/[^\u4E00-\u9FA5]/g, '').length;
+                    return chars >= 20 ? '✅' : '❌';
+                });
+
+                tbody.innerHTML += `<tr class="border-b hover:bg-indigo-50/30 transition">
+                    <td class="p-3 font-bold text-gray-700">${e.id}</td>
+                    <td class="p-3 font-semibold text-indigo-700">${e.name}</td>
+                    <td class="p-3 text-center text-lg">${status[0]}</td>
+                    <td class="p-3 text-center text-lg">${status[1]}</td>
+                    <td class="p-3 text-center text-lg">${status[2]}</td>
+                </tr>`; 
+            });
         }
 
         window.toggleEmpModal = (show) => { document.getElementById('empModal').classList[show ? 'remove' : 'add']('hidden'); if(show) renderEmployeeTable(); };
@@ -880,7 +699,6 @@
         };
 
         window.toggleHistoryModal = (show) => { document.getElementById('historyModal').classList[show ? 'remove' : 'add']('hidden'); if(show) window.filterHistoryList(); };
-        window.toggleScreenshotModal = (show) => document.getElementById('screenshotModal').classList[show ? 'remove' : 'add']('hidden');
         
         window.handleEmpSelect = (id) => {
             const match = employees.find(e => e.id === id);
@@ -893,45 +711,102 @@
             else { document.getElementById('empName').value = ""; document.getElementById('empTitle').value = ""; document.getElementById('empSelectInline').value = ""; }
         };
 
-        // --- 雲端初始化與連線監聽 ---
+        // --- Excel Export (SheetJS) ---
+        window.exportToExcel = () => {
+            const y = document.getElementById('exportYear').value;
+            const m = parseInt(document.getElementById('exportMonth').value);
+            const q = Math.ceil(m / 3);
+            const idx = (m - 1) % 3;
+
+            const targetRecords = loadedRecords.filter(r => r.year === y && parseInt(r.quarter) === q);
+            const data = [];
+
+            targetRecords.forEach(r => {
+                if(!r.months || !r.months[idx]) return;
+                const monthData = r.months[idx];
+                const contentCount = (monthData.visitContent + monthData.empFeedback).replace(/[^\u4E00-\u9FA5]/g, '').length;
+                
+                data.push({
+                    "年度": y + "年", "月份": m + "月", "區域": r.area, "店別": r.store,
+                    "員工編號": r.empId, "員工姓名": r.empName, "職稱": r.empTitle || "",
+                    "訪談內容": monthData.visitContent, "回饋內容": monthData.empFeedback,
+                    "中文字數": contentCount,
+                    "狀態": contentCount >= 20 ? "達標" : "未達標"
+                });
+            });
+
+            if (data.length === 0) return window.showWarningModal("查無資料", `找不到 ${y}年 ${m}月 的任何訪談紀錄！`);
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "訪談紀錄");
+            XLSX.writeFile(wb, `${STORE_NAME}_${y}年${m}月_訪談紀錄匯出.xlsx`);
+            window.showMsg("🎉 Excel 匯出成功", "success");
+        };
+
+        // --- 載入與初始化 ---
         window.addEventListener('load', async () => {
             const screenWidth = window.innerWidth;
             if(screenWidth < 900) { window.currentZoom = (screenWidth - 16) / 850; window.applyZoom(); }
 
-            const initAuth = async () => {
-                try {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
                     await signInAnonymously(auth);
-                    document.getElementById('syncStatusText').innerText = "雲端連線成功";
-                    document.getElementById('syncStatusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-green-500";
-                } catch (e) { 
-                    document.getElementById('syncStatusText').innerText = "驗證失敗 (本機模式)"; 
-                    document.getElementById('syncStatusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-red-500";
                 }
-            };
-            
-            await initAuth();
-            
-            onAuthStateChanged(auth, (u) => { 
-                user = u; 
-                if(u) initCloudListeners(); 
-            });
+                
+                document.getElementById('syncStatusText').innerText = "雲端連線成功";
+                document.getElementById('syncStatusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-green-500";
+                
+                // --- ADDED FALLBACK GETDOC FOR INITIALIZATION ---
+                try {
+                    const empSnapshot = await getDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'employees', 'dummy'));
+                    // We just need a read to trigger auth rule evaluation if any
+                } catch(e) {
+                    console.log("Initial read test failed, but auth succeeded.", e);
+                }
+            } catch (e) { 
+                document.getElementById('syncStatusText').innerText = "驗證失敗 (本機模式)"; 
+                console.error("Auth error:", e);
+            }
+
+            onAuthStateChanged(auth, (u) => { user = u; if(u) initCloudListeners(); });
         });
 
         function initCloudListeners() {
             if(!db || !user) return;
             
-            onSnapshot(collection(db, 'artifacts', activeAppId, 'public', 'data', 'employees'), s => {
-                employees = s.docs.map(d => d.data()); renderEmployeeBrief(); updateEmpSelectInlineDropdown(); renderRosterTable();
-            });
-            
-            onSnapshot(collection(db, 'artifacts', activeAppId, 'public', 'data', 'records'), s => { 
-                loadedRecords = s.docs.map(d => d.data()); 
-                if(!document.getElementById('historyModal').classList.contains('hidden')) window.filterHistoryList();
-            });
-            
-            onSnapshot(collection(db, 'artifacts', activeAppId, 'public', 'data', 'signatures'), s => { 
-                savedSignatures = s.docs.map(d => d.data()); updateMonthlySigSelectors(); renderSigManagerList();
-            });
+            // Add error callbacks to onSnapshot to catch connection issues
+            onSnapshot(collection(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'employees'), 
+                s => {
+                    employees = s.docs.map(d => d.data()); renderEmployeeBrief(); updateEmpSelectInlineDropdown(); if(!document.getElementById('rosterModal').classList.contains('hidden')) renderRosterTable();
+                    if(!document.getElementById('empModal').classList.contains('hidden')) renderEmployeeTable();
+                },
+                err => {
+                    console.error("Error fetching employees:", err);
+                    window.showErrorModal("同步錯誤", "無法獲取員工資料，請檢查網路連線。", err.message);
+                }
+            );
+            onSnapshot(collection(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'records'), 
+                s => { 
+                    loadedRecords = s.docs.map(d => d.data()); renderEmployeeBrief();
+                    if(!document.getElementById('historyModal').classList.contains('hidden')) window.filterHistoryList();
+                },
+                err => {
+                    console.error("Error fetching records:", err);
+                    window.showErrorModal("同步錯誤", "無法獲取訪談紀錄，請檢查網路連線。", err.message);
+                }
+            );
+            onSnapshot(collection(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'signatures'), 
+                s => { 
+                    savedSignatures = s.docs.map(d => d.data()); updateMonthlySigSelectors(); renderSigManagerList();
+                },
+                err => {
+                    console.error("Error fetching signatures:", err);
+                    window.showErrorModal("同步錯誤", "無法獲取簽名檔，請檢查網路連線。", err.message);
+                }
+            );
         }
 
         function getSelectedSignatureData(monthIdx) {
@@ -940,7 +815,7 @@
             return match ? match.imageData : "";
         }
 
-        // --- 核心寫入與截圖 ---
+        // --- 核心寫入 ---
         window.saveRecordToCloud = async () => {
             const year = document.getElementById('yearInput').value.trim();
             const quarter = document.getElementById('quarterSelect').value;
@@ -950,6 +825,12 @@
             if (!year || !empId || !empName) return window.showWarningModal("資料未填妥", "請確實填寫表格上方的『年度』、『編號』與『姓名』欄位！");
 
             const recordId = `${STORE_ID}_${year}_Q${quarter}_${empId}`;
+
+            // 防覆寫機制: 若已在雲端建檔，且尚未被 Load，則阻擋
+            if (loadedRecords.some(r => r.id === recordId) && window.currentLoadedRecordId !== recordId) {
+                return window.showWarningModal("資料已存在防覆寫", `該員工 (${empName}) 本季資料已經在雲端建檔過了。\n\n請先從「歷史紀錄列表」載入該筆資料，然後再進行編輯與儲存，避免覆蓋掉原有資料！`);
+            }
+
             const payload = {
                 id: recordId, storeId: STORE_ID, year, quarter, area: STORE_AREA, store: STORE_NAME,
                 empId, empName, empTitle: document.getElementById('empTitle').value, extraCol: document.getElementById('extraCol').value,
@@ -962,92 +843,20 @@
                 })), updatedAt: new Date().toLocaleString()
             };
 
-            // 保留離線暫存機制
             localStorage.setItem(`offline_record_${recordId}`, JSON.stringify(payload));
             if(!user || !db) {
-                window.showSuccessModal("本機暫存成功", "雲端未連線，資料已安全暫存於本機！\n待網路恢復後將自動同步，點擊確定將重置全新空白頁面。", () => window.location.reload());
+                window.showSuccessModal("本機暫存成功", "雲端未連線，資料已安全暫存於本機！\n待新資料庫開通後將自動同步，點擊確定將重置全新空白頁面。", () => window.location.reload());
                 return;
             }
 
             window.showMsg("💾 傳輸至 Firebase...", "info");
             try {
-                await setDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'records', recordId), payload);
-                window.showSuccessModal("雲端儲存成功", "🎉 訪談紀錄已完美同步至雲端！\n點擊下方「確定」將為您清空選取，載入全新空白表單。", () => window.location.reload());
+                await setDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'records', recordId), payload);
+                window.currentLoadedRecordId = recordId; // 儲存後自動視為已載入
+                window.showSuccessModal("雲端儲存成功", "🎉 訪談紀錄已完美同步至雲端！\n點擊下方「確定」將為您重置全新空白表單。", () => window.location.reload());
             } catch (err) {
-                document.getElementById('errorModalCode').innerText = err.message || err.toString();
-                document.getElementById('errorModal').classList.remove('hidden');
+                window.showErrorModal("雲端儲存失敗", "寫入過程遭到 Firebase 阻擋，請確認設定。", err.message || err.toString());
             }
-        };
-
-        window.generateScreenshot = () => {
-            window.showMsg("📸 正在為您擷取高解析相片...", "info");
-            const container = document.getElementById('captureContainer');
-            const noCaptures = document.querySelectorAll('.no-capture');
-            noCaptures.forEach(el => el.style.visibility = 'hidden'); 
-
-            const originalZoom = window.currentZoom;
-            document.getElementById('zoomArea').style.transform = 'scale(1)';
-
-            html2canvas(container, { scale: 2.2, useCORS: true, backgroundColor: "#ffffff", allowTaint: false }).then(canvas => {
-                noCaptures.forEach(el => el.style.visibility = 'visible');
-                document.getElementById('zoomArea').style.transform = `scale(${originalZoom})`; 
-
-                document.getElementById('screenshotPreview').src = canvas.toDataURL('image/png');
-                document.getElementById('downloadBtn').href = canvas.toDataURL('image/png');
-                document.getElementById('downloadBtn').download = `${document.getElementById('yearInput').value}年_Q${document.getElementById('quarterSelect').value}_${document.getElementById('empName').value || '未命名'}.png`;
-                window.toggleScreenshotModal(true);
-            }).catch(e => {
-                noCaptures.forEach(el => el.style.visibility = 'visible');
-                document.getElementById('zoomArea').style.transform = `scale(${originalZoom})`;
-                window.showMsg("❌ 轉譯失敗", "error");
-            });
-        };
-
-        // --- ★ 匯出 Excel (CSV UTF-8 BOM) 報表 ★ ---
-        window.exportHistoryToExcel = () => {
-            if (!window.currentFilteredRecords || window.currentFilteredRecords.length === 0) {
-                window.showMsg("沒有資料可匯出", "warning");
-                return;
-            }
-
-            let csvContent = "\uFEFF"; 
-            csvContent += "年度,季度,區域,店別,員工編號,員工姓名,職稱,第一個月訪談,第一個月回饋,第二個月訪談,第二個月回饋,第三個月訪談,第三個月回饋\n";
-
-            window.currentFilteredRecords.forEach(r => {
-                const escapeCSV = (str) => {
-                    if (str == null) return '""';
-                    return '"' + String(str).replace(/"/g, '""').replace(/\n/g, '  ') + '"';
-                };
-                
-                const row = [
-                    r.year,
-                    r.quarter,
-                    r.area,
-                    r.store,
-                    r.empId,
-                    r.empName,
-                    r.empTitle,
-                    r.months && r.months[0] ? r.months[0].visitContent : '',
-                    r.months && r.months[0] ? r.months[0].empFeedback : '',
-                    r.months && r.months[1] ? r.months[1].visitContent : '',
-                    r.months && r.months[1] ? r.months[1].empFeedback : '',
-                    r.months && r.months[2] ? r.months[2].visitContent : '',
-                    r.months && r.months[2] ? r.months[2].empFeedback : '',
-                ].map(escapeCSV).join(",");
-                
-                csvContent += row + "\n";
-            });
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", `訪談歷史紀錄報表_${new Date().getTime()}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.showMsg("✅ Excel 報表匯出成功！", "success");
         };
 
         // --- 其他員工操作 ---
@@ -1055,33 +864,84 @@
             e.preventDefault();
             const id = document.getElementById('newId').value.trim(), name = document.getElementById('newName').value.trim(), title = document.getElementById('newTitle').value.trim();
             if(employees.some(emp => emp.id === id)) return window.showMsg("❌ 編號重複", "error");
-            const newEmp = { id, name, title, storeId: STORE_ID };
-            
+            const newEmp = { id, name, title, storeId: STORE_ID, isHidden: false };
             try {
-                await setDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'employees', `${STORE_ID}_${id}`), newEmp);
+                await setDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'employees', `${STORE_ID}_${id}`), newEmp);
                 window.showMsg("🎉 員工新增成功", "success");
                 document.getElementById('newId').value = ""; document.getElementById('newName').value = ""; document.getElementById('newTitle').value = "";
             } catch(err) { window.showErrorModal("新增失敗", "無法寫入員工資料。", err.message); }
         };
 
+        window.toggleEmployeeStatus = async (id) => {
+            const emp = employees.find(e => e.id === id);
+            if(!emp) return;
+            try {
+                await setDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'employees', `${STORE_ID}_${id}`), { ...emp, isHidden: !emp.isHidden });
+                window.showMsg("狀態切換成功", "success");
+            } catch(err) {
+                window.showErrorModal("更新失敗", "無法更改狀態", err.message);
+            }
+        };
+
         function renderEmployeeBrief() {
             const div = document.getElementById('empListBrief'); div.innerHTML = "";
-            getSortedEmployees().forEach(e => {
-                const s = document.createElement('span'); s.className = "bg-white border rounded px-2 py-1 cursor-pointer text-xs hover:bg-indigo-50 font-medium shadow-sm transition"; s.innerText = `${e.id}: ${e.name}`;
-                s.onclick = () => { window.handleEmpSelect(e.id); document.getElementById('empSelectInline').value = e.id; };
-                div.appendChild(s);
+            
+            const today = new Date();
+            const curY = today.getFullYear() - 1911;
+            const curM = today.getMonth() + 1;
+            const curQ = Math.ceil(curM / 3);
+            const mIdx = (curM - 1) % 3;
+
+            const doneList = [];
+            const notDoneList = [];
+
+            getSortedEmployees(false).forEach(e => {
+                const rec = loadedRecords.find(r => r.empId === e.id && parseInt(r.year) === curY && parseInt(r.quarter) === curQ);
+                let isDone = false;
+                if (rec && rec.months && rec.months[mIdx]) {
+                    const charCount = (rec.months[mIdx].visitContent + rec.months[mIdx].empFeedback).replace(/[^\u4E00-\u9FA5]/g, '').length;
+                    if (charCount >= 20) isDone = true;
+                }
+
+                const elHtml = `<span class="bg-white border rounded px-1.5 py-1 cursor-pointer hover:bg-indigo-50 font-medium shadow-sm transition" onclick="window.handleEmpSelect('${e.id}'); document.getElementById('empSelectInline').value = '${e.id}'; window.currentLoadedRecordId = null;">${e.name}</span>`;
+                
+                if (isDone) doneList.push(elHtml);
+                else notDoneList.push(elHtml);
             });
+
+            div.innerHTML = `
+                <div class="mb-2">
+                    <div class="font-bold text-green-800 bg-green-100 px-2 py-0.5 rounded text-[11px] inline-block mb-1 border border-green-200">系統當月 (${curM}月) 已達標訪談: ${doneList.length} 人</div>
+                    <div class="flex flex-wrap gap-1.5">${doneList.join('')}</div>
+                </div>
+                <div class="border-t pt-1.5 border-dashed">
+                    <div class="font-bold text-red-800 bg-red-100 px-2 py-0.5 rounded text-[11px] inline-block mb-1 border border-red-200">系統當月 (${curM}月) 未達標/未訪: ${notDoneList.length} 人</div>
+                    <div class="flex flex-wrap gap-1.5">${notDoneList.join('')}</div>
+                </div>
+            `;
         }
+
         function renderEmployeeTable() {
             const tbody = document.getElementById('empTableBody'); tbody.innerHTML = "";
-            getSortedEmployees().forEach(e => {
-                tbody.innerHTML += `<tr class="border-b"><td class="p-2">${e.id}</td><td class="p-2">${e.name}</td><td class="p-2">${e.title||''}</td><td class="p-2 text-center">
-                <button onclick="requestDelete('employee', '${e.id}')" class="text-red-500 font-bold hover:text-red-700 bg-red-50 px-2 py-1 rounded">刪除</button></td></tr>`;
+            getSortedEmployees(true).forEach(e => {
+                const statusText = e.isHidden ? '<span class="text-red-500 font-bold">隱藏(離職)</span>' : '<span class="text-green-600 font-bold">正常</span>';
+                const toggleBtnText = e.isHidden ? '設為正常' : '設為離職';
+                
+                tbody.innerHTML += `<tr class="border-b">
+                    <td class="p-2">${e.id}</td>
+                    <td class="p-2">${e.name}</td>
+                    <td class="p-2 text-center">${statusText}</td>
+                    <td class="p-2 text-center">
+                        <button onclick="toggleEmployeeStatus('${e.id}')" class="text-blue-700 font-bold hover:text-blue-900 bg-blue-50 px-2 py-1 rounded text-[10px] mr-1 border border-blue-200">${toggleBtnText}</button>
+                        <button onclick="requestDelete('employee', '${e.id}')" class="text-red-600 font-bold hover:text-red-800 bg-red-50 px-2 py-1 rounded text-[10px] border border-red-200">刪除</button>
+                    </td>
+                </tr>`;
             });
         }
+        
         function updateEmpSelectInlineDropdown() {
             const sel = document.getElementById('empSelectInline'); const val = sel.value; sel.innerHTML = '<option value="">快速選擇...</option>';
-            getSortedEmployees().forEach(e => sel.innerHTML += `<option value="${e.id}">${e.id} - ${e.name}</option>`);
+            getSortedEmployees(false).forEach(e => sel.innerHTML += `<option value="${e.id}">${e.id} - ${e.name}</option>`);
             sel.value = val;
         }
 
@@ -1102,7 +962,6 @@
             if(queryVal !== "") allRecs = allRecs.filter(r => (r.empName && r.empName.toLowerCase().includes(queryVal)) || (r.empId && r.empId.toLowerCase().includes(queryVal)) || (r.year && String(r.year).includes(queryVal)));
 
             document.getElementById('historyTotalCount').innerText = allRecs.length;
-            window.currentFilteredRecords = allRecs;
 
             if(allRecs.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">查無對應紀錄</td></tr>`; return; }
             
@@ -1110,8 +969,8 @@
             allRecs.forEach(r => {
                 const badge = r.off ? `<span class="ml-1 text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">本機</span>` : `<span class="ml-1 text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">雲端</span>`;
                 tbody.innerHTML += `<tr class="border-b hover:bg-slate-50 transition"><td class="p-3">${r.year}年 Q${r.quarter}</td><td class="p-3 font-bold text-indigo-700">${r.empName} (${r.empId}) ${badge}</td><td class="p-3 text-gray-500">${r.store}</td>
-                <td class="p-3 text-center flex justify-center"><button onclick="loadSelectedRecord('${r.id}', ${r.off})" class="bg-indigo-50 text-indigo-600 font-bold hover:bg-indigo-100 py-1 px-3 rounded-lg mr-2 transition">載入</button>
-                <button onclick="requestDelete('record', '${r.id}', ${r.off})" class="bg-red-50 text-red-600 font-bold hover:bg-red-100 py-1 px-3 rounded-lg transition">刪除</button></td></tr>`;
+                <td class="p-3 text-center flex justify-center"><button onclick="loadSelectedRecord('${r.id}', ${r.off})" class="bg-indigo-50 text-indigo-600 font-bold hover:bg-indigo-100 py-1 px-3 rounded-lg mr-2 transition border border-indigo-200 shadow-sm">載入</button>
+                <button onclick="requestDelete('record', '${r.id}', ${r.off})" class="bg-red-50 text-red-600 font-bold hover:bg-red-100 py-1 px-3 rounded-lg transition border border-red-200 shadow-sm">刪除</button></td></tr>`;
             });
         };
 
@@ -1133,6 +992,7 @@
                 document.getElementById(`sigSelect${i}`).value = target.selectedSigIds[i-1] || "";
                 window.applySavedSignatureToCanvas(i, target.selectedSigIds[i-1]);
             });
+            window.currentLoadedRecordId = id; // 更新防覆寫金鑰
             window.toggleHistoryModal(false); window.showMsg("📂 載入成功！", "success");
         };
 
@@ -1169,7 +1029,7 @@
             
             const id = 'sig_'+Date.now();
             try {
-                await setDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'signatures', id), { id, name, imageData: url });
+                await setDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'signatures', id), { id, name, imageData: url });
                 document.getElementById('newSigName').value = ""; window.clearManagerSigCanvas(); 
                 window.showSuccessModal("簽名檔錄入成功", `🎉 主管「${name}」的電子簽章已安全存入雲端！`);
             } catch (err) {
@@ -1185,7 +1045,7 @@
                 list.innerHTML += `
                 <div class="flex-shrink-0 bg-white border border-slate-200 rounded-lg p-2 flex items-center gap-2 h-14 md:h-16 shadow-sm">
                     <div class="text-xs font-bold text-slate-700">${sig.name}</div>
-                    <img src="${sig.imageData}" class="h-8 md:h-10 border bg-slate-50 rounded" alt="簽名">
+                    <img src="${sig.imageData}" class="h-8 md:h-10 border bg-slate-50 rounded object-contain" alt="簽名">
                     <button onclick="requestDelete('signature', '${sig.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 rounded-full w-6 h-6 flex items-center justify-center transition active:scale-95 border border-red-100">✕</button>
                 </div>`;
             });
