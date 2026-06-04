@@ -110,6 +110,12 @@
                 </div>
             </h3>
 
+            <!-- 👑 主管當月訪談統計區塊 -->
+            <div id="supervisorStatsContainer" class="flex flex-wrap items-center gap-2 mb-3 hidden bg-white p-2 rounded border border-indigo-100 shadow-sm">
+                <span class="text-xs font-bold text-slate-500 ml-1">👑 主管當月完成數：</span>
+                <div id="supervisorBadges" class="flex flex-wrap gap-2"></div>
+            </div>
+
             <!-- 載入中動畫 UI (預設顯示) -->
             <div id="empLoadingState" class="flex flex-col items-center justify-center p-8 text-indigo-600">
                 <svg class="animate-spin h-10 w-10 mb-3 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -521,6 +527,7 @@
         // 載入狀態控制旗標
         let isEmployeesLoaded = false;
         let isRecordsLoaded = false;
+        let isSignaturesLoaded = false;
 
         const STORE_ID = "store_zhongqing";
         const STORE_NAME = "中清行館";
@@ -813,9 +820,9 @@
             onAuthStateChanged(auth, (u) => { user = u; if(u) initCloudListeners(); });
         });
 
-        // 檢查雙數據是否載入完成，切換 UI 顯示
+        // 檢查三數據是否載入完成，切換 UI 顯示
         function checkAndRenderDataState() {
-            if (isEmployeesLoaded && isRecordsLoaded) {
+            if (isEmployeesLoaded && isRecordsLoaded && isSignaturesLoaded) {
                 document.getElementById('empLoadingState').classList.add('hidden');
                 document.getElementById('empDataContainer').classList.remove('hidden');
                 document.getElementById('empDataContainer').classList.add('grid');
@@ -853,7 +860,11 @@
             );
             onSnapshot(collection(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'signatures'), 
                 s => { 
-                    savedSignatures = s.docs.map(d => d.data()); updateMonthlySigSelectors(); renderSigManagerList();
+                    savedSignatures = s.docs.map(d => d.data()); 
+                    isSignaturesLoaded = true;
+                    updateMonthlySigSelectors(); 
+                    renderSigManagerList();
+                    checkAndRenderDataState();
                 },
                 err => {
                     console.error("Error fetching signatures:", err);
@@ -936,7 +947,7 @@
             }
         };
 
-        // 高效渲染雲端員工資料庫狀態 (O(1) Map Lookup)
+        // 高效渲染雲端員工資料庫狀態與主管統計
         function renderEmployeeBrief() {
             const doneDiv = document.getElementById('empListDone');
             const notDoneDiv = document.getElementById('empListNotDone');
@@ -950,6 +961,7 @@
 
             const doneList = [];
             const notDoneList = [];
+            const sigCountMap = {}; // 用於統計當月各簽名檔完成的份數
 
             // 預先建立 O(1) 查詢 Map，加快處理速度
             const curQRecordsMap = new Map();
@@ -962,9 +974,16 @@
             getSortedEmployees(false).forEach(e => {
                 const rec = curQRecordsMap.get(e.id);
                 let isDone = false;
+                let usedSigId = null;
+
                 if (rec && rec.months && rec.months[mIdx]) {
                     const charCount = (rec.months[mIdx].visitContent + rec.months[mIdx].empFeedback).replace(/[^\u4E00-\u9FA5]/g, '').length;
-                    if (charCount >= 20) isDone = true;
+                    if (charCount >= 20) {
+                        isDone = true;
+                        if (rec.selectedSigIds && rec.selectedSigIds[mIdx]) {
+                            usedSigId = rec.selectedSigIds[mIdx];
+                        }
+                    }
                 }
 
                 const elHtml = document.createElement('span');
@@ -975,16 +994,51 @@
                     window.currentLoadedRecordId = null; 
                 };
                 
-                if (isDone) doneList.push(elHtml);
-                else notDoneList.push(elHtml);
+                if (isDone) {
+                    doneList.push(elHtml);
+                    if (usedSigId) {
+                        sigCountMap[usedSigId] = (sigCountMap[usedSigId] || 0) + 1;
+                    }
+                } else {
+                    notDoneList.push(elHtml);
+                }
             });
 
-            // 更新 DOM 與數量
+            // 更新員工狀態 DOM 與數量
             doneList.forEach(el => doneDiv.appendChild(el));
             notDoneList.forEach(el => notDoneDiv.appendChild(el));
-            
             document.getElementById('titleNotDone').innerText = `❌ 未訪談 (${notDoneList.length}人)`;
             document.getElementById('titleDone').innerText = `✅ 已訪談 (${doneList.length}人)`;
+
+            // --- 渲染主管美化統計框架 ---
+            const supervisorStatsContainer = document.getElementById('supervisorStatsContainer');
+            const supervisorBadges = document.getElementById('supervisorBadges');
+            supervisorBadges.innerHTML = '';
+            let hasSupervisorStats = false;
+
+            savedSignatures.forEach(sig => {
+                const count = sigCountMap[sig.id] || 0;
+                if (count > 0) {
+                    hasSupervisorStats = true;
+                    const badge = document.createElement('div');
+                    // 美化的漸層背景與圓角框架
+                    badge.className = 'flex items-center bg-gradient-to-r from-blue-50 to-indigo-100 border border-indigo-200 rounded-full pl-2 pr-1 py-1 shadow-sm transition-transform hover:scale-105';
+                    badge.innerHTML = `
+                        <span class="text-indigo-800 font-bold text-xs mr-2 flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"></path></svg>
+                            ${sig.name}
+                        </span>
+                        <span class="bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-inner">${count} 人</span>
+                    `;
+                    supervisorBadges.appendChild(badge);
+                }
+            });
+
+            if (hasSupervisorStats) {
+                supervisorStatsContainer.classList.remove('hidden');
+            } else {
+                supervisorStatsContainer.classList.add('hidden');
+            }
         }
 
         function renderEmployeeTable() {
