@@ -102,14 +102,25 @@
 
         <div class="mb-4 bg-gray-50 p-3 rounded-lg border">
             <h3 class="text-sm font-bold text-gray-700 mb-3 flex flex-wrap items-center justify-between border-b pb-2 gap-2">
-                <span>👥 雲端員工資料庫進度 (<span id="currentMonthDisplay">當月</span>月)</span>
+                <span id="empDatabaseTitle">👥 雲端員工資料庫進度</span>
                 <div class="flex gap-2">
                     <button onclick="toggleSigManagerModal(true)" class="text-xs text-blue-600 font-bold hover:underline border border-blue-200 bg-blue-50 px-2 py-1 rounded transition hover:bg-blue-100">✍️ 管理簽名檔</button>
                     <button onclick="toggleRosterModal(true)" class="text-xs text-indigo-600 font-bold hover:underline border border-indigo-200 bg-indigo-50 px-2 py-1 rounded transition hover:bg-indigo-100">📋 名單比對表</button>
                     <button onclick="toggleEmpModal(true)" class="text-xs text-green-600 font-bold hover:underline border border-green-200 bg-green-50 px-2 py-1 rounded transition hover:bg-green-100">+ 編輯員工</button>
                 </div>
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <!-- 載入中動畫 UI (預設顯示) -->
+            <div id="empLoadingState" class="flex flex-col items-center justify-center p-8 text-indigo-600">
+                <svg class="animate-spin h-10 w-10 mb-3 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-sm font-bold animate-pulse text-gray-600 tracking-wider">即時資料同步計算中...</span>
+            </div>
+
+            <!-- 資料顯示 UI (預設隱藏) -->
+            <div id="empDataContainer" class="hidden grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="border border-red-200 rounded bg-white p-2 shadow-sm relative">
                     <div class="font-bold text-red-800 bg-red-50 px-2 py-1.5 rounded text-xs mb-2 border-l-4 border-red-500 shadow-sm" id="titleNotDone">❌ 未訪談</div>
                     <div id="empListNotDone" class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto"></div>
@@ -163,8 +174,10 @@
                 <table class="print-table text-sm">
                     <thead>
                         <tr>
-                            <th class="w-[12%] text-center bg-gray-50 font-bold p-2">姓名</th>
-                            <td class="w-[20%] p-0"><input type="text" id="empName" class="input-flat text-center font-bold text-lg" placeholder="選取或輸入"></td>
+                            <th class="w-[12%] text-center bg-gray-50 font-bold p-2">
+                                <div>姓名</div>
+                            </th>
+                            <td class="w-[20%] p-0"><input type="text" id="empName" class="input-flat text-center font-bold text-lg" placeholder="請先點擊上方員工"></td>
                             <th class="w-[14%] text-center bg-gray-50 font-bold p-2">編號</th>
                             <td class="w-[18%] p-0"><input type="text" id="empId" oninput="handleIdInput(); window.currentLoadedRecordId = null;" class="input-flat text-center font-bold text-lg" placeholder="輸入編號"></td>
                             <td class="w-[11%] p-0"><input type="text" id="extraCol" class="input-flat text-center font-bold text-lg" placeholder="備註"></td>
@@ -450,7 +463,7 @@
                 <svg class="h-10 w-10 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             </div>
             <h3 class="text-xl font-bold text-gray-900 mb-2" id="warningModalTitle">系統提示</h3>
-            <p class="text-sm text-gray-500 mb-6 leading-relaxed" id="warningModalMsg">請確認相關資訊。</p>
+            <p class="text-sm text-gray-500 mb-6 leading-relaxed whitespace-pre-line" id="warningModalMsg">請確認相關資訊。</p>
             <button onclick="closeWarningModal()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all duration-200 active:scale-98">我知道了</button>
         </div>
     </div>
@@ -504,6 +517,10 @@
         window.currentHistoryQuarterFilter = 'ALL';
         window.currentLoadedRecordId = null; // 防覆寫機制
         window.currentEmpTab = 'active'; // 預設員工分頁
+        
+        // 載入狀態控制旗標
+        let isEmployeesLoaded = false;
+        let isRecordsLoaded = false;
 
         const STORE_ID = "store_zhongqing";
         const STORE_NAME = "中清行館";
@@ -522,12 +539,12 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // 初始化匯出年份與月份區間
+        // 初始化匯出年份與月份區間與標題
         const todayRealDate = new Date();
         document.getElementById('exportYear').value = todayRealDate.getFullYear() - 1911;
         document.getElementById('exportMonthStart').value = todayRealDate.getMonth() + 1;
         document.getElementById('exportMonthEnd').value = todayRealDate.getMonth() + 1;
-        document.getElementById('currentMonthDisplay').innerText = todayRealDate.getMonth() + 1;
+        document.getElementById('empDatabaseTitle').innerText = `👥 雲端員工資料庫進度 (${todayRealDate.getMonth() + 1}月)`;
 
         // --- 全域 Toast ---
         window.showMsg = (text, type="info") => {
@@ -703,15 +720,7 @@
 
         window.switchEmpTab = (tab) => {
             window.currentEmpTab = tab;
-            const activeCount = employees.filter(e => !e.isHidden).length;
-            const resignedCount = employees.filter(e => e.isHidden).length;
-            
-            document.getElementById('tabActive').innerText = `正常員工 (${activeCount})`;
-            document.getElementById('tabResigned').innerText = `離職員工 (${resignedCount})`;
-
-            document.getElementById('tabActive').className = tab === 'active' ? "px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 focus:outline-none transition-colors" : "px-4 py-2 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 focus:outline-none transition-colors";
-            document.getElementById('tabResigned').className = tab === 'resigned' ? "px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 focus:outline-none transition-colors" : "px-4 py-2 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 focus:outline-none transition-colors";
-            renderEmployeeTable();
+            renderEmployeeTable(); // 重新渲染表格，按鈕的 active 狀態會在 renderEmployeeTable 中更新人數時一起更新
         };
 
         window.setHistoryQuarterFilter = (q, btnElement) => {
@@ -791,10 +800,8 @@
                 document.getElementById('syncStatusText').innerText = "雲端連線成功";
                 document.getElementById('syncStatusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-green-500";
                 
-                // --- ADDED FALLBACK GETDOC FOR INITIALIZATION ---
                 try {
-                    const empSnapshot = await getDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'employees', 'dummy'));
-                    // We just need a read to trigger auth rule evaluation if any
+                    await getDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'employees', 'dummy'));
                 } catch(e) {
                     console.log("Initial read test failed, but auth succeeded.", e);
                 }
@@ -806,13 +813,25 @@
             onAuthStateChanged(auth, (u) => { user = u; if(u) initCloudListeners(); });
         });
 
+        // 檢查雙數據是否載入完成，切換 UI 顯示
+        function checkAndRenderDataState() {
+            if (isEmployeesLoaded && isRecordsLoaded) {
+                document.getElementById('empLoadingState').classList.add('hidden');
+                document.getElementById('empDataContainer').classList.remove('hidden');
+                document.getElementById('empDataContainer').classList.add('grid');
+                renderEmployeeBrief();
+            }
+        }
+
         function initCloudListeners() {
             if(!db || !user) return;
             
-            // Add error callbacks to onSnapshot to catch connection issues
             onSnapshot(collection(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'employees'), 
                 s => {
-                    employees = s.docs.map(d => d.data()); updateEmpTabCounts(); renderEmployeeBrief(); if(!document.getElementById('rosterModal').classList.contains('hidden')) renderRosterTable();
+                    employees = s.docs.map(d => d.data()); 
+                    isEmployeesLoaded = true;
+                    checkAndRenderDataState();
+                    if(!document.getElementById('rosterModal').classList.contains('hidden')) renderRosterTable();
                     if(!document.getElementById('empModal').classList.contains('hidden')) renderEmployeeTable();
                 },
                 err => {
@@ -822,7 +841,9 @@
             );
             onSnapshot(collection(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'records'), 
                 s => { 
-                    loadedRecords = s.docs.map(d => d.data()); renderEmployeeBrief();
+                    loadedRecords = s.docs.map(d => d.data()); 
+                    isRecordsLoaded = true;
+                    checkAndRenderDataState();
                     if(!document.getElementById('historyModal').classList.contains('hidden')) window.filterHistoryList();
                 },
                 err => {
@@ -860,7 +881,7 @@
 
             // 防覆寫機制: 若已在雲端建檔，且尚未被 Load，則阻擋
             if (loadedRecords.some(r => r.id === recordId) && window.currentLoadedRecordId !== recordId) {
-                return window.showWarningModal("資料已存在防覆寫", `該員工 (${empName}) 本季資料已經在雲端建檔過了。\n\n請先從「歷史紀錄列表」載入該筆資料，然後再進行編輯與儲存，避免覆蓋掉原有資料！\n\n(若您確定要輸入新資料，請先清空上方姓名與編號欄位再重新輸入)`);
+                return window.showWarningModal("資料已存在防覆寫", `該員工 (${empName}) 本季資料已經在雲端建檔過了。\n\n請先從「歷史紀錄列表」載入該筆資料，然後再進行編輯與儲存。\n\n若您確定要輸入全新資料，請先清空姓名與編號欄位避免覆寫！`);
             }
 
             const payload = {
@@ -915,15 +936,7 @@
             }
         };
 
-        function updateEmpTabCounts() {
-            const activeCount = employees.filter(e => !e.isHidden).length;
-            const resignedCount = employees.filter(e => e.isHidden).length;
-            const tabActive = document.getElementById('tabActive');
-            const tabResigned = document.getElementById('tabResigned');
-            if (tabActive) tabActive.innerText = `正常員工 (${activeCount})`;
-            if (tabResigned) tabResigned.innerText = `離職員工 (${resignedCount})`;
-        }
-
+        // 高效渲染雲端員工資料庫狀態 (O(1) Map Lookup)
         function renderEmployeeBrief() {
             const doneDiv = document.getElementById('empListDone');
             const notDoneDiv = document.getElementById('empListNotDone');
@@ -935,11 +948,19 @@
             const curQ = Math.ceil(curM / 3);
             const mIdx = (curM - 1) % 3;
 
-            let doneCount = 0;
-            let notDoneCount = 0;
+            const doneList = [];
+            const notDoneList = [];
+
+            // 預先建立 O(1) 查詢 Map，加快處理速度
+            const curQRecordsMap = new Map();
+            loadedRecords.forEach(r => {
+                if (parseInt(r.year) === curY && parseInt(r.quarter) === curQ) {
+                    curQRecordsMap.set(r.empId, r);
+                }
+            });
 
             getSortedEmployees(false).forEach(e => {
-                const rec = loadedRecords.find(r => r.empId === e.id && parseInt(r.year) === curY && parseInt(r.quarter) === curQ);
+                const rec = curQRecordsMap.get(e.id);
                 let isDone = false;
                 if (rec && rec.months && rec.months[mIdx]) {
                     const charCount = (rec.months[mIdx].visitContent + rec.months[mIdx].empFeedback).replace(/[^\u4E00-\u9FA5]/g, '').length;
@@ -947,30 +968,45 @@
                 }
 
                 const elHtml = document.createElement('span');
-                // 加入員工編號顯示
-                elHtml.className = `border rounded px-2 py-1 cursor-pointer hover:opacity-80 font-bold shadow-sm transition text-xs ${isDone ? 'bg-green-100 text-green-800 border-green-300' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`;
+                elHtml.className = `border rounded px-2 py-1 cursor-pointer hover:opacity-80 font-bold shadow-sm transition text-xs flex-shrink-0 ${isDone ? 'bg-green-100 text-green-800 border-green-300' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`;
                 elHtml.innerText = `${e.id} ${e.name}`;
                 elHtml.onclick = () => { 
                     window.handleEmpSelect(e.id); 
                     window.currentLoadedRecordId = null; 
                 };
                 
-                if (isDone) {
-                    doneDiv.appendChild(elHtml);
-                    doneCount++;
-                } else {
-                    notDoneDiv.appendChild(elHtml);
-                    notDoneCount++;
-                }
+                if (isDone) doneList.push(elHtml);
+                else notDoneList.push(elHtml);
             });
 
-            document.getElementById('titleNotDone').innerText = `❌ 未訪談 (${notDoneCount}人)`;
-            document.getElementById('titleDone').innerText = `✅ 已訪談 (${doneCount}人)`;
+            // 更新 DOM 與數量
+            doneList.forEach(el => doneDiv.appendChild(el));
+            notDoneList.forEach(el => notDoneDiv.appendChild(el));
+            
+            document.getElementById('titleNotDone').innerText = `❌ 未訪談 (${notDoneList.length}人)`;
+            document.getElementById('titleDone').innerText = `✅ 已訪談 (${doneList.length}人)`;
         }
 
         function renderEmployeeTable() {
             const tbody = document.getElementById('empTableBody'); tbody.innerHTML = "";
             const isHiddenTab = window.currentEmpTab === 'resigned';
+            
+            // 計算正常與離職員工總數
+            let activeCount = 0;
+            let resignedCount = 0;
+            employees.forEach(e => {
+                if (e.isHidden) resignedCount++;
+                else activeCount++;
+            });
+
+            // 更新分頁按鈕文字狀態
+            document.getElementById('tabActive').innerText = `正常員工 (${activeCount})`;
+            document.getElementById('tabActive').className = window.currentEmpTab === 'active' ? "px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 focus:outline-none transition-colors" : "px-4 py-2 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 focus:outline-none transition-colors";
+            
+            document.getElementById('tabResigned').innerText = `離職員工 (${resignedCount})`;
+            document.getElementById('tabResigned').className = window.currentEmpTab === 'resigned' ? "px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 focus:outline-none transition-colors" : "px-4 py-2 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 focus:outline-none transition-colors";
+
+
             const emps = getSortedEmployees(true).filter(e => isHiddenTab ? e.isHidden : !e.isHidden);
 
             if (emps.length === 0) {
@@ -993,7 +1029,7 @@
                 </tr>`;
             });
         }
-        
+
         window.filterHistoryList = () => {
             const queryVal = document.getElementById('historySearch').value.toLowerCase().trim();
             const tbody = document.getElementById('historyTableBody'); tbody.innerHTML = "";
