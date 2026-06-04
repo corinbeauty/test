@@ -102,7 +102,7 @@
 
         <div class="mb-4 bg-gray-50 p-3 rounded-lg border">
             <h3 class="text-sm font-bold text-gray-700 mb-3 flex flex-wrap items-center justify-between border-b pb-2 gap-2">
-                <span id="empDatabaseTitle">👥 當季雲端資料庫進度</span>
+                <span id="empDatabaseTitle">👥 當月雲端資料庫進度</span>
                 <div class="flex gap-2">
                     <button onclick="toggleSigManagerModal(true)" class="text-xs text-blue-600 font-bold hover:underline border border-blue-200 bg-blue-50 px-2 py-1 rounded transition hover:bg-blue-100">✍️ 管理簽名檔</button>
                     <button onclick="toggleRosterModal(true)" class="text-xs text-indigo-600 font-bold hover:underline border border-indigo-200 bg-indigo-50 px-2 py-1 rounded transition hover:bg-indigo-100">📋 名單比對表</button>
@@ -110,9 +110,9 @@
                 </div>
             </h3>
 
-            <!-- 👑 主管當季訪談統計區塊 -->
+            <!-- 👑 主管當月訪談統計區塊 -->
             <div id="supervisorStatsContainer" class="flex flex-wrap items-center gap-2 mb-3 hidden bg-white p-2 rounded border border-indigo-100 shadow-sm">
-                <span class="text-xs font-bold text-slate-500 ml-1">👑 主管當季完成數：</span>
+                <span id="supervisorStatsTitle" class="text-xs font-bold text-slate-500 ml-1">👑 主管當月完成數：</span>
                 <div id="supervisorBadges" class="flex flex-wrap gap-2"></div>
             </div>
 
@@ -999,18 +999,25 @@
             const notDoneDiv = document.getElementById('empListNotDone');
             doneDiv.innerHTML = ""; notDoneDiv.innerHTML = "";
             
-            // 根據介面當前選擇來決定季度/年度
-            const curY = parseInt(document.getElementById('yearInput').value) || 115;
-            const curQ = parseInt(document.getElementById('quarterSelect').value) || 2;
+            // 強制抓取「現實真實當月」作為儀表板的基準
+            const today = new Date();
+            const realY = today.getFullYear() - 1911;
+            const realM = today.getMonth() + 1;
+            const realQ = Math.ceil(realM / 3);
+            const mIdx = (realM - 1) % 3;
+
+            document.getElementById('empDatabaseTitle').innerText = `👥 雲端資料庫進度 (${realM}月當月)`;
+            const supervisorStatsTitle = document.getElementById('supervisorStatsTitle');
+            if(supervisorStatsTitle) supervisorStatsTitle.innerText = `👑 主管當月完成數：`;
 
             const doneList = [];
             const notDoneList = [];
-            const sigCountMap = {}; // 用於統計當季各簽名檔完成的份數
+            const sigCountMap = {}; // 用於統計當月各簽名檔完成的份數
 
             // 預先建立 O(1) 查詢 Map，加快處理速度
             const curQRecordsMap = new Map();
             loadedRecords.forEach(r => {
-                if (parseInt(r.year) === curY && parseInt(r.quarter) === curQ) {
+                if (parseInt(r.year) === realY && parseInt(r.quarter) === realQ) {
                     curQRecordsMap.set(r.empId, r);
                 }
             });
@@ -1020,16 +1027,12 @@
                 let isDone = false;
                 let usedSigId = null;
 
-                if (rec && rec.months) {
-                    for (let i = 0; i < 3; i++) {
-                        if (rec.months[i]) {
-                            const charCount = (rec.months[i].visitContent + rec.months[i].empFeedback).replace(/[^\u4E00-\u9FA5]/g, '').length;
-                            if (charCount >= 20) {
-                                isDone = true;
-                                if (rec.selectedSigIds && rec.selectedSigIds[i]) {
-                                    usedSigId = rec.selectedSigIds[i]; // 取最後一筆有效的簽名ID作為統計
-                                }
-                            }
+                if (rec && rec.months && rec.months[mIdx]) {
+                    const charCount = (rec.months[mIdx].visitContent + rec.months[mIdx].empFeedback).replace(/[^\u4E00-\u9FA5]/g, '').length;
+                    if (charCount >= 20) {
+                        isDone = true;
+                        if (rec.selectedSigIds && rec.selectedSigIds[mIdx]) {
+                            usedSigId = rec.selectedSigIds[mIdx];
                         }
                     }
                 }
@@ -1038,9 +1041,14 @@
                 elHtml.className = `border rounded px-2 py-1 cursor-pointer hover:opacity-80 font-bold shadow-sm transition text-xs flex-shrink-0 ${isDone ? 'bg-green-100 text-green-800 border-green-300' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`;
                 elHtml.innerText = `${e.id} ${e.name}`;
                 
-                // 點擊直接載入該季度資料 或 清空準備新增
+                // 點擊直接載入真實當季資料 或 清空準備新增
                 elHtml.onclick = () => { 
-                    const recordId = `${STORE_ID}_${curY}_Q${curQ}_${e.id}`;
+                    // 自動切換 UI 上的年度與季度為「真實當月」所在的季度
+                    document.getElementById('yearInput').value = realY;
+                    document.getElementById('quarterSelect').value = realQ;
+                    window.updateQuarterLayout();
+
+                    const recordId = `${STORE_ID}_${realY}_Q${realQ}_${e.id}`;
                     const cloudRec = loadedRecords.find(r => r.id === recordId);
                     let offRec = null;
                     try { offRec = JSON.parse(localStorage.getItem(`offline_record_${recordId}`)); } catch(err){}
@@ -1064,7 +1072,7 @@
                             window.applySavedSignatureToCanvas(idx, "");
                         });
                         document.getElementById('extraCol').value = "";
-                        window.showMsg(`載入空白表單: ${e.name}`, "info");
+                        window.showMsg(`載入空白表單: ${e.name} (切換至 ${realM}月所在季度)`, "info");
                     }
                 };
                 
