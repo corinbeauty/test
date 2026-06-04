@@ -75,7 +75,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">選擇季度</label>
-                <select id="quarterSelect" onchange="updateQuarterLayout(); window.currentLoadedRecordId = null; if(!document.getElementById('rosterModal').classList.contains('hidden')){renderRosterTable();}" class="w-full border rounded p-2 bg-gray-50 text-gray-800 focus:ring-2 focus:ring-blue-500">
+                <select id="quarterSelect" onchange="updateQuarterLayout(); window.currentLoadedRecordId = null; if(!document.getElementById('rosterModal').classList.contains('hidden')){renderRosterTable();} renderEmployeeBrief();" class="w-full border rounded p-2 bg-gray-50 text-gray-800 focus:ring-2 focus:ring-blue-500">
                     <option value="1">第一季 (1 - 3 月)</option>
                     <option value="2" selected>第二季 (4 - 6 月)</option>
                     <option value="3">第三季 (7 - 9 月)</option>
@@ -85,7 +85,7 @@
             
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">年度 (民國)</label>
-                <input type="number" id="yearInput" value="115" class="w-full border rounded p-2 bg-gray-50 text-gray-800 focus:ring-2 focus:ring-blue-500" oninput="document.getElementById('titleYear').innerText = this.value || '   '; window.currentLoadedRecordId = null; if(!document.getElementById('rosterModal').classList.contains('hidden')){renderRosterTable();}">
+                <input type="number" id="yearInput" value="115" class="w-full border rounded p-2 bg-gray-50 text-gray-800 focus:ring-2 focus:ring-blue-500" oninput="document.getElementById('titleYear').innerText = this.value || '   '; window.currentLoadedRecordId = null; if(!document.getElementById('rosterModal').classList.contains('hidden')){renderRosterTable();} renderEmployeeBrief();">
             </div>
 
             <div class="grid grid-cols-2 gap-2 relative">
@@ -102,7 +102,7 @@
 
         <div class="mb-4 bg-gray-50 p-3 rounded-lg border">
             <h3 class="text-sm font-bold text-gray-700 mb-3 flex flex-wrap items-center justify-between border-b pb-2 gap-2">
-                <span id="empDatabaseTitle">👥 雲端員工資料庫進度</span>
+                <span id="empDatabaseTitle">👥 當季雲端資料庫進度</span>
                 <div class="flex gap-2">
                     <button onclick="toggleSigManagerModal(true)" class="text-xs text-blue-600 font-bold hover:underline border border-blue-200 bg-blue-50 px-2 py-1 rounded transition hover:bg-blue-100">✍️ 管理簽名檔</button>
                     <button onclick="toggleRosterModal(true)" class="text-xs text-indigo-600 font-bold hover:underline border border-indigo-200 bg-indigo-50 px-2 py-1 rounded transition hover:bg-indigo-100">📋 名單比對表</button>
@@ -110,9 +110,9 @@
                 </div>
             </h3>
 
-            <!-- 👑 主管當月訪談統計區塊 -->
+            <!-- 👑 主管當季訪談統計區塊 -->
             <div id="supervisorStatsContainer" class="flex flex-wrap items-center gap-2 mb-3 hidden bg-white p-2 rounded border border-indigo-100 shadow-sm">
-                <span class="text-xs font-bold text-slate-500 ml-1">👑 主管當月完成數：</span>
+                <span class="text-xs font-bold text-slate-500 ml-1">👑 主管當季完成數：</span>
                 <div id="supervisorBadges" class="flex flex-wrap gap-2"></div>
             </div>
 
@@ -165,8 +165,8 @@
                 <div class="flex justify-between items-end mb-4 w-full">
                     <div class="w-1/4"></div>
                     <div class="text-center w-2/4">
-                        <h1 class="text-xl md:text-2xl font-bold tracking-wider">
-                            休閒部門店師傅/員工 <span id="titleYear" class="border-b border-black px-4">115</span> 年度訪談紀錄
+                        <h1 class="text-xl md:text-2xl font-bold tracking-wider leading-relaxed">
+                            休閒部門店師傅/員工 <span id="titleYear" class="border-b border-black px-4">115</span> 年度<br>訪談紀錄
                         </h1>
                     </div>
                     <div class="text-right w-1/4 text-lg font-bold">(表 2)</div>
@@ -446,6 +446,21 @@
         </div>
     </div>
 
+    <!-- 狀態確認 Modal (新增) -->
+    <div id="confirmModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[160] flex items-center justify-center hidden p-4 transition-all duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center transform scale-95 opacity-0 transition-all duration-300">
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-4 shadow-inner">
+                <svg class="h-8 w-8 text-blue-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <h3 class="text-xl font-black text-gray-900 mb-2 tracking-wide" id="confirmModalTitle">確認操作</h3>
+            <p class="text-sm text-gray-500 mb-6 leading-relaxed font-medium" id="confirmModalMsg">確定要執行此操作嗎？</p>
+            <div class="flex gap-3">
+                <button onclick="closeConfirmModal()" class="flex-1 bg-white border-2 border-gray-200 hover:bg-gray-50 text-gray-700 font-bold py-3 px-4 rounded-xl text-sm transition-all active:scale-95">取消</button>
+                <button id="confirmModalBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-lg shadow-blue-600/30 active:scale-95">確定執行</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ★ 1016 機密刪除驗證密碼 Modal ★ -->
     <div id="deletePasswordModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[160] flex items-center justify-center hidden p-4 transition-all duration-300">
         <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center transform scale-95 opacity-0 transition-all duration-300">
@@ -454,7 +469,7 @@
             </div>
             <h3 class="text-xl font-black text-gray-900 mb-2 tracking-wide">機密資料刪除驗證</h3>
             <p class="text-xs text-gray-500 mb-5 leading-relaxed font-medium">刪除資料為不可逆之操作。<br>請輸入安全密碼以核實身分。</p>
-            <input type="password" id="deletePasscodeField" maxlength="4" placeholder="請輸入密碼" class="w-full text-center text-2xl tracking-[0.5em] border-2 border-gray-200 rounded-xl py-3 px-3 focus:ring-4 focus:ring-red-500/20 focus:border-red-500 focus:outline-none mb-6 font-bold bg-gray-50 text-gray-800 transition-all">
+            <input type="password" id="deletePasscodeField" maxlength="6" placeholder="請輸入密碼" class="w-full text-center text-2xl tracking-[0.5em] border-2 border-gray-200 rounded-xl py-3 px-3 focus:ring-4 focus:ring-red-500/20 focus:border-red-500 focus:outline-none mb-6 font-bold bg-gray-50 text-gray-800 transition-all">
             <div class="flex gap-3">
                 <button onclick="closeDeletePasswordModal()" class="flex-1 bg-white border-2 border-gray-200 hover:bg-gray-50 text-gray-700 font-bold py-3 px-4 rounded-xl text-sm transition-all active:scale-95">取消</button>
                 <button onclick="submitDeletePasscode()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-lg shadow-red-600/30 active:scale-95">確認刪除</button>
@@ -551,7 +566,6 @@
         document.getElementById('exportYear').value = todayRealDate.getFullYear() - 1911;
         document.getElementById('exportMonthStart').value = todayRealDate.getMonth() + 1;
         document.getElementById('exportMonthEnd').value = todayRealDate.getMonth() + 1;
-        document.getElementById('empDatabaseTitle').innerText = `👥 雲端員工資料庫進度 (${todayRealDate.getMonth() + 1}月)`;
 
         // --- 全域 Toast ---
         window.showMsg = (text, type="info") => {
@@ -617,7 +631,8 @@
 
         window.submitDeletePasscode = async () => {
             const pass = document.getElementById('deletePasscodeField').value;
-            if (pass !== '1016') {
+            // 密碼已更新為 731016
+            if (pass !== '731016') {
                 window.showMsg("❌ 安全密碼錯誤，拒絕執行！", "error");
                 return;
             }
@@ -689,6 +704,28 @@
             document.getElementById('errorModal').classList.remove('hidden');
         };
         window.closeErrorModal = () => document.getElementById('errorModal').classList.add('hidden');
+
+        // --- 確認對話框 (新增) ---
+        window.pendingConfirmAction = null;
+        window.showConfirmModal = (title, msg, onConfirm) => {
+            document.getElementById('confirmModalTitle').innerText = title;
+            document.getElementById('confirmModalMsg').innerText = msg;
+            window.pendingConfirmAction = onConfirm;
+            document.getElementById('confirmModal').classList.remove('hidden');
+            setTimeout(() => {
+                document.querySelector('#confirmModal > div').classList.remove('scale-95', 'opacity-0');
+                document.querySelector('#confirmModal > div').classList.add('scale-100', 'opacity-100');
+            }, 10);
+        };
+        window.closeConfirmModal = () => {
+            document.querySelector('#confirmModal > div').classList.remove('scale-100', 'opacity-100');
+            document.querySelector('#confirmModal > div').classList.add('scale-95', 'opacity-0');
+            setTimeout(() => document.getElementById('confirmModal').classList.add('hidden'), 300);
+        };
+        document.getElementById('confirmModalBtn').onclick = () => {
+            if(window.pendingConfirmAction) window.pendingConfirmAction();
+            window.closeConfirmModal();
+        };
 
         // --- Modals 控制 ---
         window.toggleRosterModal = (show) => { document.getElementById('rosterModal').classList[show ? 'remove' : 'add']('hidden'); if(show) renderRosterTable(); };
@@ -947,21 +984,28 @@
             }
         };
 
+        window.confirmToggleEmployeeStatus = (id, isHidden) => {
+            const actionText = isHidden ? "設為正常" : "設為離職";
+            window.showConfirmModal(
+                "變更員工狀態",
+                `確定要將該員工狀態變更為「${actionText}」嗎？`,
+                () => window.toggleEmployeeStatus(id)
+            );
+        };
+
         // 高效渲染雲端員工資料庫狀態與主管統計
-        function renderEmployeeBrief() {
+        window.renderEmployeeBrief = () => {
             const doneDiv = document.getElementById('empListDone');
             const notDoneDiv = document.getElementById('empListNotDone');
             doneDiv.innerHTML = ""; notDoneDiv.innerHTML = "";
             
-            const today = new Date();
-            const curY = today.getFullYear() - 1911;
-            const curM = today.getMonth() + 1;
-            const curQ = Math.ceil(curM / 3);
-            const mIdx = (curM - 1) % 3;
+            // 根據介面當前選擇來決定季度/年度
+            const curY = parseInt(document.getElementById('yearInput').value) || 115;
+            const curQ = parseInt(document.getElementById('quarterSelect').value) || 2;
 
             const doneList = [];
             const notDoneList = [];
-            const sigCountMap = {}; // 用於統計當月各簽名檔完成的份數
+            const sigCountMap = {}; // 用於統計當季各簽名檔完成的份數
 
             // 預先建立 O(1) 查詢 Map，加快處理速度
             const curQRecordsMap = new Map();
@@ -976,12 +1020,16 @@
                 let isDone = false;
                 let usedSigId = null;
 
-                if (rec && rec.months && rec.months[mIdx]) {
-                    const charCount = (rec.months[mIdx].visitContent + rec.months[mIdx].empFeedback).replace(/[^\u4E00-\u9FA5]/g, '').length;
-                    if (charCount >= 20) {
-                        isDone = true;
-                        if (rec.selectedSigIds && rec.selectedSigIds[mIdx]) {
-                            usedSigId = rec.selectedSigIds[mIdx];
+                if (rec && rec.months) {
+                    for (let i = 0; i < 3; i++) {
+                        if (rec.months[i]) {
+                            const charCount = (rec.months[i].visitContent + rec.months[i].empFeedback).replace(/[^\u4E00-\u9FA5]/g, '').length;
+                            if (charCount >= 20) {
+                                isDone = true;
+                                if (rec.selectedSigIds && rec.selectedSigIds[i]) {
+                                    usedSigId = rec.selectedSigIds[i]; // 取最後一筆有效的簽名ID作為統計
+                                }
+                            }
                         }
                     }
                 }
@@ -989,9 +1037,35 @@
                 const elHtml = document.createElement('span');
                 elHtml.className = `border rounded px-2 py-1 cursor-pointer hover:opacity-80 font-bold shadow-sm transition text-xs flex-shrink-0 ${isDone ? 'bg-green-100 text-green-800 border-green-300' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`;
                 elHtml.innerText = `${e.id} ${e.name}`;
+                
+                // 點擊直接載入該季度資料 或 清空準備新增
                 elHtml.onclick = () => { 
-                    window.handleEmpSelect(e.id); 
-                    window.currentLoadedRecordId = null; 
+                    const recordId = `${STORE_ID}_${curY}_Q${curQ}_${e.id}`;
+                    const cloudRec = loadedRecords.find(r => r.id === recordId);
+                    let offRec = null;
+                    try { offRec = JSON.parse(localStorage.getItem(`offline_record_${recordId}`)); } catch(err){}
+                    
+                    if (cloudRec) {
+                        window.loadSelectedRecord(recordId, false);
+                    } else if (offRec) {
+                        window.loadSelectedRecord(recordId, true);
+                    } else {
+                        // 當季沒有資料，則清空表單準備輸入
+                        window.handleEmpSelect(e.id); 
+                        window.currentLoadedRecordId = null; 
+                        
+                        [1,2,3].forEach(idx => {
+                            document.getElementById(`date${idx}`).value = "";
+                            const vEl = document.getElementById(`visit${idx}`);
+                            const fEl = document.getElementById(`feedback${idx}`);
+                            vEl.value = ""; fEl.value = "";
+                            window.autoResizeTextarea(vEl); window.autoResizeTextarea(fEl);
+                            document.getElementById(`sigSelect${idx}`).value = "";
+                            window.applySavedSignatureToCanvas(idx, "");
+                        });
+                        document.getElementById('extraCol').value = "";
+                        window.showMsg(`載入空白表單: ${e.name}`, "info");
+                    }
                 };
                 
                 if (isDone) {
@@ -1039,7 +1113,7 @@
             } else {
                 supervisorStatsContainer.classList.add('hidden');
             }
-        }
+        };
 
         function renderEmployeeTable() {
             const tbody = document.getElementById('empTableBody'); tbody.innerHTML = "";
@@ -1077,7 +1151,7 @@
                     <td class="p-2 font-bold text-indigo-700">${e.name}</td>
                     <td class="p-2 text-center">${statusText}</td>
                     <td class="p-2 text-center">
-                        <button onclick="toggleEmployeeStatus('${e.id}')" class="text-blue-700 font-bold hover:text-blue-900 bg-blue-50 px-2 py-1 rounded text-[10px] mr-1 border border-blue-200 transition-colors">${toggleBtnText}</button>
+                        <button onclick="confirmToggleEmployeeStatus('${e.id}', ${e.isHidden})" class="text-blue-700 font-bold hover:text-blue-900 bg-blue-50 px-2 py-1 rounded text-[10px] mr-1 border border-blue-200 transition-colors">${toggleBtnText}</button>
                         <button onclick="requestDelete('employee', '${e.id}')" class="text-red-600 font-bold hover:text-red-800 bg-red-50 px-2 py-1 rounded text-[10px] border border-red-200 transition-colors">刪除</button>
                     </td>
                 </tr>`;
@@ -1118,6 +1192,8 @@
             if(!target) return;
             document.getElementById('quarterSelect').value = target.quarter; document.getElementById('yearInput').value = target.year;
             document.getElementById('empId').value = target.empId; document.getElementById('empName').value = target.empName; document.getElementById('empTitle').value = target.empTitle;
+            if(target.extraCol) document.getElementById('extraCol').value = target.extraCol;
+            
             [1,2,3].forEach(i => {
                 document.getElementById(`date${i}`).value = target.months[i-1].date; 
                 
@@ -1132,6 +1208,11 @@
                 window.applySavedSignatureToCanvas(i, target.selectedSigIds[i-1]);
             });
             window.currentLoadedRecordId = id; // 更新防覆寫金鑰
+            
+            // 更新狀態顯示
+            window.updateQuarterLayout();
+            window.renderEmployeeBrief();
+
             window.toggleHistoryModal(false); window.showMsg("📂 載入成功！", "success");
         };
 
