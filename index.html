@@ -1005,6 +1005,41 @@
             
             if (!year || !empId || !empName) return window.showWarningModal("資料未填妥", "請確實填寫表格上方的『年度』、『編號』與『姓名』欄位！");
 
+            // --- 新增：嚴格檢查各月份內容是否完整 ---
+            let errorMsg = "";
+            let hasAnyData = false;
+
+            for(let i=1; i<=3; i++) {
+                const dateVal = document.getElementById(`date${i}`).value.trim();
+                const visitVal = document.getElementById(`visit${i}`).value.trim();
+                const feedbackVal = document.getElementById(`feedback${i}`).value.trim();
+                const sigVal = document.getElementById(`sigSelect${i}`).value;
+
+                // 只要該月有填寫任何一個欄位，就進行完整度檢查
+                if (dateVal || visitVal || feedbackVal || sigVal) {
+                    hasAnyData = true;
+                    let missing = [];
+                    if (!dateVal) missing.push("填寫日期");
+                    if (!visitVal) missing.push("訪談內容 (訪)");
+                    if (!feedbackVal) missing.push("回饋內容 (回)");
+                    if (!sigVal) missing.push("套用簽名檔");
+
+                    if (missing.length > 0) {
+                        const monthText = document.getElementById(`monthTitle${i}`).innerText;
+                        errorMsg += `\n📍 ${monthText} 缺少：${missing.join("、")}`;
+                    }
+                }
+            }
+
+            if (!hasAnyData) {
+                return window.showWarningModal("資料空白", "請至少填寫一個月的訪談紀錄！\n(包含填寫日期、訪談內容、回饋內容及套用簽名檔)");
+            }
+
+            if (errorMsg) {
+                return window.showWarningModal("資料填寫不完整", "您有部分月份的紀錄未填寫齊全，請補齊後再儲存：\n" + errorMsg);
+            }
+            // --- 結束檢查 ---
+
             const recordId = `${STORE_ID}_${year}_Q${quarter}_${empId}`;
 
             // 防覆寫機制
