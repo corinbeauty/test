@@ -321,6 +321,24 @@
     </div>
 
     <!-- Modals -->
+
+    <!-- 主管專屬名單 Modal (新增) -->
+    <div id="supervisorListModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-5 max-h-[80vh] flex flex-col">
+            <h3 class="text-lg font-bold text-indigo-800 mb-3 flex justify-between items-center border-b pb-2">
+                <span id="supListModalTitle" class="flex items-center gap-2">👑 主管訪談名單</span>
+                <button onclick="toggleSupervisorListModal(false)" class="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+            </h3>
+            <div class="overflow-y-auto flex-1 border rounded-lg bg-slate-50 p-2 shadow-inner">
+                <div id="supListModalContent" class="flex flex-col gap-2"></div>
+            </div>
+            <div class="mt-4 flex justify-between items-center text-xs text-gray-500">
+                <span class="font-medium">* 點擊「載入資料」將自動帶出完整紀錄</span>
+                <button onclick="toggleSupervisorListModal(false)" class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-indigo-700 text-sm shadow">關閉名單</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 名單比對表 -->
     <div id="rosterModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-5 max-h-[80vh] flex flex-col">
@@ -733,6 +751,52 @@
             window.closeConfirmModal();
         };
 
+        // --- 主管專屬名單 Modal ---
+        window.toggleSupervisorListModal = (show) => {
+            document.getElementById('supervisorListModal').classList[show ? 'remove' : 'add']('hidden');
+        };
+
+        window.openSupervisorListModal = (sigName, isQuarter, list) => {
+            // 計算真實當月對應的月份文字
+            const today = new Date();
+            const realQ = Math.ceil((today.getMonth() + 1) / 3);
+            const m = [[1,2,3], [4,5,6], [7,8,9], [10,11,12]][realQ - 1];
+            
+            const titleSpan = document.getElementById('supListModalTitle');
+            titleSpan.innerHTML = `👑 主管 ${sigName} - <span class="text-pink-700">${isQuarter ? '當季' : '當月'}訪談名單</span>`;
+            
+            const contentDiv = document.getElementById('supListModalContent');
+            contentDiv.innerHTML = "";
+            
+            if(list.length === 0) {
+                contentDiv.innerHTML = '<div class="p-4 text-center text-gray-500 text-sm">此主管尚未有訪談紀錄</div>';
+            } else {
+                // 照員工編號排序
+                list.sort((a,b) => parseInt(a.id) - parseInt(b.id));
+                list.forEach(item => {
+                    const monthText = m[item.monthIdx] + '月';
+                    contentDiv.innerHTML += `
+                    <div class="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-200 shadow-sm hover:border-indigo-400 hover:bg-indigo-50/50 transition">
+                        <div class="font-bold text-gray-800 text-sm flex items-center gap-2">
+                            <span>${item.id}</span>
+                            <span class="text-indigo-700">${item.name}</span>
+                            <span class="text-[10px] bg-slate-100 border border-slate-200 text-slate-600 px-1.5 py-0.5 rounded-full">${monthText}</span>
+                        </div>
+                        <button onclick="window.loadSelectedRecordFromSup('${item.recordId}')" class="bg-indigo-600 text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-indigo-700 transition shadow-sm active:scale-95 flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            載入資料
+                        </button>
+                    </div>`;
+                });
+            }
+            window.toggleSupervisorListModal(true);
+        };
+
+        window.loadSelectedRecordFromSup = (recordId) => {
+            window.toggleSupervisorListModal(false);
+            window.loadSelectedRecord(recordId, false); // 從儀表板點開的保證是雲端資料
+        };
+
         // --- Modals 控制 ---
         window.toggleRosterModal = (show) => { document.getElementById('rosterModal').classList[show ? 'remove' : 'add']('hidden'); if(show) renderRosterTable(); };
         function renderRosterTable() {
@@ -1016,8 +1080,8 @@
 
             const doneList = [];
             const notDoneList = [];
-            const monthSigCountMap = {}; // 當月完成數統計
-            const quarterSigCountMap = {}; // 當季完成數統計
+            const monthSigMap = {};   // 記錄當月完成的人員名單
+            const quarterSigMap = {}; // 記錄當季完成的人員名單
 
             // 預先建立 O(1) 查詢 Map，加快處理速度
             const curQRecordsMap = new Map();
@@ -1037,18 +1101,20 @@
                         if (rec.months[i]) {
                             const charCount = (rec.months[i].visitContent + rec.months[i].empFeedback).replace(/[^\u4E00-\u9FA5]/g, '').length;
                             if (charCount >= 20) {
-                                // 只要該月達標，就記錄給當季累積
+                                // 只要該月達標，就記錄給當季累積名單
                                 if (rec.selectedSigIds && rec.selectedSigIds[i]) {
                                     const qSig = rec.selectedSigIds[i];
-                                    quarterSigCountMap[qSig] = (quarterSigCountMap[qSig] || 0) + 1;
+                                    if (!quarterSigMap[qSig]) quarterSigMap[qSig] = [];
+                                    quarterSigMap[qSig].push({ id: e.id, name: e.name, recordId: rec.id, monthIdx: i });
                                 }
                                 
-                                // 若剛好是「現實當月」，才判定該員工在名單為「已訪談」並記錄當月統計
+                                // 若剛好是「現實當月」，才判定該員工在名單為「已訪談」並記錄當月統計名單
                                 if (i === mIdx) {
                                     isDoneThisMonth = true;
                                     if (rec.selectedSigIds && rec.selectedSigIds[i]) {
                                         const mSig = rec.selectedSigIds[i];
-                                        monthSigCountMap[mSig] = (monthSigCountMap[mSig] || 0) + 1;
+                                        if (!monthSigMap[mSig]) monthSigMap[mSig] = [];
+                                        monthSigMap[mSig].push({ id: e.id, name: e.name, recordId: rec.id, monthIdx: i });
                                     }
                                 }
                             }
@@ -1119,23 +1185,27 @@
             let hasMonthStats = false;
             let hasQuarterStats = false;
 
-            // 輔助函式：產生徽章 HTML
-            const createBadge = (sigName, count, isQuarter = false) => {
+            // 輔助函式：產生徽章 HTML (並加上點擊呼叫名單事件)
+            const createBadge = (sigName, list, isQuarter = false) => {
+                const count = list.length;
                 const badge = document.createElement('div');
                 // 當月使用靛藍色，當季使用紫紅色，以示區別
                 const colorClasses = isQuarter 
-                    ? 'from-fuchsia-50 to-pink-100 border-pink-200 text-pink-800 bg-pink-600'
-                    : 'from-blue-50 to-indigo-100 border-indigo-200 text-indigo-800 bg-indigo-600';
+                    ? 'from-fuchsia-50 to-pink-100 border-pink-200 text-pink-800 bg-pink-600 hover:from-fuchsia-100 hover:to-pink-200 cursor-pointer'
+                    : 'from-blue-50 to-indigo-100 border-indigo-200 text-indigo-800 bg-indigo-600 hover:from-blue-100 hover:to-indigo-200 cursor-pointer';
                 
-                const [bgGrad, border, textCol, bgBadge] = colorClasses.split(' ').reduce((acc, curr) => {
+                const [bgGrad, border, textCol, bgBadge, hBg1, hBg2, pointer] = colorClasses.split(' ').reduce((acc, curr) => {
                     if(curr.startsWith('from-') || curr.startsWith('to-')) acc[0] += curr + ' ';
                     else if(curr.startsWith('border-')) acc[1] = curr;
                     else if(curr.startsWith('text-')) acc[2] = curr;
                     else if(curr.startsWith('bg-')) acc[3] = curr;
+                    else if(curr.startsWith('hover:from-')) acc[4] = curr;
+                    else if(curr.startsWith('hover:to-')) acc[5] = curr;
+                    else if(curr.startsWith('cursor-')) acc[6] = curr;
                     return acc;
-                }, ['', '', '', '']);
+                }, ['', '', '', '', '', '', '']);
 
-                badge.className = `flex items-center bg-gradient-to-r ${bgGrad} border ${border} rounded-full pl-2 pr-1 py-1 shadow-sm transition-transform hover:scale-105`;
+                badge.className = `flex items-center bg-gradient-to-r ${bgGrad} ${hBg1} ${hBg2} border ${border} rounded-full pl-2 pr-1 py-1 shadow-sm transition-all hover:scale-[1.03] ${pointer}`;
                 badge.innerHTML = `
                     <span class="${textCol} font-bold text-xs mr-2 flex items-center gap-1">
                         <svg class="w-3.5 h-3.5 opacity-75" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"></path></svg>
@@ -1143,20 +1213,23 @@
                     </span>
                     <span class="${bgBadge} text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-inner">${count} ${isQuarter ? '次' : '人'}</span>
                 `;
+                
+                // 點擊後開啟主管專屬名單 Modal
+                badge.onclick = () => window.openSupervisorListModal(sigName, isQuarter, list);
                 return badge;
             };
 
             savedSignatures.forEach(sig => {
-                const mCount = monthSigCountMap[sig.id] || 0;
-                if (mCount > 0) {
+                const mList = monthSigMap[sig.id] || [];
+                if (mList.length > 0) {
                     hasMonthStats = true;
-                    supervisorBadgesMonth.appendChild(createBadge(sig.name, mCount, false));
+                    supervisorBadgesMonth.appendChild(createBadge(sig.name, mList, false));
                 }
                 
-                const qCount = quarterSigCountMap[sig.id] || 0;
-                if (qCount > 0) {
+                const qList = quarterSigMap[sig.id] || [];
+                if (qList.length > 0) {
                     hasQuarterStats = true;
-                    supervisorBadgesQuarter.appendChild(createBadge(sig.name, qCount, true));
+                    supervisorBadgesQuarter.appendChild(createBadge(sig.name, qList, true));
                 }
             });
 
@@ -1268,7 +1341,6 @@
             // 更新狀態顯示
             window.updateQuarterLayout();
             
-            // 這裡不再呼叫 renderEmployeeBrief()，以避免把畫面洗掉。因為已經強制綁定真實當月了，所以載入歷史紀錄不影響儀表板
             window.toggleHistoryModal(false); window.showMsg("📂 載入成功！", "success");
         };
 
