@@ -322,7 +322,7 @@
 
     <!-- Modals -->
 
-    <!-- 主管專屬名單 Modal (新增) -->
+    <!-- 主管專屬名單 Modal -->
     <div id="supervisorListModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-5 max-h-[80vh] flex flex-col">
             <h3 class="text-lg font-bold text-indigo-800 mb-3 flex justify-between items-center border-b pb-2">
@@ -590,6 +590,16 @@
         document.getElementById('exportYear').value = todayRealDate.getFullYear() - 1911;
         document.getElementById('exportMonthStart').value = todayRealDate.getMonth() + 1;
         document.getElementById('exportMonthEnd').value = todayRealDate.getMonth() + 1;
+
+        // --- 全域自動平滑捲動 (自動對焦輸入表單) ---
+        window.scrollToForm = () => {
+            setTimeout(() => {
+                const container = document.getElementById('scrollContainer');
+                if (container) {
+                    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 350); // 延遲以配合 Modal 關閉的動畫時間
+        };
 
         // --- 全域 Toast ---
         window.showMsg = (text, type="info") => {
@@ -1158,6 +1168,7 @@
                         });
                         document.getElementById('extraCol').value = "";
                         window.showMsg(`載入空白表單: ${e.name} (切換至 ${realM}月所在季度)`, "info");
+                        window.scrollToForm(); // 空白表單也自動往下捲動
                     }
                 };
                 
@@ -1342,6 +1353,7 @@
             window.updateQuarterLayout();
             
             window.toggleHistoryModal(false); window.showMsg("📂 載入成功！", "success");
+            window.scrollToForm(); // 載入完成後平滑捲動到下方表單
         };
 
         // --- 全螢幕 Modal 簽名板 ---
