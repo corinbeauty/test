@@ -102,7 +102,7 @@
 
         <div class="mb-4 bg-gray-50 p-3 rounded-lg border">
             <h3 class="text-sm font-bold text-gray-700 mb-3 flex flex-wrap items-center justify-between border-b pb-2 gap-2">
-                <span id="empDatabaseTitle">👥 當月雲端資料庫進度</span>
+                <span id="empDatabaseTitle">👥 雲端資料庫進度</span>
                 <div class="flex gap-2">
                     <button onclick="toggleSigManagerModal(true)" class="text-xs text-blue-600 font-bold hover:underline border border-blue-200 bg-blue-50 px-2 py-1 rounded transition hover:bg-blue-100">✍️ 管理簽名檔</button>
                     <button onclick="toggleRosterModal(true)" class="text-xs text-indigo-600 font-bold hover:underline border border-indigo-200 bg-indigo-50 px-2 py-1 rounded transition hover:bg-indigo-100">📋 名單比對表</button>
@@ -110,10 +110,16 @@
                 </div>
             </h3>
 
-            <!-- 👑 主管當月訪談統計區塊 -->
-            <div id="supervisorStatsContainer" class="flex flex-wrap items-center gap-2 mb-3 hidden bg-white p-2 rounded border border-indigo-100 shadow-sm">
-                <span id="supervisorStatsTitle" class="text-xs font-bold text-slate-500 ml-1">👑 主管當月完成數：</span>
-                <div id="supervisorBadges" class="flex flex-wrap gap-2"></div>
+            <!-- 👑 主管當月與當季訪談統計區塊 -->
+            <div id="supervisorStatsContainer" class="flex flex-col gap-2 mb-3 hidden bg-white p-2 rounded border border-indigo-100 shadow-sm">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-bold text-slate-500 ml-1">👑 主管當月完成數：</span>
+                    <div id="supervisorBadgesMonth" class="flex flex-wrap gap-2"></div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 border-t border-indigo-50 pt-2 mt-1">
+                    <span class="text-xs font-bold text-slate-500 ml-1">🏆 主管當季累積數：</span>
+                    <div id="supervisorBadgesQuarter" class="flex flex-wrap gap-2"></div>
+                </div>
             </div>
 
             <!-- 載入中動畫 UI (預設顯示) -->
@@ -446,7 +452,7 @@
         </div>
     </div>
 
-    <!-- 狀態確認 Modal (新增) -->
+    <!-- 狀態確認 Modal -->
     <div id="confirmModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[160] flex items-center justify-center hidden p-4 transition-all duration-300">
         <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center transform scale-95 opacity-0 transition-all duration-300">
             <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-4 shadow-inner">
@@ -705,7 +711,7 @@
         };
         window.closeErrorModal = () => document.getElementById('errorModal').classList.add('hidden');
 
-        // --- 確認對話框 (新增) ---
+        // --- 確認對話框 ---
         window.pendingConfirmAction = null;
         window.showConfirmModal = (title, msg, onConfirm) => {
             document.getElementById('confirmModalTitle').innerText = title;
@@ -737,7 +743,7 @@
             
             document.getElementById('roster-m1').innerText = m[0] + "月";
             document.getElementById('roster-m2').innerText = m[1] + "月";
-            document.getElementById('roster-m3').innerText = m[2] + "月";
+            document.getElementById('roster-m3innerText = m[2] + "月";
 
             const sortedEmps = getSortedEmployees(false);
             if(sortedEmps.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">當前無任何正常名單紀錄</td></tr>`; return; }
@@ -764,7 +770,7 @@
 
         window.switchEmpTab = (tab) => {
             window.currentEmpTab = tab;
-            renderEmployeeTable(); // 重新渲染表格，按鈕的 active 狀態會在 renderEmployeeTable 中更新人數時一起更新
+            renderEmployeeTable(); 
         };
 
         window.setHistoryQuarterFilter = (q, btnElement) => {
@@ -927,7 +933,7 @@
 
             const recordId = `${STORE_ID}_${year}_Q${quarter}_${empId}`;
 
-            // 防覆寫機制: 若已在雲端建檔，且尚未被 Load，則阻擋
+            // 防覆寫機制
             if (loadedRecords.some(r => r.id === recordId) && window.currentLoadedRecordId !== recordId) {
                 return window.showWarningModal("資料已存在防覆寫", `該員工 (${empName}) 本季資料已經在雲端建檔過了。\n\n請先從「歷史紀錄列表」載入該筆資料，然後再進行編輯與儲存。\n\n若您確定要輸入全新資料，請先清空姓名與編號欄位避免覆寫！`);
             }
@@ -953,7 +959,7 @@
             window.showMsg("💾 傳輸至 Firebase...", "info");
             try {
                 await setDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'records', recordId), payload);
-                window.currentLoadedRecordId = recordId; // 儲存後自動視為已載入
+                window.currentLoadedRecordId = recordId; 
                 window.showSuccessModal("雲端儲存成功", "🎉 訪談紀錄已完美同步至雲端！\n點擊下方「確定」將為您重置全新空白表單。", () => window.location.reload());
             } catch (err) {
                 window.showErrorModal("雲端儲存失敗", "寫入過程遭到 Firebase 阻擋，請確認設定。", err.message || err.toString());
@@ -1007,12 +1013,11 @@
             const mIdx = (realM - 1) % 3;
 
             document.getElementById('empDatabaseTitle').innerText = `👥 雲端資料庫進度 (${realM}月當月)`;
-            const supervisorStatsTitle = document.getElementById('supervisorStatsTitle');
-            if(supervisorStatsTitle) supervisorStatsTitle.innerText = `👑 主管當月完成數：`;
 
             const doneList = [];
             const notDoneList = [];
-            const sigCountMap = {}; // 用於統計當月各簽名檔完成的份數
+            const monthSigCountMap = {}; // 當月完成數統計
+            const quarterSigCountMap = {}; // 當季完成數統計
 
             // 預先建立 O(1) 查詢 Map，加快處理速度
             const curQRecordsMap = new Map();
@@ -1024,21 +1029,35 @@
 
             getSortedEmployees(false).forEach(e => {
                 const rec = curQRecordsMap.get(e.id);
-                let isDone = false;
-                let usedSigId = null;
+                let isDoneThisMonth = false;
 
-                if (rec && rec.months && rec.months[mIdx]) {
-                    const charCount = (rec.months[mIdx].visitContent + rec.months[mIdx].empFeedback).replace(/[^\u4E00-\u9FA5]/g, '').length;
-                    if (charCount >= 20) {
-                        isDone = true;
-                        if (rec.selectedSigIds && rec.selectedSigIds[mIdx]) {
-                            usedSigId = rec.selectedSigIds[mIdx];
+                if (rec && rec.months) {
+                    // 掃描本季所有月份
+                    for (let i = 0; i < 3; i++) {
+                        if (rec.months[i]) {
+                            const charCount = (rec.months[i].visitContent + rec.months[i].empFeedback).replace(/[^\u4E00-\u9FA5]/g, '').length;
+                            if (charCount >= 20) {
+                                // 只要該月達標，就記錄給當季累積
+                                if (rec.selectedSigIds && rec.selectedSigIds[i]) {
+                                    const qSig = rec.selectedSigIds[i];
+                                    quarterSigCountMap[qSig] = (quarterSigCountMap[qSig] || 0) + 1;
+                                }
+                                
+                                // 若剛好是「現實當月」，才判定該員工在名單為「已訪談」並記錄當月統計
+                                if (i === mIdx) {
+                                    isDoneThisMonth = true;
+                                    if (rec.selectedSigIds && rec.selectedSigIds[i]) {
+                                        const mSig = rec.selectedSigIds[i];
+                                        monthSigCountMap[mSig] = (monthSigCountMap[mSig] || 0) + 1;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
 
                 const elHtml = document.createElement('span');
-                elHtml.className = `border rounded px-2 py-1 cursor-pointer hover:opacity-80 font-bold shadow-sm transition text-xs flex-shrink-0 ${isDone ? 'bg-green-100 text-green-800 border-green-300' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`;
+                elHtml.className = `border rounded px-2 py-1 cursor-pointer hover:opacity-80 font-bold shadow-sm transition text-xs flex-shrink-0 ${isDoneThisMonth ? 'bg-green-100 text-green-800 border-green-300' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`;
                 elHtml.innerText = `${e.id} ${e.name}`;
                 
                 // 點擊直接載入真實當季資料 或 清空準備新增
@@ -1076,11 +1095,8 @@
                     }
                 };
                 
-                if (isDone) {
+                if (isDoneThisMonth) {
                     doneList.push(elHtml);
-                    if (usedSigId) {
-                        sigCountMap[usedSigId] = (sigCountMap[usedSigId] || 0) + 1;
-                    }
                 } else {
                     notDoneList.push(elHtml);
                 }
@@ -1094,32 +1110,67 @@
 
             // --- 渲染主管美化統計框架 ---
             const supervisorStatsContainer = document.getElementById('supervisorStatsContainer');
-            const supervisorBadges = document.getElementById('supervisorBadges');
-            supervisorBadges.innerHTML = '';
-            let hasSupervisorStats = false;
+            const supervisorBadgesMonth = document.getElementById('supervisorBadgesMonth');
+            const supervisorBadgesQuarter = document.getElementById('supervisorBadgesQuarter');
+            
+            supervisorBadgesMonth.innerHTML = '';
+            supervisorBadgesQuarter.innerHTML = '';
+            
+            let hasMonthStats = false;
+            let hasQuarterStats = false;
+
+            // 輔助函式：產生徽章 HTML
+            const createBadge = (sigName, count, isQuarter = false) => {
+                const badge = document.createElement('div');
+                // 當月使用靛藍色，當季使用紫紅色，以示區別
+                const colorClasses = isQuarter 
+                    ? 'from-fuchsia-50 to-pink-100 border-pink-200 text-pink-800 bg-pink-600'
+                    : 'from-blue-50 to-indigo-100 border-indigo-200 text-indigo-800 bg-indigo-600';
+                
+                const [bgGrad, border, textCol, bgBadge] = colorClasses.split(' ').reduce((acc, curr) => {
+                    if(curr.startsWith('from-') || curr.startsWith('to-')) acc[0] += curr + ' ';
+                    else if(curr.startsWith('border-')) acc[1] = curr;
+                    else if(curr.startsWith('text-')) acc[2] = curr;
+                    else if(curr.startsWith('bg-')) acc[3] = curr;
+                    return acc;
+                }, ['', '', '', '']);
+
+                badge.className = `flex items-center bg-gradient-to-r ${bgGrad} border ${border} rounded-full pl-2 pr-1 py-1 shadow-sm transition-transform hover:scale-105`;
+                badge.innerHTML = `
+                    <span class="${textCol} font-bold text-xs mr-2 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 opacity-75" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"></path></svg>
+                        ${sigName}
+                    </span>
+                    <span class="${bgBadge} text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-inner">${count} ${isQuarter ? '次' : '人'}</span>
+                `;
+                return badge;
+            };
 
             savedSignatures.forEach(sig => {
-                const count = sigCountMap[sig.id] || 0;
-                if (count > 0) {
-                    hasSupervisorStats = true;
-                    const badge = document.createElement('div');
-                    // 美化的漸層背景與圓角框架
-                    badge.className = 'flex items-center bg-gradient-to-r from-blue-50 to-indigo-100 border border-indigo-200 rounded-full pl-2 pr-1 py-1 shadow-sm transition-transform hover:scale-105';
-                    badge.innerHTML = `
-                        <span class="text-indigo-800 font-bold text-xs mr-2 flex items-center gap-1">
-                            <svg class="w-3.5 h-3.5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"></path></svg>
-                            ${sig.name}
-                        </span>
-                        <span class="bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-inner">${count} 人</span>
-                    `;
-                    supervisorBadges.appendChild(badge);
+                const mCount = monthSigCountMap[sig.id] || 0;
+                if (mCount > 0) {
+                    hasMonthStats = true;
+                    supervisorBadgesMonth.appendChild(createBadge(sig.name, mCount, false));
+                }
+                
+                const qCount = quarterSigCountMap[sig.id] || 0;
+                if (qCount > 0) {
+                    hasQuarterStats = true;
+                    supervisorBadgesQuarter.appendChild(createBadge(sig.name, qCount, true));
                 }
             });
 
-            if (hasSupervisorStats) {
+            // 只要當季有數字（代表本季至少有一筆達標），就顯示整個統計框架
+            if (hasQuarterStats) {
                 supervisorStatsContainer.classList.remove('hidden');
+                supervisorStatsContainer.classList.add('flex');
+                
+                if (!hasMonthStats) {
+                    supervisorBadgesMonth.innerHTML = '<span class="text-xs text-gray-400 font-medium italic px-2">本月尚未有完成紀錄</span>';
+                }
             } else {
                 supervisorStatsContainer.classList.add('hidden');
+                supervisorStatsContainer.classList.remove('flex');
             }
         };
 
@@ -1127,7 +1178,6 @@
             const tbody = document.getElementById('empTableBody'); tbody.innerHTML = "";
             const isHiddenTab = window.currentEmpTab === 'resigned';
             
-            // 計算正常與離職員工總數
             let activeCount = 0;
             let resignedCount = 0;
             employees.forEach(e => {
@@ -1135,13 +1185,11 @@
                 else activeCount++;
             });
 
-            // 更新分頁按鈕文字狀態
             document.getElementById('tabActive').innerText = `正常員工 (${activeCount})`;
             document.getElementById('tabActive').className = window.currentEmpTab === 'active' ? "px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 focus:outline-none transition-colors" : "px-4 py-2 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 focus:outline-none transition-colors";
             
             document.getElementById('tabResigned').innerText = `離職員工 (${resignedCount})`;
             document.getElementById('tabResigned').className = window.currentEmpTab === 'resigned' ? "px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 focus:outline-none transition-colors" : "px-4 py-2 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 focus:outline-none transition-colors";
-
 
             const emps = getSortedEmployees(true).filter(e => isHiddenTab ? e.isHidden : !e.isHidden);
 
@@ -1219,8 +1267,8 @@
             
             // 更新狀態顯示
             window.updateQuarterLayout();
-            window.renderEmployeeBrief();
-
+            
+            // 這裡不再呼叫 renderEmployeeBrief()，以避免把畫面洗掉。因為已經強制綁定真實當月了，所以載入歷史紀錄不影響儀表板
             window.toggleHistoryModal(false); window.showMsg("📂 載入成功！", "success");
         };
 
