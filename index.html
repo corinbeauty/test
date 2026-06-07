@@ -231,7 +231,6 @@
                                             <span class="font-bold text-xs">訪談主管簽名：</span>
                                             <div class="relative w-40 h-16 border border-dashed border-gray-400 bg-white rounded overflow-hidden shadow-sm flex items-center justify-center p-0.5">
                                                 <span id="sigPlaceholder1" class="text-gray-300 text-xs font-medium">未選擇</span>
-                                                <!-- 移除 scale-[1.5]，改用 object-contain 讓他完整服貼不裁切 -->
                                                 <img id="sigImg1" class="w-full h-full object-contain hidden" alt="簽名">
                                             </div>
                                         </div>
@@ -377,7 +376,7 @@
                 <span>👥 編輯員工編號對照表</span>
                 <button onclick="toggleEmpModal(false)" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
             </h3>
-            <form id="newEmpForm" onsubmit="addEmployee(event)" class="bg-gray-50 p-3 rounded-lg border mb-4 grid grid-cols-3 gap-2">
+            <form id="newEmpForm" onsubmit="window.addEmployee(event)" class="bg-gray-50 p-3 rounded-lg border mb-4 grid grid-cols-3 gap-2">
                 <div><input type="text" id="newId" placeholder="編號" class="w-full border rounded p-1.5 text-xs focus:ring-1 focus:ring-blue-500" required></div>
                 <div><input type="text" id="newName" placeholder="姓名" class="w-full border rounded p-1.5 text-xs focus:ring-1 focus:ring-blue-500" required></div>
                 <div class="flex gap-1">
@@ -511,7 +510,7 @@
             <input type="password" id="deletePasscodeField" maxlength="6" placeholder="請輸入密碼" class="w-full text-center text-2xl tracking-[0.5em] border-2 border-gray-200 rounded-xl py-3 px-3 focus:ring-4 focus:ring-red-500/20 focus:border-red-500 focus:outline-none mb-6 font-bold bg-gray-50 text-gray-800 transition-all">
             <div class="flex gap-3">
                 <button onclick="closeDeletePasswordModal()" class="flex-1 bg-white border-2 border-gray-200 hover:bg-gray-50 text-gray-700 font-bold py-3 px-4 rounded-xl text-sm transition-all active:scale-95">取消</button>
-                <button onclick="submitDeletePasscode()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-lg shadow-red-600/30 active:scale-95">確認刪除</button>
+                <button onclick="window.submitDeletePasscode()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-lg shadow-red-600/30 active:scale-95">確認刪除</button>
             </div>
         </div>
     </div>
@@ -655,7 +654,10 @@
             const q = parseInt(document.getElementById('quarterSelect').value);
             const text = ["第一季", "第二季", "第三季", "第四季"][q-1];
             const m = [[1,2,3], [4,5,6], [7,8,9], [10,11,12]][q-1];
-            for(let i=1; i<=3; i++) document.getElementById(`monthTitle${i}`).innerText = `${text} ${m[i-1]}月`;
+            for(let i=1; i<=3; i++) {
+                const titleEl = document.getElementById(`monthTitle${i}`);
+                if(titleEl) titleEl.innerText = `${text} ${m[i-1]}月`;
+            }
         };
 
         // --- ★ 1016 全域機密刪除調度系統 ---
@@ -1359,8 +1361,8 @@
                     <td class="p-2 font-bold text-indigo-700">${e.name}</td>
                     <td class="p-2 text-center">${statusText}</td>
                     <td class="p-2 text-center">
-                        <button onclick="confirmToggleEmployeeStatus('${e.id}', ${e.isHidden})" class="text-blue-700 font-bold hover:text-blue-900 bg-blue-50 px-2 py-1 rounded text-[10px] mr-1 border border-blue-200 transition-colors">${toggleBtnText}</button>
-                        <button onclick="requestDelete('employee', '${e.id}')" class="text-red-600 font-bold hover:text-red-800 bg-red-50 px-2 py-1 rounded text-[10px] border border-red-200 transition-colors">刪除</button>
+                        <button onclick="window.confirmToggleEmployeeStatus('${e.id}', ${e.isHidden})" class="text-blue-700 font-bold hover:text-blue-900 bg-blue-50 px-2 py-1 rounded text-[10px] mr-1 border border-blue-200 transition-colors">${toggleBtnText}</button>
+                        <button onclick="window.requestDelete('employee', '${e.id}')" class="text-red-600 font-bold hover:text-red-800 bg-red-50 px-2 py-1 rounded text-[10px] border border-red-200 transition-colors">刪除</button>
                     </td>
                 </tr>`;
             });
@@ -1389,13 +1391,59 @@
             allRecs.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
             allRecs.forEach(r => {
                 const badge = r.off ? `<span class="ml-1 text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">本機</span>` : `<span class="ml-1 text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">雲端</span>`;
-                tbody.innerHTML += `<tr class="border-b hover:bg-slate-50 transition"><td class="p-3">${r.year}年 Q${r.quarter}</td><td class="p-3 font-bold text-indigo-700">${r.empName} (${r.empId}) ${badge}</td><td class="p-3 text-gray-500">${r.store}</td>
-                <td class="p-3 text-center flex justify-center"><button onclick="loadSelectedRecord('${r.id}', ${r.off})" class="bg-indigo-50 text-indigo-600 font-bold hover:bg-indigo-100 py-1 px-3 rounded-lg mr-2 transition border border-indigo-200 shadow-sm">載入</button>
-                <button onclick="requestDelete('record', '${r.id}', ${r.off})" class="bg-red-50 text-red-600 font-bold hover:bg-red-100 py-1 px-3 rounded-lg transition border border-red-200 shadow-sm">刪除</button></td></tr>`;
+                tbody.innerHTML += `<tr class="border-b hover:bg-slate-50 transition">
+                <td class="p-3">${r.year}年 Q${r.quarter}</td>
+                <td class="p-3 font-bold text-indigo-700">${r.empName} (${r.empId}) ${badge}</td>
+                <td class="p-3 text-gray-500">${r.store}</td>
+                <td class="p-3 text-center flex justify-center">
+                    <button onclick="window.loadSelectedRecord('${r.id}', ${r.off})" class="bg-indigo-50 text-indigo-600 font-bold hover:bg-indigo-100 py-1 px-3 rounded-lg mr-2 transition border border-indigo-200 shadow-sm">載入</button>
+                    <button onclick="window.requestDelete('record', '${r.id}', ${r.off})" class="bg-red-50 text-red-600 font-bold hover:bg-red-100 py-1 px-3 rounded-lg transition border border-red-200 shadow-sm">刪除</button>
+                </td></tr>`;
             });
         };
 
-        // --- 全螢幕 Modal 簽名板 (修正尺寸重繪與直向鎖定) ---
+        window.loadSelectedRecord = (id, isOff) => {
+            const target = isOff ? JSON.parse(localStorage.getItem(`offline_record_${id}`)) : loadedRecords.find(r => r.id === id);
+            
+            if(!target) {
+                window.showWarningModal("載入失敗", "找不到該筆資料實體，可能已被刪除。");
+                return;
+            }
+            
+            document.getElementById('quarterSelect').value = target.quarter || "1"; 
+            document.getElementById('yearInput').value = target.year || "";
+            document.getElementById('titleYear').innerText = target.year || "   ";
+            
+            document.getElementById('empId').value = target.empId || ""; 
+            document.getElementById('empName').value = target.empName || ""; 
+            document.getElementById('empTitle').value = target.empTitle || "";
+            if(target.extraCol !== undefined) document.getElementById('extraCol').value = target.extraCol;
+            
+            [1,2,3].forEach(i => {
+                const mData = (target.months && target.months[i-1]) ? target.months[i-1] : { date: "", visitContent: "", empFeedback: "" };
+                const sigId = (target.selectedSigIds && target.selectedSigIds[i-1]) ? target.selectedSigIds[i-1] : "";
+
+                document.getElementById(`date${i}`).value = mData.date || ""; 
+                
+                const vEl = document.getElementById(`visit${i}`);
+                const fEl = document.getElementById(`feedback${i}`);
+                vEl.value = mData.visitContent || "";
+                fEl.value = mData.empFeedback || "";
+                
+                setTimeout(() => { window.autoResizeTextarea(vEl); window.autoResizeTextarea(fEl); }, 10);
+
+                document.getElementById(`sigSelect${i}`).value = sigId;
+                window.applySavedSignatureToCanvas(i, sigId);
+            });
+            window.currentLoadedRecordId = id; 
+            
+            window.updateQuarterLayout();
+            window.toggleHistoryModal(false); 
+            window.showMsg("📂 載入成功！", "success");
+            window.scrollToForm(); 
+        };
+
+        // --- 全螢幕 Modal 簽名板 (修正尺寸重繪與直向鎖定防護) ---
         function checkOrientation() {
             const overlay = document.getElementById('portraitOverlay');
             if (!overlay) return;
@@ -1549,10 +1597,10 @@
             savedSignatures.forEach(sig => {
                 // 新增 onClick 調用原有名字事件，並讓刪除按鈕阻擋事件冒泡
                 list.innerHTML += `
-                <div class="flex-shrink-0 bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer rounded-lg p-2 flex items-center gap-2 h-14 md:h-16 shadow-sm transition group" onclick="loadSigNameForEdit('${sig.name}')">
+                <div class="flex-shrink-0 bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer rounded-lg p-2 flex items-center gap-2 h-14 md:h-16 shadow-sm transition group" onclick="window.loadSigNameForEdit('${sig.name}')">
                     <div class="text-xs font-bold text-slate-700 group-hover:text-blue-700">${sig.name}</div>
                     <img src="${sig.imageData}" class="h-8 md:h-10 border bg-slate-50 rounded object-contain" alt="簽名">
-                    <button onclick="event.stopPropagation(); requestDelete('signature', '${sig.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 rounded-full w-6 h-6 flex items-center justify-center transition active:scale-95 border border-red-100" title="刪除簽名檔">✕</button>
+                    <button onclick="event.stopPropagation(); window.requestDelete('signature', '${sig.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 rounded-full w-6 h-6 flex items-center justify-center transition active:scale-95 border border-red-100" title="刪除簽名檔">✕</button>
                 </div>`;
             });
         }
