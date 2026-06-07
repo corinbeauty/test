@@ -407,17 +407,16 @@
 
     <!-- 雲端電子簽名管理 (最大化畫布) -->
     <div id="sigManagerModal" class="fixed inset-0 bg-white z-[110] flex-col hidden overflow-hidden">
-        <div id="rotationBanner" class="bg-amber-500 text-white text-xs py-2 px-4 text-center font-bold flex items-center justify-center gap-2 animate-pulse">
-            <span>🔄 若畫面太小，建議旋轉手機至「橫向」以獲得最流暢的手寫簽名空間！</span>
-        </div>
         <div class="bg-slate-100 px-4 py-3 border-b flex flex-wrap items-center justify-between gap-2 shadow-sm">
             <h3 class="text-sm font-bold text-gray-800 flex items-center gap-1.5">
                 <span>✍️ 雲端電子簽名管理</span>
             </h3>
             <div class="flex items-center gap-2">
-                <input type="text" id="newSigName" placeholder="主管姓名" class="border border-gray-300 rounded px-2.5 py-1 text-xs focus:ring-2 focus:ring-blue-500 w-28 md:w-40 font-bold text-gray-800 outline-none">
-                <button onclick="uploadNewSignature()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded font-bold transition shadow">新增簽名</button>
+                <input type="text" id="newSigName" list="existingSigNames" placeholder="調用或輸入姓名" class="border border-gray-300 rounded px-2.5 py-1 text-xs focus:ring-2 focus:ring-blue-500 w-28 md:w-40 font-bold text-gray-800 outline-none">
+                <datalist id="existingSigNames"></datalist>
+                <button onclick="uploadNewSignature()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded font-bold transition shadow">儲存簽名</button>
                 <button onclick="clearManagerSigCanvas()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs px-3 py-1.5 rounded font-bold transition">重畫</button>
+                <button onclick="toggleSigListPanel()" class="bg-indigo-100 text-indigo-700 border border-indigo-200 hover:bg-indigo-200 text-xs px-3 py-1.5 rounded font-bold transition">管理清單</button>
                 <button onclick="toggleSigManagerModal(false)" class="bg-slate-800 hover:bg-slate-950 text-white text-xs px-3 py-1.5 rounded font-bold transition">關閉</button>
             </div>
         </div>
@@ -426,11 +425,23 @@
             <div class="absolute inset-0 flex items-center justify-center pointer-events-none select-none opacity-10">
                 <div class="text-center"><span class="text-4xl md:text-6xl font-bold tracking-widest block mb-2">請在此區域親筆簽名</span></div>
             </div>
+            <!-- 直向防護遮罩：強制要求轉橫向 -->
+            <div id="portraitOverlay" class="absolute inset-0 z-50 bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center text-white transition-opacity duration-300 hidden pointer-events-auto">
+                <div class="relative w-20 h-20 mb-5">
+                    <svg class="w-full h-full text-blue-500 animate-[spin_2s_ease-in-out_infinite]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <svg class="w-8 h-8 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                </div>
+                <h3 class="text-2xl font-black tracking-widest mb-3 drop-shadow-md">請旋轉您的設備</h3>
+                <div class="text-slate-300 font-medium text-sm text-center px-6 leading-relaxed border-t border-slate-700/80 pt-4 space-y-1.5">
+                    <p>系統偵測到畫布目前為<span class="text-white font-bold bg-slate-800 px-2 py-0.5 rounded mx-1 shadow-inner">直向顯示</span></p>
+                    <p class="text-amber-400 font-bold text-base mt-2 drop-shadow">請將手機轉至「橫向」以解鎖簽名空間</p>
+                </div>
+            </div>
         </div>
-        <!-- 隱藏清單區塊 -->
-        <div class="hidden border-t bg-white h-24 md:h-32 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <!-- 隱藏清單區塊 (可透過按鈕展開) -->
+        <div id="sigManagerListPanel" class="hidden border-t bg-white h-24 md:h-32 flex-col z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] transition-all">
             <div class="bg-slate-50 px-3 py-1.5 text-[11px] font-bold text-gray-500 border-b flex justify-between items-center">
-                <span>📁 現有雲端簽名檔清單</span>
+                <span>📁 現有雲端簽名檔清單 (點選下方卡片可直接載入姓名，重新簽名後自動覆蓋)</span>
             </div>
             <div class="flex-1 overflow-x-auto overflow-y-hidden p-2 flex items-center gap-3" id="sigManagerListHorizontal"></div>
         </div>
@@ -1384,36 +1395,22 @@
             });
         };
 
-        window.loadSelectedRecord = (id, isOff) => {
-            const target = isOff ? JSON.parse(localStorage.getItem(`offline_record_${id}`)) : loadedRecords.find(r => r.id === id);
-            if(!target) return;
-            document.getElementById('quarterSelect').value = target.quarter; document.getElementById('yearInput').value = target.year;
-            document.getElementById('empId').value = target.empId; document.getElementById('empName').value = target.empName; document.getElementById('empTitle').value = target.empTitle;
-            if(target.extraCol) document.getElementById('extraCol').value = target.extraCol;
-            
-            [1,2,3].forEach(i => {
-                document.getElementById(`date${i}`).value = target.months[i-1].date; 
-                
-                const vEl = document.getElementById(`visit${i}`);
-                const fEl = document.getElementById(`feedback${i}`);
-                vEl.value = target.months[i-1].visitContent;
-                fEl.value = target.months[i-1].empFeedback;
-                
-                setTimeout(() => { window.autoResizeTextarea(vEl); window.autoResizeTextarea(fEl); }, 10);
+        // --- 全螢幕 Modal 簽名板 (修正尺寸重繪與直向鎖定) ---
+        function checkOrientation() {
+            const overlay = document.getElementById('portraitOverlay');
+            if (!overlay) return;
+            // 偵測畫面若是直向(高大於寬)，即顯示強制轉向提示遮罩
+            if (window.innerHeight > window.innerWidth) {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+                if (managerSigPad) managerSigPad.canvas.style.pointerEvents = 'none';
+            } else {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+                if (managerSigPad) managerSigPad.canvas.style.pointerEvents = 'auto';
+            }
+        }
 
-                document.getElementById(`sigSelect${i}`).value = target.selectedSigIds[i-1] || "";
-                window.applySavedSignatureToCanvas(i, target.selectedSigIds[i-1]);
-            });
-            window.currentLoadedRecordId = id; // 更新防覆寫金鑰
-            
-            // 更新狀態顯示
-            window.updateQuarterLayout();
-            
-            window.toggleHistoryModal(false); window.showMsg("📂 載入成功！", "success");
-            window.scrollToForm(); // 載入完成後平滑捲動到下方表單
-        };
-
-        // --- 全螢幕 Modal 簽名板 (修正尺寸重繪與視窗縮放) ---
         window.toggleSigManagerModal = (show) => {
             const m = document.getElementById('sigManagerModal');
             if(show) { 
@@ -1421,6 +1418,7 @@
                 m.classList.add('flex'); 
                 setTimeout(() => {
                     initManagerSignaturePad();
+                    checkOrientation(); // 初始化時優先偵測防護
                     window.addEventListener('resize', handleSigPadResize);
                 }, 200); 
             } else { 
@@ -1428,6 +1426,18 @@
                 m.classList.remove('flex'); 
                 window.removeEventListener('resize', handleSigPadResize);
             }
+        };
+
+        window.toggleSigListPanel = () => {
+            const panel = document.getElementById('sigManagerListPanel');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                panel.classList.add('flex');
+            } else {
+                panel.classList.add('hidden');
+                panel.classList.remove('flex');
+            }
+            handleSigPadResize(); // 開關清單後重繪畫布尺寸
         };
 
         let managerSigPad = null;
@@ -1438,6 +1448,7 @@
             if(resizeTimeout) clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
                 if(!document.getElementById('sigManagerModal').classList.contains('hidden')) {
+                    checkOrientation(); // 重新偵測方向
                     const tempUrl = managerSigPad.canvas.toDataURL(); // 暫存筆跡
                     initManagerSignaturePad(); // 重新計算全螢幕寬高
                     
@@ -1504,30 +1515,44 @@
         
         window.uploadNewSignature = async () => {
             const name = document.getElementById('newSigName').value.trim(); 
-            if(!name) return window.showWarningModal("缺少資訊", "請先輸入「主管姓名」，以便建立雲端簽名檔！");
+            if(!name) return window.showWarningModal("缺少資訊", "請先調用或輸入「主管姓名」，以便建立或更新雲端簽名檔！");
             const url = managerSigPad.canvas.toDataURL(); 
             if(url.length < 1000) return window.showWarningModal("尚未簽名", "請在下方全螢幕畫布區域親筆簽名！");
             
-            const id = 'sig_'+Date.now();
+            // 智慧覆蓋：檢查是否已有相同姓名的簽名檔，若有則沿用原 ID 直接覆蓋圖片
+            const existingSig = savedSignatures.find(s => s.name === name);
+            const id = existingSig ? existingSig.id : 'sig_'+Date.now();
+            
             try {
                 await setDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'signatures', id), { id, name, imageData: url });
                 document.getElementById('newSigName').value = ""; window.clearManagerSigCanvas(); 
-                window.showSuccessModal("簽名檔錄入成功", `🎉 主管「${name}」的電子簽章已安全存入雲端！`);
+                
+                if (existingSig) {
+                    window.showSuccessModal("簽名檔更新成功", `🎉 主管「${name}」的電子簽章已成功重新繪製並覆蓋更新！`);
+                } else {
+                    window.showSuccessModal("簽名檔錄入成功", `🎉 主管「${name}」的電子簽章已安全存入雲端！`);
+                }
             } catch (err) {
                 window.showErrorModal("雲端儲存失敗", "簽名檔寫入過程遭到 Firebase 阻擋。", err.message || err.toString());
             }
         };
         window.clearManagerSigCanvas = () => { if(managerSigPad) managerSigPad.ctx.clearRect(0,0,managerSigPad.canvas.width, managerSigPad.canvas.height); };
 
+        window.loadSigNameForEdit = (name) => {
+            document.getElementById('newSigName').value = name;
+            window.showMsg(`已調用原有名字「${name}」，重新簽名後即可覆蓋原檔`, "info");
+        };
+
         function renderSigManagerList() {
             const list = document.getElementById('sigManagerListHorizontal'); list.innerHTML = "";
             if(savedSignatures.length === 0) return;
             savedSignatures.forEach(sig => {
+                // 新增 onClick 調用原有名字事件，並讓刪除按鈕阻擋事件冒泡
                 list.innerHTML += `
-                <div class="flex-shrink-0 bg-white border border-slate-200 rounded-lg p-2 flex items-center gap-2 h-14 md:h-16 shadow-sm">
-                    <div class="text-xs font-bold text-slate-700">${sig.name}</div>
+                <div class="flex-shrink-0 bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer rounded-lg p-2 flex items-center gap-2 h-14 md:h-16 shadow-sm transition group" onclick="loadSigNameForEdit('${sig.name}')">
+                    <div class="text-xs font-bold text-slate-700 group-hover:text-blue-700">${sig.name}</div>
                     <img src="${sig.imageData}" class="h-8 md:h-10 border bg-slate-50 rounded object-contain" alt="簽名">
-                    <button onclick="requestDelete('signature', '${sig.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 rounded-full w-6 h-6 flex items-center justify-center transition active:scale-95 border border-red-100">✕</button>
+                    <button onclick="event.stopPropagation(); requestDelete('signature', '${sig.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 rounded-full w-6 h-6 flex items-center justify-center transition active:scale-95 border border-red-100" title="刪除簽名檔">✕</button>
                 </div>`;
             });
         }
@@ -1537,6 +1562,13 @@
                 const sel=document.getElementById(`sigSelect${i}`); const v=sel.value; sel.innerHTML='<option value="">-- 選擇 --</option>'; 
                 savedSignatures.forEach(s=>sel.innerHTML+=`<option value="${s.id}">${s.name}</option>`); sel.value=v; 
             });
+            
+            // 同步更新 DataList 下拉選單供輸入框使用
+            const dl = document.getElementById('existingSigNames');
+            if (dl) {
+                dl.innerHTML = "";
+                savedSignatures.forEach(s => dl.innerHTML += `<option value="${s.name}">`);
+            }
         }
         
         window.applySavedSignatureToCanvas = (i, id) => {
