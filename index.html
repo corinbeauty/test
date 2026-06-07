@@ -402,7 +402,7 @@
         </div>
     </div>
 
-    <!-- 雲端電子簽名管理 -->
+    <!-- 雲端電子簽名管理 (修改版：隱藏下方清單，最大化畫布) -->
     <div id="sigManagerModal" class="fixed inset-0 bg-white z-[110] flex-col hidden overflow-hidden">
         <div id="rotationBanner" class="bg-amber-500 text-white text-xs py-2 px-4 text-center font-bold flex items-center justify-center gap-2 animate-pulse">
             <span>🔄 若畫面太小，建議旋轉手機至「橫向」以獲得最流暢的手寫簽名空間！</span>
@@ -424,7 +424,8 @@
                 <div class="text-center"><span class="text-4xl md:text-6xl font-bold tracking-widest block mb-2">請在此區域親筆簽名</span></div>
             </div>
         </div>
-        <div class="border-t bg-white h-24 md:h-32 flex flex-col z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <!-- 隱藏清單區塊 (加上 hidden，移除 flex) -->
+        <div class="hidden border-t bg-white h-24 md:h-32 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
             <div class="bg-slate-50 px-3 py-1.5 text-[11px] font-bold text-gray-500 border-b flex justify-between items-center">
                 <span>📁 現有雲端簽名檔清單</span>
             </div>
@@ -1391,28 +1392,92 @@
             window.scrollToForm(); // 載入完成後平滑捲動到下方表單
         };
 
-        // --- 全螢幕 Modal 簽名板 ---
+        // --- 全螢幕 Modal 簽名板 (修正尺寸重繪與視窗縮放) ---
         window.toggleSigManagerModal = (show) => {
             const m = document.getElementById('sigManagerModal');
-            if(show) { m.classList.remove('hidden'); m.classList.add('flex'); setTimeout(() => initManagerSignaturePad(), 200); }
-            else { m.classList.add('hidden'); m.classList.remove('flex'); }
+            if(show) { 
+                m.classList.remove('hidden'); 
+                m.classList.add('flex'); 
+                setTimeout(() => {
+                    initManagerSignaturePad();
+                    window.addEventListener('resize', handleSigPadResize);
+                }, 200); 
+            } else { 
+                m.classList.add('hidden'); 
+                m.classList.remove('flex'); 
+                window.removeEventListener('resize', handleSigPadResize);
+            }
         };
 
         let managerSigPad = null;
+        let resizeTimeout = null;
+
+        // 處理螢幕旋轉/重置畫布，並保留已畫軌跡
+        function handleSigPadResize() {
+            if(resizeTimeout) clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if(!document.getElementById('sigManagerModal').classList.contains('hidden')) {
+                    const tempUrl = managerSigPad.canvas.toDataURL(); // 暫存筆跡
+                    initManagerSignaturePad(); // 重新計算全螢幕寬高
+                    
+                    // 重新畫回原本暫存的簽名
+                    if(tempUrl.length > 1000) { 
+                        const img = new Image();
+                        img.onload = () => {
+                            const dpr = window.devicePixelRatio || 1;
+                            managerSigPad.ctx.drawImage(img, 0, 0, img.width / dpr, img.height / dpr);
+                        };
+                        img.src = tempUrl;
+                    }
+                }
+            }, 150); // 延遲讓旋轉後的 UI 尺寸完全穩定
+        }
+
         function initManagerSignaturePad() {
-            const canvas = document.getElementById('managerSigCanvas'); const ctx = canvas.getContext('2d');
-            const w = canvas.parentElement.clientWidth || window.innerWidth, h = canvas.parentElement.clientHeight || window.innerHeight;
-            canvas.style.width=w+"px"; canvas.style.height=h+"px"; canvas.width=w*2; canvas.height=h*2; ctx.scale(2,2);
-            ctx.strokeStyle="#000"; ctx.lineWidth=4; ctx.lineCap="round"; ctx.lineJoin="round";
-            let drawing=false, lastX=0, lastY=0;
+            const canvas = document.getElementById('managerSigCanvas'); 
+            const ctx = canvas.getContext('2d');
+            const container = canvas.parentElement;
+
+            // 動態抓取父容器(滿版)的絕對寬高
+            const w = container.clientWidth; 
+            const h = container.clientHeight;
+            
+            canvas.style.width = w + "px"; 
+            canvas.style.height = h + "px"; 
+            
+            // 修正高解析度螢幕(手機/平板)的筆跡偏移問題
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = w * dpr; 
+            canvas.height = h * dpr; 
+            ctx.scale(dpr, dpr);
+            
+            ctx.strokeStyle = "#000"; 
+            ctx.lineWidth = 4; 
+            ctx.lineCap = "round"; 
+            ctx.lineJoin = "round";
+            
+            let drawing = false, lastX = 0, lastY = 0;
+            
             const getPos = (e) => { 
-                const r = canvas.getBoundingClientRect(); const evt = e.touches ? e.touches[0] : e;
-                const scaleX = canvas.offsetWidth / (r.width || 1), scaleY = canvas.offsetHeight / (r.height || 1);
-                return { x: (evt.clientX - r.left) * scaleX, y: (evt.clientY - r.top) * scaleY }; 
+                const r = canvas.getBoundingClientRect(); 
+                const evt = e.touches ? e.touches[0] : e;
+                return { x: evt.clientX - r.left, y: evt.clientY - r.top }; 
             };
-            canvas.onmousedown = canvas.ontouchstart = (e) => { drawing=true; const p=getPos(e); lastX=p.x; lastY=p.y; };
-            canvas.onmousemove = canvas.ontouchmove = (e) => { if(!drawing) return; e.preventDefault(); const p=getPos(e); ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y); ctx.stroke(); lastX=p.x; lastY=p.y; };
-            canvas.onmouseup = canvas.onmouseleave = canvas.ontouchend = () => drawing=false;
+            
+            canvas.onmousedown = canvas.ontouchstart = (e) => { drawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; };
+            canvas.onmousemove = canvas.ontouchmove = (e) => { 
+                if(!drawing) return; 
+                e.preventDefault(); 
+                const p = getPos(e); 
+                ctx.beginPath(); 
+                ctx.moveTo(lastX, lastY); 
+                ctx.lineTo(p.x, p.y); 
+                ctx.stroke(); 
+                lastX = p.x; 
+                lastY = p.y; 
+            };
+            canvas.onmouseup = canvas.onmouseleave = canvas.ontouchend = () => drawing = false;
+            
             managerSigPad = { canvas: canvas, ctx: ctx };
         }
         
