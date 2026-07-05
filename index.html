@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>休閒部門店師傅/員工 訪談紀錄表 - 中清行館專用版 (V2)</title>
+    <title>休閒部門店師傅/員工 訪談紀錄表 - 中清行館專用版 (V2.1)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS (xlsx) for Excel Export -->
@@ -45,11 +45,12 @@
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                 </div>
                 <h2 class="text-2xl font-black text-slate-800 tracking-wider">中清行館訪談系統</h2>
-                <p class="text-sm text-slate-500 mt-2 font-medium" id="loginStatusText">請輸入您的姓名與密碼登入</p>
+                <p class="text-sm text-slate-500 mt-2 font-medium" id="loginStatusText">請輸入您的帳號密碼登入系統</p>
             </div>
             <form onsubmit="handleLogin(event)" class="space-y-4">
                 <div>
-                    <input type="text" id="loginName" required placeholder="請輸入姓名 (如：信吉)" class="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-700 shadow-sm transition">
+                    <!-- 乾淨的輸入框，不洩漏任何提示 -->
+                    <input type="text" id="loginName" required placeholder="請輸入帳號名稱" class="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-700 shadow-sm transition">
                 </div>
                 <div>
                     <input type="password" id="loginPass" required placeholder="請輸入密碼" class="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-700 shadow-sm transition">
@@ -164,16 +165,14 @@
 
             <div class="mb-4 bg-gray-50 p-3 rounded-lg border">
                 <h3 class="text-sm font-bold text-gray-700 mb-3 flex flex-wrap items-center justify-between border-b pb-2 gap-2">
-                    <span id="empDatabaseTitle">👥 雲端資料庫進度</span>
+                    <span id="empDatabaseTitle">👥 名單建立進度</span>
                     <div class="flex gap-2 flex-wrap">
-                        <!-- V2 Module - 新增後台監控按鈕，僅管理員可見 -->
-                        <button id="adminPanelBtn" onclick="toggleAdminPanel(true)" class="hidden text-xs text-red-600 font-bold hover:underline border border-red-200 bg-red-50 px-2 py-1 rounded transition hover:bg-red-100 shadow-sm">🛡️ 系統後台</button>
+                        <!-- V2 Module - 系統後台按鈕，僅管理員可見 -->
+                        <button id="adminPanelBtn" onclick="toggleAdminPanel(true)" class="hidden text-xs text-red-600 font-bold hover:underline border border-red-200 bg-red-50 px-2 py-1 rounded transition hover:bg-red-100 shadow-sm">🛡️ 最高權限後台 (帳號與名單)</button>
                         
                         <button onclick="toggleSpecialSearchModal(true)" class="text-xs text-purple-600 font-bold hover:underline border border-purple-200 bg-purple-50 px-2 py-1 rounded transition hover:bg-purple-100">🔍 特別訪談查詢</button>
                         <button onclick="toggleSigManagerModal(true)" class="text-xs text-blue-600 font-bold hover:underline border border-blue-200 bg-blue-50 px-2 py-1 rounded transition hover:bg-blue-100">✍️ 管理簽名檔</button>
                         <button onclick="toggleRosterModal(true)" class="text-xs text-indigo-600 font-bold hover:underline border border-indigo-200 bg-indigo-50 px-2 py-1 rounded transition hover:bg-indigo-100">📋 名單比對表</button>
-                        <!-- V2 Module - 限制此按鈕僅管理員可見 -->
-                        <button id="editEmpBtn" onclick="toggleEmpModal(true)" class="hidden text-xs text-green-600 font-bold hover:underline border border-green-200 bg-green-50 px-2 py-1 rounded transition hover:bg-green-100">+ 編輯員工</button>
                     </div>
                 </h3>
 
@@ -424,26 +423,27 @@
 
     <!-- ================== 核心功能 Modals ================== -->
 
-    <!-- V2 Module - 系統後台審計面板 (最高權限專屬) -->
+    <!-- V2.1 Module - 系統後台審計面板 (最高權限專屬 - 完全分離帳號與名單) -->
     <div id="adminPanelModal" class="fixed inset-0 bg-slate-900/80 z-[150] flex items-center justify-center hidden p-4 backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl max-w-5xl w-full h-[85vh] flex flex-col overflow-hidden transform scale-95 opacity-0 transition-all duration-300">
             <div class="bg-slate-800 px-5 py-4 flex justify-between items-center text-white">
                 <h3 class="text-lg font-black flex items-center gap-2">
-                    🛡️ 系統安全後台 (System Backend)
+                    🛡️ 系統安全後台 (帳號與名單分離架構)
                 </h3>
                 <button onclick="toggleAdminPanel(false)" class="text-slate-300 hover:text-white font-bold text-2xl transition">✕</button>
             </div>
             
             <div class="flex bg-slate-100 border-b border-slate-200">
-                <button onclick="switchAdminTab('audit')" id="tabAdminAudit" class="flex-1 py-3 text-sm font-black text-indigo-700 border-b-4 border-indigo-600 focus:outline-none transition-colors">📄 系統存取審計日誌 (Audit Logs)</button>
-                <button onclick="switchAdminTab('users')" id="tabAdminUsers" class="flex-1 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-4 border-transparent focus:outline-none transition-colors">👥 人員與密碼管理</button>
+                <button onclick="switchAdminTab('audit')" id="tabAdminAudit" class="flex-1 py-3 text-sm font-black text-indigo-700 border-b-4 border-indigo-600 focus:outline-none transition-colors">📄 系統存取日誌</button>
+                <button onclick="switchAdminTab('accounts')" id="tabAdminAccounts" class="flex-1 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-4 border-transparent focus:outline-none transition-colors">🔐 系統登入帳號管理</button>
+                <button onclick="switchAdminTab('employees')" id="tabAdminEmployees" class="flex-1 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-4 border-transparent focus:outline-none transition-colors">👥 訪談對象名單管理</button>
             </div>
 
             <div class="flex-1 overflow-y-auto bg-white p-4" id="adminContentArea">
-                <!-- 審計日誌 Tab -->
+                <!-- Tab 1: 審計日誌 -->
                 <div id="adminTabAudit" class="h-full flex flex-col">
                     <div class="mb-3 flex justify-between items-center bg-slate-50 p-2 rounded border border-slate-200">
-                        <span class="text-xs font-bold text-slate-500">* 記錄系統內所有登入登出、人員與紀錄的調閱及修改行為。</span>
+                        <span class="text-xs font-bold text-slate-500">* 統一記錄系統內所有人員的登入登出、調閱及修改行為。</span>
                         <button onclick="fetchAuditLogs()" class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded font-bold hover:bg-indigo-200 transition">🔄 重新整理</button>
                     </div>
                     <div class="flex-1 overflow-y-auto border border-slate-200 rounded">
@@ -461,66 +461,84 @@
                     </div>
                 </div>
 
-                <!-- 人員密碼管理 Tab -->
-                <div id="adminTabUsers" class="h-full hidden flex-col">
-                    <div class="mb-3 bg-amber-50 p-3 rounded border border-amber-200 flex items-center justify-between">
-                        <span class="text-xs font-bold text-amber-800">⚠️ 最高權限 (信吉) 密碼為系統寫死，無需於此管理。此處顯示並管理所有一般員工之密碼設定。</span>
+                <!-- Tab 2: 系統登入帳號管理 (有密碼、有權限) -->
+                <div id="adminTabAccounts" class="h-full hidden flex-col">
+                    <div class="mb-3 bg-amber-50 p-3 rounded border border-amber-200 flex flex-col gap-1">
+                        <span class="text-xs font-bold text-amber-800">⚠️ 此處管理的是「可以登入此系統的人員」(例如各店主管)。</span>
+                        <span class="text-xs font-medium text-amber-700">最高權限帳號密碼為系統內建保護，無需於此管理。新增帳號預設密碼皆為 8888，首次登入將強制修改。</span>
                     </div>
+                    <!-- 新增系統帳號表單 -->
+                    <form onsubmit="window.addSystemUser(event)" class="bg-white p-3 rounded-lg border border-slate-200 mb-4 flex gap-2 shadow-sm items-end">
+                        <div class="flex-1">
+                            <label class="block text-xs font-bold text-slate-500 mb-1">登入帳號名稱 (顯示名稱)</label>
+                            <input type="text" id="newAccountName" placeholder="輸入姓名" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" required>
+                        </div>
+                        <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-700 transition shadow-md whitespace-nowrap">＋ 新增登入帳號</button>
+                    </form>
+
+                    <div class="flex-1 overflow-y-auto border border-slate-200 rounded">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-slate-100 uppercase sticky top-0 shadow-sm text-slate-600 font-black">
+                                <tr>
+                                    <th class="p-3">帳號名稱</th>
+                                    <th class="p-3">密碼狀態</th>
+                                    <th class="p-3 text-center">登入權限</th>
+                                    <th class="p-3 text-center">管理操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminAccountsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab 3: 受訪員工名單管理 (無密碼、純名單) -->
+                <div id="adminTabEmployees" class="h-full hidden flex-col">
+                    <div class="mb-3 bg-blue-50 p-3 rounded border border-blue-200 flex flex-col gap-1">
+                        <span class="text-xs font-bold text-blue-800">ℹ️ 此處管理的是「表單內可供挑選的受訪人員名單」，他們不具備登入系統的能力。</span>
+                    </div>
+                    <!-- 新增受訪員工表單 -->
+                    <form onsubmit="window.addEmployee(event)" class="bg-white p-3 rounded-lg border border-slate-200 mb-3 flex gap-2 shadow-sm items-end">
+                        <div class="flex-1">
+                            <label class="block text-xs font-bold text-slate-500 mb-1">員工編號</label>
+                            <input type="text" id="newEmpId" placeholder="輸入編號" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-xs font-bold text-slate-500 mb-1">員工姓名</label>
+                            <input type="text" id="newEmpName" placeholder="輸入姓名" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" required>
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-xs font-bold text-slate-500 mb-1">職稱 (選填)</label>
+                            <input type="text" id="newEmpTitle" placeholder="如: 櫃台" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow-md whitespace-nowrap">＋ 新增名單</button>
+                    </form>
+
+                    <!-- 分頁標籤 -->
+                    <div class="flex border-b border-slate-200 mb-2">
+                        <button onclick="switchAdminEmpTab('active')" id="adminTabEmpActive" class="px-5 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 focus:outline-none transition-colors">在職名單 (0)</button>
+                        <button onclick="switchAdminEmpTab('resigned')" id="adminTabEmpResigned" class="px-5 py-2 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 focus:outline-none transition-colors">離職隱藏名單 (0)</button>
+                    </div>
+
                     <div class="flex-1 overflow-y-auto border border-slate-200 rounded">
                         <table class="w-full text-xs text-left">
                             <thead class="bg-slate-100 uppercase sticky top-0 shadow-sm text-slate-600 font-black">
                                 <tr>
                                     <th class="p-3">編號</th>
                                     <th class="p-3">姓名</th>
-                                    <th class="p-3">目前密碼狀態</th>
-                                    <th class="p-3 text-center">操作</th>
+                                    <th class="p-3">職稱</th>
+                                    <th class="p-3 text-center">狀態</th>
+                                    <th class="p-3 text-center">管理操作</th>
                                 </tr>
                             </thead>
-                            <tbody id="adminUsersTableBody"></tbody>
+                            <tbody id="adminEmployeesTableBody"></tbody>
                         </table>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
 
-    <!-- 編輯員工 Modal (V2: 只有管理員能用) -->
-    <div id="empModal" class="fixed inset-0 bg-black/50 z-[120] flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-5 max-h-[80vh] flex flex-col">
-            <h3 class="text-lg font-bold text-gray-800 mb-3 flex justify-between items-center border-b pb-2">
-                <span>👥 編輯員工名單</span>
-                <button onclick="toggleEmpModal(false)" class="text-gray-400 hover:text-gray-600 font-bold">✕</button>
-            </h3>
-            <form id="newEmpForm" onsubmit="window.addEmployee(event)" class="bg-gray-50 p-3 rounded-lg border mb-4 grid grid-cols-3 gap-2">
-                <div><input type="text" id="newId" placeholder="編號" class="w-full border rounded p-1.5 text-xs focus:ring-1 focus:ring-blue-500" required></div>
-                <div><input type="text" id="newName" placeholder="姓名" class="w-full border rounded p-1.5 text-xs focus:ring-1 focus:ring-blue-500" required></div>
-                <div class="flex gap-1">
-                    <input type="text" id="newTitle" placeholder="職稱" class="w-full border rounded p-1.5 text-xs focus:ring-1 focus:ring-blue-500">
-                    <button type="submit" class="bg-blue-600 text-white px-3 rounded text-xs font-bold hover:bg-blue-700 transition">＋</button>
-                </div>
-            </form>
-            
-            <div class="flex border-b mb-2">
-                <button onclick="switchEmpTab('active')" id="tabActive" class="px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 focus:outline-none transition-colors">正常員工 (0)</button>
-                <button onclick="switchEmpTab('resigned')" id="tabResigned" class="px-4 py-2 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 focus:outline-none transition-colors">離職員工 (0)</button>
-            </div>
-
-            <div class="overflow-y-auto flex-1 border rounded-lg">
-                <table class="w-full text-xs text-left">
-                    <thead class="bg-gray-100 uppercase sticky top-0 shadow-sm">
-                        <tr><th class="p-2 border-b">編號</th><th class="p-2 border-b">姓名</th><th class="p-2 border-b text-center">狀態</th><th class="p-2 border-b text-center">操作</th></tr>
-                    </thead>
-                    <tbody id="empTableBody"></tbody>
-                </table>
-            </div>
-            <div class="mt-4 flex justify-between items-center">
-                <span class="text-xs text-slate-500">* 新增人員預設密碼為 8888</span>
-                <button onclick="toggleEmpModal(false)" class="bg-gray-800 text-white px-4 py-2 rounded font-bold hover:bg-gray-900 text-xs">完成關閉</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 其他原有 Modals (歷史紀錄、特別查詢、名單比對、主管名單、簽名檔、提示框) -->
     <!-- 特別訪談查詢 Modal -->
     <div id="specialSearchModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-xl shadow-xl max-w-3xl w-full p-5 max-h-[80vh] flex flex-col">
@@ -679,7 +697,7 @@
                 <svg class="h-8 w-8 text-red-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
             </div>
             <h3 class="text-xl font-black text-gray-900 mb-2 tracking-wide">權限驗證</h3>
-            <p class="text-xs text-gray-500 mb-5 leading-relaxed font-medium">刪除資料為不可逆之操作。<br>請輸入最高權限密碼以核實身分。</p>
+            <p class="text-xs text-gray-500 mb-5 leading-relaxed font-medium">資料抹除為不可逆之操作。<br>請輸入最高權限密碼以核實身分。</p>
             <input type="password" id="deletePasscodeField" maxlength="10" placeholder="請輸入密碼" class="w-full text-center text-xl tracking-[0.2em] border-2 border-gray-200 rounded-xl py-3 px-3 focus:ring-4 focus:ring-red-500/20 focus:border-red-500 focus:outline-none mb-6 font-bold bg-gray-50 text-gray-800 transition-all">
             <div class="flex gap-3">
                 <button onclick="closeDeletePasswordModal()" class="flex-1 bg-white border-2 border-gray-200 hover:bg-gray-50 text-gray-700 font-bold py-3 px-4 rounded-xl text-sm transition-all active:scale-95">取消</button>
@@ -738,23 +756,29 @@
         import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         let user = null;
-        let employees = [];
+        
+        // V2.1 雙軌資料庫：登入帳號 vs 受訪名單
+        let systemUsers = []; // 登入系統用的帳號
+        let employees = [];   // 表單上可挑選的受訪名單
+        
         let loadedRecords = []; 
         let savedSignatures = []; 
-        let auditLogs = []; // V2 Module
+        let auditLogs = []; 
         
         let successModalCallback = null;
         
         window.currentZoom = 1.0;
         window.currentHistoryQuarterFilter = 'ALL';
         window.currentLoadedRecordId = null; 
-        window.currentEmpTab = 'active'; 
         
-        // V2 Module Auth State
+        // Admin Tabs State
+        window.currentAdminEmpTab = 'active'; 
+        
+        // Auth State
         window.currentUserRole = null; // 'admin' or 'user'
         window.currentUserName = null;
-        window.currentLoginEmpId = null;
         
+        let isSystemUsersLoaded = false;
         let isEmployeesLoaded = false;
         let isRecordsLoaded = false;
         let isSignaturesLoaded = false;
@@ -778,7 +802,6 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // 初始化匯出年份與月份區間與標題
         const todayRealDate = new Date();
         document.getElementById('exportYear').value = todayRealDate.getFullYear() - 1911;
         document.getElementById('exportMonthStart').value = todayRealDate.getMonth() + 1;
@@ -813,10 +836,10 @@
             for(let i=1; i<=3; i++) { const titleEl = document.getElementById(`monthTitle${i}`); if(titleEl) titleEl.innerText = `${text} ${m[i-1]}月`; }
         };
 
-        // --- V2 RBAC 登入與登出系統 ---
+        // --- V2.1 RBAC 登入與登出系統 (驗證 system_users) ---
         window.handleLogin = async (e) => {
             e.preventDefault();
-            if(!isEmployeesLoaded) return showWarningModal("請稍候", "員工資料庫尚未載入完成，請等待連線。");
+            if(!isSystemUsersLoaded) return showWarningModal("請稍候", "系統安全資料庫尚未載入完成，請等待連線。");
 
             const name = document.getElementById('loginName').value.trim();
             const pass = document.getElementById('loginPass').value.trim();
@@ -825,32 +848,24 @@
                 window.currentUserRole = 'admin';
                 window.currentUserName = `${ADMIN_NAME} (最高權限)`;
                 document.getElementById('loginOverlay').classList.add('opacity-0');
-                setTimeout(() => {
-                    document.getElementById('loginOverlay').classList.add('hidden');
-                    completeLoginInit();
-                }, 500);
+                setTimeout(() => { document.getElementById('loginOverlay').classList.add('hidden'); completeLoginInit(); }, 500);
                 return;
             }
 
-            const emp = employees.find(e => e.name === name);
-            if (!emp) return showWarningModal("登入失敗", "找不到此人員，請確認姓名是否正確。");
-
-            const empPass = emp.password || "8888"; 
-            if (pass !== empPass) return showWarningModal("登入失敗", "密碼錯誤！若忘記密碼請聯繫管理員重設。");
+            const sysUser = systemUsers.find(u => u.username === name);
+            if (!sysUser) return showWarningModal("登入失敗", "查無此帳號名稱，請確認輸入是否正確。");
+            if (!sysUser.isActive) return showWarningModal("登入拒絕", "此帳號目前已停用，請聯繫最高權限管理員。");
+            if (pass !== sysUser.password) return showWarningModal("登入失敗", "密碼錯誤！若忘記密碼請聯繫管理員重設。");
 
             window.currentUserRole = 'user';
             window.currentUserName = name;
-            window.currentLoginEmpId = emp.id;
 
-            if (empPass === "8888" || emp.isFirstLogin) {
+            if (pass === "8888" || sysUser.isFirstLogin) {
                 document.getElementById('loginOverlay').classList.add('hidden');
                 document.getElementById('forcePasswordOverlay').classList.remove('hidden');
             } else {
                 document.getElementById('loginOverlay').classList.add('opacity-0');
-                setTimeout(() => {
-                    document.getElementById('loginOverlay').classList.add('hidden');
-                    completeLoginInit();
-                }, 500);
+                setTimeout(() => { document.getElementById('loginOverlay').classList.add('hidden'); completeLoginInit(); }, 500);
             }
         };
 
@@ -863,15 +878,15 @@
 
             try {
                 showMsg("更新密碼中...", "info");
-                const emp = employees.find(e => e.id === window.currentLoginEmpId);
-                await setDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'employees', `${STORE_ID}_${emp.id}`), {
-                    ...emp, password: p1, isFirstLogin: false
+                const sysUser = systemUsers.find(u => u.username === window.currentUserName);
+                await setDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'system_users', sysUser.id), {
+                    ...sysUser, password: p1, isFirstLogin: false
                 });
                 
-                await window.logAction("變更密碼", `使用者 ${window.currentUserName} 初次登入完成強制密碼變更`);
+                await window.logAction("變更密碼", `帳號 ${window.currentUserName} 初次登入完成強制密碼變更`);
                 
                 document.getElementById('forcePasswordOverlay').classList.add('hidden');
-                showSuccessModal("密碼變更成功", "密碼已更新，歡迎進入系統。");
+                showSuccessModal("密碼變更成功", "密碼已安全更新，歡迎進入系統。");
                 completeLoginInit();
             } catch (err) {
                 showErrorModal("密碼更新失敗", "無法儲存新密碼。", err.message);
@@ -879,7 +894,7 @@
         };
 
         window.handleLogout = async () => {
-            await window.logAction("登出系統", `使用者 ${window.currentUserName} 登出系統`);
+            await window.logAction("登出系統", `帳號 ${window.currentUserName} 登出系統`);
             localStorage.clear();
             sessionStorage.clear();
             location.reload();
@@ -891,36 +906,30 @@
             document.getElementById('topNavUser').classList.add('flex');
             document.getElementById('displayUserName').innerText = window.currentUserName;
             
-            // RBAC UI Control
-            if (window.currentUserRole === 'admin') {
-                document.getElementById('adminPanelBtn').classList.remove('hidden');
-                document.getElementById('editEmpBtn').classList.remove('hidden');
-            } else {
-                document.getElementById('adminPanelBtn').classList.add('hidden');
-                document.getElementById('editEmpBtn').classList.add('hidden');
-            }
+            if (window.currentUserRole === 'admin') { document.getElementById('adminPanelBtn').classList.remove('hidden'); } 
+            else { document.getElementById('adminPanelBtn').classList.add('hidden'); }
             
-            window.logAction("登入系統", `使用者 ${window.currentUserName} 成功登入`);
-            checkAndRenderDataState(); // Render data now that app is visible
+            window.logAction("登入系統", `帳號 ${window.currentUserName} 成功登入`);
+            checkAndRenderDataState(); 
         }
 
-        // --- V2 Module: 審計日誌引擎 (Audit Log Engine) ---
+        // --- 審計日誌引擎 (Audit Log Engine) ---
         window.logAction = async (action, details) => {
             if(!window.currentUserName) return;
             const logId = `log_${Date.now()}_${Math.floor(Math.random()*10000)}`;
             const payload = { id: logId, timestamp: new Date().toISOString(), user: window.currentUserName, action, details };
-            try {
-                await setDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'audit_logs', logId), payload);
-            } catch(e) { console.error("Audit logging failed", e); }
+            try { await setDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'audit_logs', logId), payload); } catch(e) { console.error("Audit logging failed", e); }
         };
 
+        // --- V2.1 系統後台 Tabs 切換 ---
         window.toggleAdminPanel = (show) => {
             const m = document.getElementById('adminPanelModal');
             if(show) {
                 m.classList.remove('hidden'); m.classList.add('flex');
                 setTimeout(() => { m.querySelector('div').classList.remove('scale-95', 'opacity-0'); m.querySelector('div').classList.add('scale-100', 'opacity-100'); }, 10);
                 window.fetchAuditLogs();
-                window.renderAdminUsersTable();
+                window.renderAdminAccountsTable();
+                window.renderAdminEmployeesTable();
             } else {
                 m.querySelector('div').classList.remove('scale-100', 'opacity-100'); m.querySelector('div').classList.add('scale-95', 'opacity-0');
                 setTimeout(() => { m.classList.add('hidden'); m.classList.remove('flex'); }, 300);
@@ -929,12 +938,15 @@
 
         window.switchAdminTab = (tab) => {
             document.getElementById('tabAdminAudit').className = tab==='audit' ? "flex-1 py-3 text-sm font-black text-indigo-700 border-b-4 border-indigo-600 focus:outline-none transition-colors" : "flex-1 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-4 border-transparent focus:outline-none transition-colors";
-            document.getElementById('tabAdminUsers').className = tab==='users' ? "flex-1 py-3 text-sm font-black text-indigo-700 border-b-4 border-indigo-600 focus:outline-none transition-colors" : "flex-1 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-4 border-transparent focus:outline-none transition-colors";
+            document.getElementById('tabAdminAccounts').className = tab==='accounts' ? "flex-1 py-3 text-sm font-black text-indigo-700 border-b-4 border-indigo-600 focus:outline-none transition-colors" : "flex-1 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-4 border-transparent focus:outline-none transition-colors";
+            document.getElementById('tabAdminEmployees').className = tab==='employees' ? "flex-1 py-3 text-sm font-black text-indigo-700 border-b-4 border-indigo-600 focus:outline-none transition-colors" : "flex-1 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-4 border-transparent focus:outline-none transition-colors";
             
             document.getElementById('adminTabAudit').style.display = tab==='audit' ? 'flex' : 'none';
-            document.getElementById('adminTabUsers').style.display = tab==='users' ? 'flex' : 'none';
+            document.getElementById('adminTabAccounts').style.display = tab==='accounts' ? 'flex' : 'none';
+            document.getElementById('adminTabEmployees').style.display = tab==='employees' ? 'flex' : 'none';
         };
 
+        // --- 管理區 1: 審計日誌 ---
         window.fetchAuditLogs = () => {
             if (window.currentUserRole !== 'admin') return;
             const tbody = document.getElementById('auditLogsTableBody');
@@ -949,54 +961,148 @@
                     const timeStr = `${dateObj.getFullYear()}/${String(dateObj.getMonth()+1).padStart(2,'0')}/${String(dateObj.getDate()).padStart(2,'0')} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}:${String(dateObj.getSeconds()).padStart(2,'0')}`;
                     let actionBadge = "bg-slate-100 text-slate-600";
                     if(log.action.includes("登入") || log.action.includes("登出")) actionBadge = "bg-emerald-100 text-emerald-700 border border-emerald-200";
-                    if(log.action.includes("刪除") || log.action.includes("隱藏")) actionBadge = "bg-red-100 text-red-700 border border-red-200";
-                    if(log.action.includes("新增") || log.action.includes("儲存")) actionBadge = "bg-blue-100 text-blue-700 border border-blue-200";
-                    if(log.action.includes("調閱")) actionBadge = "bg-amber-100 text-amber-700 border border-amber-200";
+                    if(log.action.includes("刪除") || log.action.includes("停用") || log.action.includes("離職")) actionBadge = "bg-red-100 text-red-700 border border-red-200";
+                    if(log.action.includes("新增") || log.action.includes("儲存") || log.action.includes("派發")) actionBadge = "bg-blue-100 text-blue-700 border border-blue-200";
+                    if(log.action.includes("調閱") || log.action.includes("重設")) actionBadge = "bg-amber-100 text-amber-700 border border-amber-200";
 
                     tbody.innerHTML += `<tr class="border-b hover:bg-slate-50 transition">
                         <td class="p-3 text-slate-500 font-mono">${timeStr}</td>
                         <td class="p-3 font-bold text-slate-800">${log.user}</td>
                         <td class="p-3"><span class="px-2 py-1 rounded text-[10px] font-bold ${actionBadge}">${log.action}</span></td>
-                        <td class="p-3 text-slate-600 truncate max-w-[200px]" title="${log.details}">${log.details}</td>
+                        <td class="p-3 text-slate-600 truncate max-w-[300px]" title="${log.details}">${log.details}</td>
                     </tr>`;
                 });
             }, err => console.error("Audit log error:", err));
         };
 
-        window.renderAdminUsersTable = () => {
-            const tbody = document.getElementById('adminUsersTableBody');
-            tbody.innerHTML = "";
-            const emps = getSortedEmployees(true);
-            if(emps.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">尚無人員</td></tr>`; return; }
+        // --- 管理區 2: 系統登入帳號管理 ---
+        window.addSystemUser = async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('newAccountName').value.trim();
+            if(systemUsers.some(u => u.username === username)) return window.showMsg("❌ 此登入帳號已存在", "error");
             
-            emps.forEach(e => {
-                const pass = e.password || "8888";
-                const isDefault = pass === "8888" || e.isFirstLogin;
-                const passBadge = isDefault ? `<span class="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">未設定 (預設: 8888)</span>` : `<span class="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded border border-green-200">已自訂 (${pass})</span>`;
+            const id = 'sys_' + Date.now();
+            const newUser = { id, username, password: "8888", isFirstLogin: true, isActive: true };
+            try {
+                await setDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'system_users', id), newUser);
+                await window.logAction("派發系統帳號", `最高權限新增了登入帳號: ${username}`);
+                window.showMsg("🎉 登入帳號派發成功", "success");
+                document.getElementById('newAccountName').value = "";
+                window.renderAdminAccountsTable();
+            } catch(err) { window.showErrorModal("新增失敗", "無法寫入系統帳號。", err.message); }
+        };
+
+        window.renderAdminAccountsTable = () => {
+            const tbody = document.getElementById('adminAccountsTableBody');
+            tbody.innerHTML = "";
+            if(systemUsers.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">尚無任何派發的登入帳號</td></tr>`; return; }
+            
+            const sortedUsers = systemUsers.slice().sort((a,b) => a.username.localeCompare(b.username));
+            sortedUsers.forEach(u => {
+                const isDefault = u.password === "8888" || u.isFirstLogin;
+                const passBadge = isDefault ? `<span class="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">預設 (8888)</span>` : `<span class="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded border border-green-200">已自訂密碼</span>`;
+                const statusText = !u.isActive ? '<span class="text-red-500 font-bold">🚫 已停用</span>' : '<span class="text-green-600 font-bold">✅ 正常允許</span>';
+                const toggleBtnText = !u.isActive ? '恢復權限' : '停用登入';
                 
-                tbody.innerHTML += `<tr class="border-b hover:bg-slate-50">
-                    <td class="p-3 font-semibold text-slate-700">${e.id}</td>
-                    <td class="p-3 font-bold text-indigo-700">${e.name}</td>
+                tbody.innerHTML += `<tr class="border-b hover:bg-slate-50 transition">
+                    <td class="p-3 font-bold text-indigo-700">${u.username}</td>
                     <td class="p-3">${passBadge}</td>
-                    <td class="p-3 text-center">
-                        <button onclick="window.resetUserPassword('${e.id}')" class="text-xs bg-red-50 text-red-600 font-bold px-3 py-1.5 rounded hover:bg-red-100 border border-red-200 transition">重設密碼</button>
+                    <td class="p-3 text-center">${statusText}</td>
+                    <td class="p-3 text-center flex justify-center gap-1.5">
+                        <button onclick="window.resetSystemUserPassword('${u.id}')" class="text-[11px] bg-slate-100 text-slate-600 font-bold px-2.5 py-1.5 rounded hover:bg-slate-200 border border-slate-300 transition">重設密碼</button>
+                        <button onclick="window.confirmToggleSystemUserStatus('${u.id}', ${!u.isActive})" class="text-[11px] bg-amber-50 text-amber-700 font-bold px-2.5 py-1.5 rounded hover:bg-amber-100 border border-amber-200 transition">${toggleBtnText}</button>
+                        <button onclick="window.requestDelete('system_user', '${u.id}')" class="text-[11px] bg-red-50 text-red-600 font-bold px-2.5 py-1.5 rounded hover:bg-red-100 border border-red-200 transition">永久刪除</button>
                     </td>
                 </tr>`;
             });
         };
 
-        window.resetUserPassword = (id) => {
-            window.showConfirmModal("重設員工密碼", "確定要將該員工密碼重設為預設值「8888」並要求下次登入時強制更改嗎？", async () => {
-                const emp = employees.find(e => e.id === id);
-                if(!emp) return;
+        window.resetSystemUserPassword = (id) => {
+            window.showConfirmModal("重設帳號密碼", "確定要將該登入帳號的密碼重設為預設值「8888」並要求下次強制更改嗎？", async () => {
+                const u = systemUsers.find(e => e.id === id); if(!u) return;
                 try {
-                    await setDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'employees', `${STORE_ID}_${id}`), { ...emp, password: "8888", isFirstLogin: true });
-                    await window.logAction("管理員重設密碼", `管理員重設了員工 ${emp.name} (${emp.id}) 的密碼為預設值`);
-                    window.showMsg("密碼已重設", "success");
-                    window.renderAdminUsersTable();
+                    await setDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'system_users', id), { ...u, password: "8888", isFirstLogin: true });
+                    await window.logAction("管理員重設密碼", `最高權限重設了登入帳號 ${u.username} 的密碼為預設值`);
+                    window.showMsg("帳號密碼已重設", "success");
                 } catch(err) { window.showErrorModal("重設失敗", "無法重設密碼。", err.message); }
             });
         };
+
+        window.toggleSystemUserStatus = async (id) => {
+            const u = systemUsers.find(e => e.id === id); if(!u) return;
+            try {
+                await setDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'system_users', id), { ...u, isActive: !u.isActive });
+                await window.logAction("系統帳號權限變更", `最高權限變更了帳號 ${u.username} 的狀態為 ${!u.isActive ? '停用' : '啟用'}`);
+                window.showMsg("權限狀態已變更", "success");
+            } catch(err) { window.showErrorModal("更新失敗", "無法更改權限狀態", err.message); }
+        };
+
+        window.confirmToggleSystemUserStatus = (id, isCurrentlyDisabled) => { const actionText = isCurrentlyDisabled ? "恢復登入權限" : "停用該帳號登入"; window.showConfirmModal("變更帳號權限", `確定要對此帳號執行「${actionText}」嗎？`, () => window.toggleSystemUserStatus(id)); };
+
+
+        // --- 管理區 3: 受訪員工名單管理 (無密碼純實體) ---
+        window.switchAdminEmpTab = (tab) => { window.currentAdminEmpTab = tab; window.renderAdminEmployeesTable(); };
+
+        window.addEmployee = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('newEmpId').value.trim(), name = document.getElementById('newEmpName').value.trim(), title = document.getElementById('newEmpTitle').value.trim();
+            if(employees.some(emp => emp.id === id)) return window.showMsg("❌ 員工編號重複", "error");
+            
+            const newEmp = { id, name, title, storeId: STORE_ID, isHidden: false };
+            try {
+                await setDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'employees', `${STORE_ID}_${id}`), newEmp);
+                await window.logAction("受訪名單管理", `新增了受訪人員名單: ${name} (編號: ${id})`);
+                window.showMsg("🎉 受訪名單新增成功", "success");
+                document.getElementById('newEmpId').value = ""; document.getElementById('newEmpName').value = ""; document.getElementById('newEmpTitle').value = "";
+                window.renderAdminEmployeesTable();
+            } catch(err) { window.showErrorModal("新增失敗", "無法寫入名單資料。", err.message); }
+        };
+
+        window.renderAdminEmployeesTable = () => {
+            const tbody = document.getElementById('adminEmployeesTableBody'); tbody.innerHTML = "";
+            const isHiddenTab = window.currentAdminEmpTab === 'resigned';
+            
+            let activeCount = 0; let resignedCount = 0; 
+            employees.forEach(e => { if (e.isHidden) resignedCount++; else activeCount++; });
+
+            document.getElementById('adminTabEmpActive').innerText = `在職名單 (${activeCount})`; 
+            document.getElementById('adminTabEmpActive').className = window.currentAdminEmpTab === 'active' ? "px-5 py-2.5 text-sm font-bold border-b-2 border-blue-600 text-blue-600 focus:outline-none transition-colors" : "px-5 py-2.5 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 focus:outline-none transition-colors";
+            
+            document.getElementById('adminTabEmpResigned').innerText = `離職隱藏名單 (${resignedCount})`; 
+            document.getElementById('adminTabEmpResigned').className = window.currentAdminEmpTab === 'resigned' ? "px-5 py-2.5 text-sm font-bold border-b-2 border-blue-600 text-blue-600 focus:outline-none transition-colors" : "px-5 py-2.5 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 focus:outline-none transition-colors";
+
+            const emps = employees.slice().sort((a,b) => parseInt(a.id) - parseInt(b.id)).filter(e => isHiddenTab ? e.isHidden : !e.isHidden);
+
+            if(emps.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">目前尚無人員資料</td></tr>`; return; }
+            
+            emps.forEach(e => {
+                const statusText = e.isHidden ? '<span class="text-red-500 font-bold">隱藏(離職)</span>' : '<span class="text-green-600 font-bold">顯示中(在職)</span>';
+                const toggleBtnText = e.isHidden ? '恢復在職' : '設為離職';
+                
+                tbody.innerHTML += `<tr class="border-b hover:bg-slate-50 transition">
+                    <td class="p-3 font-semibold text-slate-700">${e.id}</td>
+                    <td class="p-3 font-bold text-blue-700">${e.name}</td>
+                    <td class="p-3 text-slate-600">${e.title || '-'}</td>
+                    <td class="p-3 text-center">${statusText}</td>
+                    <td class="p-3 text-center flex justify-center gap-1.5">
+                        <button onclick="window.confirmToggleEmployeeStatus('${e.id}', ${e.isHidden})" class="text-[11px] bg-blue-50 text-blue-600 font-bold px-2.5 py-1.5 rounded hover:bg-blue-100 border border-blue-200 transition">${toggleBtnText}</button>
+                        <button onclick="window.requestDelete('employee', '${e.id}')" class="text-[11px] bg-red-50 text-red-600 font-bold px-2.5 py-1.5 rounded hover:bg-red-100 border border-red-200 transition">永久刪除</button>
+                    </td>
+                </tr>`;
+            });
+        };
+
+        window.toggleEmployeeStatus = async (id) => {
+            const emp = employees.find(e => e.id === id); if(!emp) return;
+            try {
+                await setDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'employees', `${STORE_ID}_${id}`), { ...emp, isHidden: !emp.isHidden });
+                await window.logAction("受訪名單變更", `最高權限變更了受訪人員: ${emp.name} (ID: ${id}) 的狀態為 ${!emp.isHidden ? '離職(隱藏)' : '在職'}`);
+                window.showMsg("人員狀態切換成功", "success");
+            } catch(err) { window.showErrorModal("更新失敗", "無法更改狀態", err.message); }
+        };
+
+        window.confirmToggleEmployeeStatus = (id, isHidden) => { const actionText = isHidden ? "恢復為在職顯示" : "設為離職並隱藏"; window.showConfirmModal("變更人員狀態", `確定要將該人員名單狀態變更為「${actionText}」嗎？`, () => window.toggleEmployeeStatus(id)); };
+
 
         // --- 機密刪除調度系統 ---
         window.pendingDelete = { type: null, id: null, extra: null };
@@ -1034,14 +1140,20 @@
                     const isOff = extra;
                     if(isOff) { localStorage.removeItem(`offline_record_${id}`); window.filterHistoryList(); } 
                     else { await deleteDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'records', id)); }
-                    await window.logAction("刪除訪談紀錄", `管理員刪除了紀錄 ID: ${id}`);
+                    await window.logAction("刪除訪談紀錄", `管理員刪除了訪談紀錄 ID: ${id}`);
                     window.showSuccessModal("紀錄銷毀完成", "指定的訪談紀錄已成功徹底刪除。");
                 } 
+                else if (type === 'system_user') {
+                    const sysName = systemUsers.find(u=>u.id===id)?.username || id;
+                    await deleteDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'system_users', id));
+                    await window.logAction("刪除登入帳號", `管理員移除了登入帳號: ${sysName}`);
+                    window.showSuccessModal("登入帳號銷毀完成", `該系統登入帳號已被徹底移除。`);
+                }
                 else if (type === 'employee') {
                     const empName = employees.find(e=>e.id===id)?.name || id;
                     await deleteDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'employees', `${STORE_ID}_${id}`));
-                    await window.logAction("刪除人員名單", `管理員刪除了人員: ${empName} (ID: ${id})`);
-                    window.showSuccessModal("員工名單銷毀完成", `員工 (ID: ${id}) 已成功抹除。`);
+                    await window.logAction("刪除受訪名單", `管理員移除了受訪人員: ${empName} (ID: ${id})`);
+                    window.showSuccessModal("受訪名單銷毀完成", `員工名單 (ID: ${id}) 已成功抹除。`);
                 } 
                 else if (type === 'signature') {
                     await deleteDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'signatures', id));
@@ -1051,7 +1163,7 @@
             } catch (err) { window.showErrorModal("銷毀失敗", "資料刪除過程中發生異常。", err.message || err.toString()); }
         };
 
-        // --- 智慧排序引擎 ---
+        // --- 智慧排序引擎 (過濾掉已離職的人員給前台使用) ---
         function getSortedEmployees(includeHidden = false) {
             let filtered = employees;
             if (!includeHidden) filtered = employees.filter(e => !e.isHidden);
@@ -1129,8 +1241,6 @@
             });
         }
 
-        window.toggleEmpModal = (show) => { document.getElementById('empModal').classList[show ? 'remove' : 'add']('hidden'); if(show) renderEmployeeTable(); };
-        window.switchEmpTab = (tab) => { window.currentEmpTab = tab; renderEmployeeTable(); };
         window.setHistoryQuarterFilter = (q, btnElement) => { window.currentHistoryQuarterFilter = q; document.querySelectorAll('.q-btn').forEach(btn => btn.className = "q-btn px-3 py-1.5 text-xs rounded-full bg-white border text-slate-600 hover:bg-slate-100 transition font-bold shadow-sm"); btnElement.className = "q-btn active px-3 py-1.5 text-xs rounded-full transition font-bold"; window.filterHistoryList(); };
         window.toggleHistoryModal = (show) => { document.getElementById('historyModal').classList[show ? 'remove' : 'add']('hidden'); if(show) window.filterHistoryList(); };
         
@@ -1166,7 +1276,7 @@
             if (data.length === 0) return window.showWarningModal("查無資料", `找不到 ${y}年 ${mStart}月 至 ${mEnd}月 的任何訪談紀錄！`);
             const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "訪談紀錄"); XLSX.writeFile(wb, `${STORE_NAME}_${y}年${mStart}-${mEnd}月_訪談紀錄匯出.xlsx`);
             window.showMsg("🎉 Excel 匯出成功", "success");
-            window.logAction("匯出紀錄", `使用者匯出了 ${y}年 ${mStart}-${mEnd}月 的 Excel 檔案`);
+            window.logAction("匯出紀錄", `操作者匯出了 ${y}年 ${mStart}-${mEnd}月 的 Excel 檔案`);
         };
 
         // --- 載入與初始化 ---
@@ -1187,8 +1297,7 @@
         });
 
         function checkAndRenderDataState() {
-            if (isEmployeesLoaded && isRecordsLoaded && isSignaturesLoaded) {
-                // 如果已經登入，才顯示主畫面 UI，否則僅更新提示文字
+            if (isSystemUsersLoaded && isEmployeesLoaded && isRecordsLoaded && isSignaturesLoaded) {
                 if (window.currentUserRole) {
                     document.getElementById('empLoadingState').classList.add('hidden');
                     document.getElementById('empDataContainer').classList.remove('hidden');
@@ -1202,12 +1311,21 @@
 
         function initCloudListeners() {
             if(!db || !user) return;
+            
+            // 監聽 系統登入帳號
+            onSnapshot(collection(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'system_users'), s => {
+                systemUsers = s.docs.map(d => d.data()); isSystemUsersLoaded = true; checkAndRenderDataState();
+                if(!document.getElementById('adminPanelModal').classList.contains('hidden')) window.renderAdminAccountsTable();
+            }, err => console.error("Error fetching system users:", err));
+
+            // 監聽 受訪員工名單
             onSnapshot(collection(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'employees'), s => {
                 employees = s.docs.map(d => d.data()); isEmployeesLoaded = true; checkAndRenderDataState();
                 if(!document.getElementById('rosterModal').classList.contains('hidden')) renderRosterTable();
-                if(!document.getElementById('empModal').classList.contains('hidden')) renderEmployeeTable();
+                if(!document.getElementById('adminPanelModal').classList.contains('hidden')) window.renderAdminEmployeesTable();
             }, err => console.error("Error fetching employees:", err));
             
+            // 監聽 紀錄與簽名
             onSnapshot(collection(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'records'), s => { 
                 loadedRecords = s.docs.map(d => d.data()); isRecordsLoaded = true; checkAndRenderDataState();
                 if(!document.getElementById('historyModal').classList.contains('hidden')) window.filterHistoryList();
@@ -1270,46 +1388,22 @@
                 window.currentLoadedRecordId = recordId; 
                 localStorage.removeItem(`offline_record_${recordId}`);
                 
-                await window.logAction("修改/新增紀錄", `儲存了員工 ${empName} (${empId}) 的 ${year}年 Q${quarter} 紀錄`);
+                await window.logAction("儲存/更新紀錄", `儲存了員工 ${empName} (${empId}) 的 ${year}年 Q${quarter} 紀錄`);
                 
                 window.showSuccessModal("雲端儲存成功", "🎉 訪談紀錄已完美同步至雲端！\n點擊下方「確定」將為您重置全新空白表單。", () => window.location.reload());
             } catch (err) { window.showErrorModal("雲端儲存失敗", "寫入過程遭到 Firebase 阻擋，請確認設定。", err.message || err.toString()); }
         };
 
-        // --- 其他員工操作 (V2: 新增密碼預設) ---
-        window.addEmployee = async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('newId').value.trim(), name = document.getElementById('newName').value.trim(), title = document.getElementById('newTitle').value.trim();
-            if(employees.some(emp => emp.id === id)) return window.showMsg("❌ 編號重複", "error");
-            // 新增 password 與 isFirstLogin 屬性供 V2 使用
-            const newEmp = { id, name, title, storeId: STORE_ID, isHidden: false, password: "8888", isFirstLogin: true };
-            try {
-                await setDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'employees', `${STORE_ID}_${id}`), newEmp);
-                await window.logAction("人員管理", `管理員新增了人員名單: ${name} (ID: ${id})`);
-                window.showMsg("🎉 員工新增成功", "success");
-                document.getElementById('newId').value = ""; document.getElementById('newName').value = ""; document.getElementById('newTitle').value = "";
-            } catch(err) { window.showErrorModal("新增失敗", "無法寫入員工資料。", err.message); }
-        };
-
-        window.toggleEmployeeStatus = async (id) => {
-            const emp = employees.find(e => e.id === id); if(!emp) return;
-            try {
-                await setDoc(doc(db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'employees', `${STORE_ID}_${id}`), { ...emp, isHidden: !emp.isHidden });
-                await window.logAction("人員管理", `管理員變更了人員: ${emp.name} (ID: ${id}) 的狀態為 ${!emp.isHidden ? '隱藏(離職)' : '正常'}`);
-                window.showMsg("狀態切換成功", "success");
-            } catch(err) { window.showErrorModal("更新失敗", "無法更改狀態", err.message); }
-        };
-
-        window.confirmToggleEmployeeStatus = (id, isHidden) => { const actionText = isHidden ? "設為正常" : "設為離職"; window.showConfirmModal("變更員工狀態", `確定要將該員工狀態變更為「${actionText}」嗎？`, () => window.toggleEmployeeStatus(id)); };
-
+        // --- 儀表板資料渲染 (僅使用受訪名單 employees) ---
         window.renderEmployeeBrief = () => {
             const doneDiv = document.getElementById('empListDone'); const notDoneDiv = document.getElementById('empListNotDone'); doneDiv.innerHTML = ""; notDoneDiv.innerHTML = "";
             const today = new Date(); const realY = today.getFullYear() - 1911; const realM = today.getMonth() + 1; const realQ = Math.ceil(realM / 3); const mIdx = (realM - 1) % 3;
-            document.getElementById('empDatabaseTitle').innerText = `👥 雲端資料庫進度 (${realM}月當月)`;
+            document.getElementById('empDatabaseTitle').innerText = `👥 名單建立進度 (${realM}月當月)`;
 
             const doneList = []; const notDoneList = []; const monthSigMap = {}; const quarterSigMap = {};
             const curQRecordsMap = new Map(); loadedRecords.forEach(r => { if (parseInt(r.year) === realY && parseInt(r.quarter) === realQ) curQRecordsMap.set(r.empId, r); });
 
+            // 此處只拉出 employees 來建置按鈕
             getSortedEmployees(false).forEach(e => {
                 const rec = curQRecordsMap.get(e.id); let isDoneThisMonth = false;
                 if (rec) {
@@ -1365,20 +1459,6 @@
             if (hasQuarterStats) { supervisorStatsContainer.classList.remove('hidden'); supervisorStatsContainer.classList.add('flex'); if (!hasMonthStats) { supervisorBadgesMonth.innerHTML = '<span class="text-xs text-gray-400 font-medium italic px-2">本月尚未有完成紀錄</span>'; } } else { supervisorStatsContainer.classList.add('hidden'); supervisorStatsContainer.classList.remove('flex'); }
         };
 
-        function renderEmployeeTable() {
-            const tbody = document.getElementById('empTableBody'); tbody.innerHTML = ""; const isHiddenTab = window.currentEmpTab === 'resigned';
-            let activeCount = 0; let resignedCount = 0; employees.forEach(e => { if (e.isHidden) resignedCount++; else activeCount++; });
-            document.getElementById('tabActive').innerText = `正常員工 (${activeCount})`; document.getElementById('tabActive').className = window.currentEmpTab === 'active' ? "px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 focus:outline-none transition-colors" : "px-4 py-2 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 focus:outline-none transition-colors";
-            document.getElementById('tabResigned').innerText = `離職員工 (${resignedCount})`; document.getElementById('tabResigned').className = window.currentEmpTab === 'resigned' ? "px-4 py-2 text-sm font-bold border-b-2 border-blue-600 text-blue-600 focus:outline-none transition-colors" : "px-4 py-2 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 focus:outline-none transition-colors";
-            const emps = getSortedEmployees(true).filter(e => isHiddenTab ? e.isHidden : !e.isHidden);
-            if (emps.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">尚無資料</td></tr>`; return; }
-            emps.forEach(e => {
-                const statusText = e.isHidden ? '<span class="text-red-500 font-bold">隱藏(離職)</span>' : '<span class="text-green-600 font-bold">正常</span>';
-                const toggleBtnText = e.isHidden ? '設為正常' : '設為離職';
-                tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-2 font-semibold text-gray-800">${e.id}</td><td class="p-2 font-bold text-indigo-700">${e.name}</td><td class="p-2 text-center">${statusText}</td><td class="p-2 text-center"><button onclick="window.confirmToggleEmployeeStatus('${e.id}', ${e.isHidden})" class="text-blue-700 font-bold hover:text-blue-900 bg-blue-50 px-2 py-1 rounded text-[10px] mr-1 border border-blue-200 transition-colors">${toggleBtnText}</button><button onclick="window.requestDelete('employee', '${e.id}')" class="text-red-600 font-bold hover:text-red-800 bg-red-50 px-2 py-1 rounded text-[10px] border border-red-200 transition-colors">刪除</button></td></tr>`;
-            });
-        }
-
         window.filterHistoryList = () => {
             const queryVal = document.getElementById('historySearch').value.toLowerCase().trim(); const tbody = document.getElementById('historyTableBody'); tbody.innerHTML = "";
             let allRecs = []; const cloudRecs = loadedRecords; const offRecs = [];
@@ -1399,7 +1479,6 @@
             const target = isOff ? JSON.parse(localStorage.getItem(`offline_record_${id}`)) : loadedRecords.find(r => r.id === id);
             if(!target) return window.showWarningModal("載入失敗", "找不到該筆資料實體，可能已被刪除。");
             
-            // 寫入調閱審計日誌
             await window.logAction("調閱紀錄", `調閱了員工 ${target.empName} (${target.empId}) 的 ${target.year}年 Q${target.quarter} 紀錄`);
 
             document.getElementById('quarterSelect').value = target.quarter || "1"; document.getElementById('yearInput').value = target.year || ""; document.getElementById('titleYear').innerText = target.year || "   ";
