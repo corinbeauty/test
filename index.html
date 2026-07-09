@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>休閒部門店師傅/員工 訪談紀錄表 - 中清行館專用版 (V2.4)</title>
+    <title>休閒部門店師傅/員工 訪談紀錄表 - 中清行館專用版 (V2.5)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS (xlsx) for Excel Export -->
@@ -36,6 +36,12 @@
         
         /* 拖曳視覺回饋 */
         .drop-target-active { background-color: #e0e7ff !important; border-color: #6366f1 !important; border-width: 2px !important; border-style: dashed !important; }
+
+        /* Custom Scrollbar for inner elements */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="pb-24">
@@ -57,11 +63,13 @@
                 <div>
                     <input type="password" id="loginPass" required placeholder="請輸入密碼" class="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-700 shadow-sm transition">
                 </div>
-                <button type="submit" id="loginBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 px-4 rounded-xl shadow-lg hover:shadow-indigo-500/50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                <button type="submit" id="loginBtn" disabled class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 px-4 rounded-xl shadow-lg hover:shadow-indigo-500/50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                     安全登入
                 </button>
             </form>
-            <div class="mt-4 text-center text-xs text-slate-400">系統初始化中，請稍候...</div>
+            <div id="initStatusText" class="mt-4 text-center text-xs text-slate-500 font-bold leading-loose">
+                正在連線至雲端伺服器...
+            </div>
         </div>
     </div>
 
@@ -98,7 +106,7 @@
                     ⚙️ 訪談系統-<span class="text-blue-600 font-bold">中清行館 (專用版)</span>
                 </span>
                 <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                    <div class="flex items-center gap-1 border border-gray-200 rounded p-1 bg-gray-50 shadow-sm" id="exportContainer">
+                    <div class="flex items-center gap-1 border border-gray-200 rounded p-1 bg-gray-50 shadow-sm hidden" id="exportContainer">
                         <span class="font-bold text-gray-700 px-1">資料匯出</span>
                         <select id="exportYear" class="border rounded bg-white text-gray-700 py-0.5 outline-none focus:ring-1 focus:ring-green-500 text-xs">
                             <option value="113">113年</option><option value="114">114年</option><option value="115" selected>115年</option>
@@ -161,13 +169,13 @@
                 <h3 class="text-sm font-bold text-gray-700 mb-3 flex flex-wrap items-center justify-between border-b pb-2 gap-2">
                     <span id="empDatabaseTitle">👥 名單建立進度</span>
                     <div class="flex gap-2 flex-wrap">
-                        <button id="adminPanelBtn" onclick="toggleAdminPanel(true)" class="hidden text-xs text-red-600 font-bold hover:underline border border-red-200 bg-red-50 px-2 py-1 rounded transition hover:bg-red-100 shadow-sm">🛡️ 最高權限 (帳號權限管理)</button>
+                        <button id="adminPanelBtn" onclick="toggleAdminPanel(true)" class="hidden text-xs text-red-600 font-bold hover:underline border border-red-200 bg-red-50 px-2 py-1 rounded transition hover:bg-red-100 shadow-sm">🛡️ 最高權限 (後台管理)</button>
                         
-                        <button id="empManagerBtn" onclick="toggleEmployeeManagerModal(true)" class="text-xs text-teal-600 font-bold hover:underline border border-teal-200 bg-teal-50 px-2 py-1 rounded transition hover:bg-teal-100">👥 訪談對象名單管理</button>
+                        <button id="empManagerBtn" onclick="toggleEmployeeManagerModal(true)" class="hidden text-xs text-teal-600 font-bold hover:underline border border-teal-200 bg-teal-50 px-2 py-1 rounded transition hover:bg-teal-100">👥 訪談對象名單管理</button>
 
-                        <button id="specialSearchBtn" onclick="toggleSpecialSearchModal(true)" class="text-xs text-purple-600 font-bold hover:underline border border-purple-200 bg-purple-50 px-2 py-1 rounded transition hover:bg-purple-100">🔍 特別訪談查詢</button>
-                        <button onclick="toggleSigManagerModal(true)" class="text-xs text-blue-600 font-bold hover:underline border border-blue-200 bg-blue-50 px-2 py-1 rounded transition hover:bg-blue-100">✍️ 管理簽名檔</button>
-                        <button id="rosterBtn" onclick="toggleRosterModal(true)" class="text-xs text-indigo-600 font-bold hover:underline border border-indigo-200 bg-indigo-50 px-2 py-1 rounded transition hover:bg-indigo-100">📋 名單比對表</button>
+                        <button id="specialSearchBtn" onclick="toggleSpecialSearchModal(true)" class="hidden text-xs text-purple-600 font-bold hover:underline border border-purple-200 bg-purple-50 px-2 py-1 rounded transition hover:bg-purple-100">🔍 特別訪談查詢</button>
+                        <button id="sigManagerBtn" onclick="toggleSigManagerModal(true)" class="text-xs text-blue-600 font-bold hover:underline border border-blue-200 bg-blue-50 px-2 py-1 rounded transition hover:bg-blue-100">✍️ 管理簽名檔</button>
+                        <button id="rosterBtn" onclick="toggleRosterModal(true)" class="hidden text-xs text-indigo-600 font-bold hover:underline border border-indigo-200 bg-indigo-50 px-2 py-1 rounded transition hover:bg-indigo-100">📋 名單比對表</button>
                     </div>
                 </h3>
 
@@ -183,20 +191,14 @@
                     </div>
                 </div>
 
-                <!-- 載入中動畫 UI -->
-                <div id="empLoadingState" class="flex flex-col items-center justify-center p-8 text-indigo-600">
-                    <svg class="animate-spin h-10 w-10 mb-3 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    <span class="text-sm font-bold animate-pulse text-gray-600 tracking-wider">即時資料同步計算中...</span>
-                </div>
-
                 <!-- 資料顯示 UI -->
-                <div id="empDataContainer" class="hidden grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="border border-red-200 rounded bg-white p-2 shadow-sm relative">
-                        <div class="font-bold text-red-800 bg-red-50 px-2 py-1.5 rounded text-xs mb-2 border-l-4 border-red-500 shadow-sm" id="titleNotDone">❌ 未訪談</div>
+                <div id="empDataContainer" class="grid-cols-1 md:grid-cols-2 gap-4 flex w-full">
+                    <div class="border border-red-200 rounded bg-white p-2 shadow-sm relative flex-1">
+                        <div class="font-bold text-red-800 bg-red-50 px-2 py-1.5 rounded text-xs mb-2 border-l-4 border-red-500 shadow-sm" id="titleNotDone">❌ 未填寫</div>
                         <div id="empListNotDone" class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto"></div>
                     </div>
-                    <div class="border border-green-200 rounded bg-white p-2 shadow-sm relative">
-                        <div class="font-bold text-green-800 bg-green-50 px-2 py-1.5 rounded text-xs mb-2 border-l-4 border-green-500 shadow-sm" id="titleDone">✅ 已訪談</div>
+                    <div class="border border-green-200 rounded bg-white p-2 shadow-sm relative flex-1">
+                        <div class="font-bold text-green-800 bg-green-50 px-2 py-1.5 rounded text-xs mb-2 border-l-4 border-green-500 shadow-sm" id="titleDone">✅ 已填寫</div>
                         <div id="empListDone" class="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto"></div>
                     </div>
                 </div>
@@ -485,23 +487,24 @@
 
     <!-- 系統後台審計面板 (最高權限專屬) -->
     <div id="adminPanelModal" class="fixed inset-0 bg-slate-900/80 z-[150] flex items-center justify-center hidden p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-xl shadow-2xl max-w-5xl w-full h-[85vh] flex flex-col overflow-hidden transform scale-95 opacity-0 transition-all duration-300">
-            <div class="bg-slate-800 px-5 py-4 flex justify-between items-center text-white">
+        <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full h-[85vh] flex flex-col overflow-hidden transform scale-95 opacity-0 transition-all duration-300">
+            <div class="bg-slate-800 px-5 py-4 flex justify-between items-center text-white shrink-0">
                 <h3 class="text-lg font-black flex items-center gap-2">
-                    🛡️ 系統安全後台 (帳號權限管理)
+                    🛡️ 系統安全後台 (帳號與權限動態管理)
                 </h3>
                 <button onclick="toggleAdminPanel(false)" class="text-slate-300 hover:text-white font-bold text-2xl transition">✕</button>
             </div>
             
-            <div class="flex bg-slate-100 border-b border-slate-200">
+            <div class="flex bg-slate-100 border-b border-slate-200 shrink-0">
                 <button onclick="switchAdminTab('audit')" id="tabAdminAudit" class="flex-1 py-3 text-sm font-black text-indigo-700 border-b-4 border-indigo-600 focus:outline-none transition-colors">📄 系統存取日誌</button>
+                <button onclick="switchAdminTab('roles')" id="tabAdminRoles" class="flex-1 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-4 border-transparent focus:outline-none transition-colors">🎭 職級與權限管理 (自訂打勾)</button>
                 <button onclick="switchAdminTab('accounts')" id="tabAdminAccounts" class="flex-1 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-4 border-transparent focus:outline-none transition-colors">🔐 系統登入帳號管理 (拖曳分組)</button>
             </div>
 
             <div class="flex-1 overflow-y-auto bg-white p-4" id="adminContentArea">
                 <!-- Tab 1: 審計日誌 -->
                 <div id="adminTabAudit" class="h-full flex flex-col">
-                    <div class="mb-3 flex justify-between items-center bg-slate-50 p-2 rounded border border-slate-200">
+                    <div class="mb-3 flex justify-between items-center bg-slate-50 p-2 rounded border border-slate-200 shrink-0">
                         <span class="text-xs font-bold text-slate-500">* 統一記錄系統內所有人員的登入登出、調閱及修改行為。</span>
                         <button onclick="window.fetchAuditLogs()" class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded font-bold hover:bg-indigo-200 transition">🔄 重新整理</button>
                     </div>
@@ -520,14 +523,44 @@
                     </div>
                 </div>
 
-                <!-- Tab 2: 系統登入帳號管理 (支援店名群組拖曳與編輯) -->
+                <!-- Tab 2: 職級權限設定 -->
+                <div id="adminTabRoles" class="h-full hidden flex-col">
+                    <div class="mb-3 bg-indigo-50 p-3 rounded border border-indigo-200 flex flex-col gap-1 shrink-0">
+                        <span class="text-xs font-bold text-indigo-800">ℹ️ 您可以在此自訂系統的「職級名稱」與「該職級登入後能看見的功能與表單」。設定後即時生效。</span>
+                    </div>
+                    
+                    <div class="mb-4 flex gap-2 shrink-0">
+                        <input type="text" id="newRoleName" placeholder="輸入新職級名稱..." class="border border-slate-300 rounded p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-64">
+                        <button onclick="window.addRole()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-bold shadow transition">＋ 新增職級</button>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto border border-slate-200 rounded">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-slate-100 uppercase sticky top-0 shadow-sm text-slate-600 font-black">
+                                <tr>
+                                    <th class="p-3 border-r min-w-[150px]">職級名稱 <span class="text-[10px] text-gray-400 font-normal">(可編輯)</span></th>
+                                    <th class="p-3 text-center border-r" title="觀看與填寫主管版本的一般訪談表">一般訪談</th>
+                                    <th class="p-3 text-center border-r" title="觀看與填寫領航員專屬訓練表">領航員表</th>
+                                    <th class="p-3 text-center border-r" title="可檢視當季人員達標狀況比對表">季比對表</th>
+                                    <th class="p-3 text-center border-r" title="可搜尋跨季度的特別訪談紀錄">特別訪談</th>
+                                    <th class="p-3 text-center border-r" title="可新增、編輯或隱藏受訪人員名單">名單管理</th>
+                                    <th class="p-3 text-center border-r" title="允許將資料匯出成 Excel">資料匯出</th>
+                                    <th class="p-3 text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rolesTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab 3: 系統登入帳號管理 (支援店名群組拖曳) -->
                 <div id="adminTabAccounts" class="h-full hidden flex-col">
-                    <div class="mb-3 bg-amber-50 p-3 rounded border border-amber-200 flex flex-col gap-1">
+                    <div class="mb-3 bg-amber-50 p-3 rounded border border-amber-200 flex flex-col gap-1 shrink-0">
                         <span class="text-xs font-bold text-amber-800">⚠️ 此處管理「可以登入此系統的人員」。新增帳號預設密碼皆為 8888，首次登入將強制修改。</span>
                         <span class="text-xs font-medium text-amber-700">您可以直接將下方的帳號卡片 <span class="font-bold underline">拖曳</span> 到對應的店名群組中。</span>
                     </div>
                     
-                    <div class="flex flex-wrap gap-2 mb-4 items-end">
+                    <div class="flex flex-wrap gap-2 mb-4 items-end shrink-0">
                         <!-- 新增系統帳號表單 -->
                         <form onsubmit="window.addSystemUser(event)" class="bg-white p-3 rounded-lg border border-slate-200 flex-1 flex gap-2 shadow-sm items-end min-w-[300px] flex-wrap">
                             <div class="flex-1 min-w-[120px]">
@@ -537,8 +570,7 @@
                             <div class="flex-1 max-w-[120px]">
                                 <label class="block text-xs font-bold text-slate-500 mb-1">帳號權限</label>
                                 <select id="newAccountRole" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                                    <option value="supervisor">一般主管</option>
-                                    <option value="navigator">領航員 (專屬訓練)</option>
+                                    <!-- Options injected via JS -->
                                 </select>
                             </div>
                             <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-700 transition shadow-md whitespace-nowrap">＋ 新增登入帳號</button>
@@ -555,7 +587,7 @@
                     </div>
 
                     <!-- 拖曳群組容器 -->
-                    <div id="adminAccountsContainer" class="flex-1 overflow-x-auto overflow-y-auto flex gap-4 p-4 bg-slate-100/50 rounded-lg border border-slate-200 shadow-inner">
+                    <div id="adminAccountsContainer" class="flex-1 overflow-x-auto overflow-y-auto flex gap-4 p-4 bg-slate-100/50 rounded-lg border border-slate-200 shadow-inner min-h-[300px]">
                         <!-- 透過 JS 動態產生群組卡片 -->
                     </div>
                 </div>
@@ -563,7 +595,7 @@
         </div>
     </div>
 
-    <!-- 受訪名單管理 (所有人可用) -->
+    <!-- 受訪名單管理 (具有 manageEmp 權限者可用) -->
     <div id="employeeManagerModal" class="fixed inset-0 bg-slate-900/80 z-[150] flex items-center justify-center hidden p-4 backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full h-[85vh] flex flex-col overflow-hidden transform scale-95 opacity-0 transition-all duration-300">
             <div class="bg-teal-700 px-5 py-4 flex justify-between items-center text-white">
@@ -839,6 +871,7 @@
         let user = null;
         
         let systemUsers = []; 
+        let systemRoles = [];
         let employees = [];   
         let loadedRecords = []; 
         let savedSignatures = []; 
@@ -852,11 +885,13 @@
         
         window.currentAdminEmpTab = 'active'; 
         
-        window.currentUserRole = null; // 'admin', 'supervisor', or 'navigator'
+        window.currentUserRole = null; 
         window.currentUserName = null;
         window.currentUserGroup = null; 
+        window.currentUserPermissions = {};
         
         let isSystemUsersLoaded = false;
+        let isRolesLoaded = false;
         let isEmployeesLoaded = false;
         let isRecordsLoaded = false;
         let isSignaturesLoaded = false;
@@ -949,7 +984,7 @@
         // --- 登入與登出系統 ---
         window.handleLogin = async (e) => {
             if(e) e.preventDefault();
-            if(!isSystemUsersLoaded) return showWarningModal("請稍候", "系統安全資料庫尚未載入完成，請等待連線。");
+            if(!isSystemUsersLoaded || !isRolesLoaded) return showWarningModal("請稍候", "系統安全資料庫尚未載入完成，請等待連線。");
 
             const name = document.getElementById('loginName').value.trim();
             const pass = document.getElementById('loginPass').value.trim();
@@ -967,7 +1002,6 @@
             if (!sysUser.isActive) return showWarningModal("登入拒絕", "此帳號目前已停用，請聯繫最高權限管理員。");
             if (pass !== sysUser.password) return showWarningModal("登入失敗", "密碼錯誤！若忘記密碼請聯繫管理員重設。");
 
-            // RBAC Assignment
             window.currentUserRole = sysUser.role || 'supervisor'; 
             window.currentUserName = name;
             window.currentUserGroup = sysUser.storeGroup || '未分組';
@@ -1029,52 +1063,54 @@
             document.getElementById('displayUserName').innerText = window.currentUserName;
             document.getElementById('displayUserGroup').innerText = window.currentUserGroup || '未分組';
             
-            let roleText = "👨‍💼 一般主管";
-            if (window.currentUserRole === 'admin') roleText = "👑 最高權限";
-            if (window.currentUserRole === 'navigator') roleText = "🧭 領航員";
+            // Apply Permissions (Role checks)
+            let perms = { viewGeneral: true, viewNav: true, viewRoster: true, viewSpecial: true, manageEmp: true, exportData: true }; // Admin defaults
+            let roleText = "👑 最高權限";
+            if (window.currentUserRole !== 'admin') {
+                const roleObj = systemRoles.find(r => r.id === window.currentUserRole);
+                if (roleObj && roleObj.perms) {
+                    perms = roleObj.perms;
+                    roleText = `🏷️ ${roleObj.name}`;
+                } else {
+                    perms = { viewGeneral: true, viewNav: false, viewRoster: false, viewSpecial: false, manageEmp: false, exportData: false }; // fallback safe defaults
+                    roleText = "👨‍💼 一般權限";
+                }
+            }
+            window.currentUserPermissions = perms;
             document.getElementById('displayUserRole').innerText = roleText;
 
-            // 根據權限解鎖/隱藏功能
-            if (window.currentUserRole === 'admin') { 
-                document.getElementById('adminPanelBtn').classList.remove('hidden'); 
-                document.getElementById('exportContainer').classList.remove('hidden');
-                // 解鎖年度與季度
-                const qs = document.getElementById('quarterSelect');
+            // UI Visibility Toggle Helper
+            const toggleEl = (id, show) => { const el = document.getElementById(id); if(el) el.classList[show ? 'remove' : 'add']('hidden'); };
+            
+            // Applying UI based on perms
+            if (window.currentUserRole === 'admin') toggleEl('adminPanelBtn', true);
+            else toggleEl('adminPanelBtn', false);
+
+            toggleEl('exportContainer', perms.exportData);
+            toggleEl('empManagerBtn', perms.manageEmp);
+            toggleEl('specialSearchBtn', perms.viewSpecial);
+            toggleEl('rosterBtn', perms.viewRoster);
+            toggleEl('captureContainer', perms.viewGeneral);
+            toggleEl('navigatorContainer', perms.viewNav);
+            toggleEl('supervisorStatsContainer', perms.viewGeneral); // Hide stats if they don't see general forms
+
+            // 鎖定/解鎖 年度與季度 (僅 Admin 可隨意切)
+            const qs = document.getElementById('quarterSelect');
+            const yi = document.getElementById('yearInput');
+            if (window.currentUserRole === 'admin') {
                 qs.disabled = false; qs.classList.remove('cursor-not-allowed', 'bg-gray-200', 'appearance-none'); qs.classList.add('bg-white', 'hover:bg-gray-50', 'text-indigo-800');
-                const yi = document.getElementById('yearInput');
                 yi.readOnly = false; yi.classList.remove('cursor-not-allowed', 'bg-gray-200'); yi.classList.add('bg-white', 'hover:bg-gray-50', 'text-indigo-800');
-                
-                // 管理員看一般表單預設
-                document.getElementById('captureContainer').classList.remove('hidden');
-                document.getElementById('navigatorContainer').classList.add('hidden');
-            } else { 
-                document.getElementById('adminPanelBtn').classList.add('hidden'); 
-                document.getElementById('exportContainer').classList.add('hidden'); // 一般人不可匯出
-                
-                // 鎖定年度與季度
-                const qs = document.getElementById('quarterSelect');
+            } else {
                 qs.disabled = true; qs.classList.add('cursor-not-allowed', 'bg-gray-200', 'appearance-none'); qs.classList.remove('bg-white', 'hover:bg-gray-50', 'text-indigo-800');
-                const yi = document.getElementById('yearInput');
                 yi.readOnly = true; yi.classList.add('cursor-not-allowed', 'bg-gray-200'); yi.classList.remove('bg-white', 'hover:bg-gray-50', 'text-indigo-800');
-                
-                // 領航員專區切換
-                if (window.currentUserRole === 'navigator') {
-                    document.getElementById('captureContainer').classList.add('hidden');
-                    document.getElementById('navigatorContainer').classList.remove('hidden');
-                    document.getElementById('supervisorStatsContainer').classList.add('hidden'); // 隱藏一般主管統計
-                    document.getElementById('rosterBtn').classList.add('hidden'); // 領航員不需要季比對表
-                    document.getElementById('specialSearchBtn').classList.add('hidden'); // 隱藏特別訪談查詢
-                } else {
-                    document.getElementById('captureContainer').classList.remove('hidden');
-                    document.getElementById('navigatorContainer').classList.add('hidden');
-                }
             }
             
             if(!sessionStorage.getItem('loginLogged')) {
-                window.logAction("登入系統", `帳號 ${window.currentUserName} 成功登入 (角色: ${window.currentUserRole})`);
+                window.logAction("登入系統", `帳號 ${window.currentUserName} 成功登入 (職級: ${window.currentUserRole})`);
                 sessionStorage.setItem('loginLogged', 'true');
             }
-            checkAndRenderDataState(); 
+            // 執行渲染
+            renderEmployeeBrief();
         }
 
         // --- 審計日誌引擎 ---
@@ -1085,13 +1121,14 @@
             try { await setDoc(doc(window.db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'audit_logs', logId), payload); } catch(e) { console.error("Audit logging failed", e); }
         };
 
-        // --- 系統後台 (帳號管理) ---
+        // --- 系統後台 (帳號與職級管理) ---
         window.toggleAdminPanel = (show) => {
             const m = document.getElementById('adminPanelModal');
             if(show) {
                 m.classList.remove('hidden'); m.classList.add('flex');
                 setTimeout(() => { m.querySelector('div').classList.remove('scale-95', 'opacity-0'); m.querySelector('div').classList.add('scale-100', 'opacity-100'); }, 10);
                 window.fetchAuditLogs();
+                window.renderAdminRoles();
                 window.renderAdminAccounts();
             } else {
                 m.querySelector('div').classList.remove('scale-100', 'opacity-100'); m.querySelector('div').classList.add('scale-95', 'opacity-0');
@@ -1101,10 +1138,90 @@
 
         window.switchAdminTab = (tab) => {
             document.getElementById('tabAdminAudit').className = tab==='audit' ? "flex-1 py-3 text-sm font-black text-indigo-700 border-b-4 border-indigo-600 focus:outline-none transition-colors" : "flex-1 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-4 border-transparent focus:outline-none transition-colors";
+            document.getElementById('tabAdminRoles').className = tab==='roles' ? "flex-1 py-3 text-sm font-black text-indigo-700 border-b-4 border-indigo-600 focus:outline-none transition-colors" : "flex-1 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-4 border-transparent focus:outline-none transition-colors";
             document.getElementById('tabAdminAccounts').className = tab==='accounts' ? "flex-1 py-3 text-sm font-black text-indigo-700 border-b-4 border-indigo-600 focus:outline-none transition-colors" : "flex-1 py-3 text-sm font-bold text-slate-500 hover:text-slate-800 border-b-4 border-transparent focus:outline-none transition-colors";
             
             document.getElementById('adminTabAudit').style.display = tab==='audit' ? 'flex' : 'none';
+            document.getElementById('adminTabRoles').style.display = tab==='roles' ? 'flex' : 'none';
             document.getElementById('adminTabAccounts').style.display = tab==='accounts' ? 'flex' : 'none';
+        };
+
+        // --- 職級與權限引擎 ---
+        window.addRole = async () => {
+            const name = document.getElementById('newRoleName').value.trim();
+            if(!name) return window.showWarningModal("欄位空白", "請輸入新職級的名稱。");
+            const id = 'role_' + Date.now();
+            const newRole = { id, name, perms: { viewGeneral: true, viewNav: false, viewRoster: false, viewSpecial: false, manageEmp: false, exportData: false } };
+            try {
+                await setDoc(doc(window.db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'roles', id), newRole);
+                document.getElementById('newRoleName').value = "";
+                window.showMsg("職級已新增", "success");
+            } catch(e) { window.showErrorModal("新增失敗", e.message); }
+        };
+
+        window.updateRoleName = async (roleId, newName) => {
+            if(!newName.trim()) return;
+            const r = systemRoles.find(x => x.id === roleId);
+            if(!r || r.name === newName.trim()) return;
+            r.name = newName.trim();
+            try {
+                await setDoc(doc(window.db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'roles', roleId), r);
+                window.showMsg("職級名稱已更新", "success");
+                window.renderAdminAccounts(); // update account cards UI to show new name
+            } catch(e) { window.showErrorModal("更新失敗", e.message); }
+        };
+
+        window.updateRolePerm = async (roleId, permKey, value) => {
+            const r = systemRoles.find(x => x.id === roleId);
+            if(!r) return;
+            if(!r.perms) r.perms = {};
+            r.perms[permKey] = value;
+            try {
+                await setDoc(doc(window.db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'roles', roleId), r);
+                window.showMsg("權限設定已同步", "success");
+            } catch(e) { window.showErrorModal("更新失敗", e.message); }
+        };
+
+        window.deleteRole = async (roleId) => {
+            if (systemUsers.some(u => u.role === roleId)) {
+                return window.showWarningModal("無法刪除", "此職級目前仍有「系統登入帳號」使用中。\n請先至帳號管理將他們的權限改為其他職級後，再行刪除。");
+            }
+            if (roleId === 'supervisor' || roleId === 'navigator') {
+                return window.showWarningModal("系統保護", "預設基礎職級無法刪除，但您可以自由修改其名稱與勾選權限。");
+            }
+            window.showConfirmModal("刪除職級", "確定要永久刪除此職級設定嗎？", async () => {
+                try {
+                    await deleteDoc(doc(window.db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'roles', roleId));
+                    window.showMsg("職級已刪除", "success");
+                } catch(e) { window.showErrorModal("刪除失敗", e.message); }
+            });
+        };
+
+        window.renderAdminRoles = () => {
+            const tbody = document.getElementById('rolesTableBody');
+            if(!tbody) return;
+            tbody.innerHTML = "";
+            systemRoles.slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(r => {
+                const isDefault = (r.id === 'supervisor' || r.id === 'navigator');
+                const delBtn = isDefault ? 
+                    `<button class="text-slate-400 cursor-not-allowed text-xl" title="系統預設無法刪除">🔒</button>` : 
+                    `<button onclick="window.deleteRole('${r.id}')" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded font-bold border border-red-200 transition">刪除</button>`;
+                    
+                const p = r.perms || {};
+                tbody.innerHTML += `
+                <tr class="border-b hover:bg-indigo-50/30 transition">
+                    <td class="p-2 border-r">
+                        <input type="text" value="${r.name}" onchange="window.updateRoleName('${r.id}', this.value)" class="border border-slate-300 p-1.5 rounded w-full font-black text-indigo-700 outline-none focus:ring-2 focus:ring-indigo-500 transition shadow-sm bg-white hover:bg-indigo-50">
+                    </td>
+                    <td class="p-2 text-center border-r"><input type="checkbox" class="w-4 h-4 cursor-pointer accent-indigo-600" ${p.viewGeneral ? 'checked' : ''} onchange="window.updateRolePerm('${r.id}', 'viewGeneral', this.checked)"></td>
+                    <td class="p-2 text-center border-r"><input type="checkbox" class="w-4 h-4 cursor-pointer accent-indigo-600" ${p.viewNav ? 'checked' : ''} onchange="window.updateRolePerm('${r.id}', 'viewNav', this.checked)"></td>
+                    <td class="p-2 text-center border-r"><input type="checkbox" class="w-4 h-4 cursor-pointer accent-indigo-600" ${p.viewRoster ? 'checked' : ''} onchange="window.updateRolePerm('${r.id}', 'viewRoster', this.checked)"></td>
+                    <td class="p-2 text-center border-r"><input type="checkbox" class="w-4 h-4 cursor-pointer accent-indigo-600" ${p.viewSpecial ? 'checked' : ''} onchange="window.updateRolePerm('${r.id}', 'viewSpecial', this.checked)"></td>
+                    <td class="p-2 text-center border-r"><input type="checkbox" class="w-4 h-4 cursor-pointer accent-indigo-600" ${p.manageEmp ? 'checked' : ''} onchange="window.updateRolePerm('${r.id}', 'manageEmp', this.checked)"></td>
+                    <td class="p-2 text-center border-r"><input type="checkbox" class="w-4 h-4 cursor-pointer accent-indigo-600" ${p.exportData ? 'checked' : ''} onchange="window.updateRolePerm('${r.id}', 'exportData', this.checked)"></td>
+                    <td class="p-2 text-center">${delBtn}</td>
+                </tr>`;
+            });
         };
 
         // --- 審計日誌 ---
@@ -1205,7 +1322,8 @@
             const newUser = { id, username, role, password: "8888", isFirstLogin: true, isActive: true, storeGroup: "未分組" };
             try {
                 await setDoc(doc(window.db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'system_users', id), newUser);
-                await window.logAction("派發系統帳號", `最高權限新增了登入帳號: ${username} (權限: ${role === 'navigator' ? '領航員' : '一般主管'})`);
+                const rName = systemRoles.find(x=>x.id===role)?.name || '未知';
+                await window.logAction("派發系統帳號", `新增了登入帳號: ${username} (權限: ${rName})`);
                 window.showMsg("🎉 登入帳號派發成功", "success");
                 document.getElementById('newAccountName').value = "";
             } catch(err) { window.showErrorModal("新增失敗", "無法寫入系統帳號。", err.message); }
@@ -1225,21 +1343,24 @@
                 let usersHtml = "";
                 usersInGroup.sort((a,b)=>a.username.localeCompare(b.username)).forEach(u => {
                     const passBadge = (u.password === "8888" || u.isFirstLogin) ? `<span class="text-amber-600 bg-amber-50 px-1 rounded text-[10px] font-bold border border-amber-200">預設</span>` : `<span class="text-green-600 bg-green-50 px-1 rounded text-[10px] font-bold border border-green-200">已自訂</span>`;
-                    const roleBadge = (u.role === 'navigator') ? `<span class="text-purple-600 bg-purple-50 px-1 rounded text-[10px] font-bold border border-purple-200">🧭 領航員</span>` : `<span class="text-blue-600 bg-blue-50 px-1 rounded text-[10px] font-bold border border-blue-200">👨‍💼 主管</span>`;
+                    
+                    const roleObj = systemRoles.find(r => r.id === u.role);
+                    const rName = roleObj ? roleObj.name : '未知';
+                    const roleBadge = `<span class="text-indigo-600 bg-indigo-50 px-1 rounded text-[10px] font-bold border border-indigo-200 shadow-sm truncate max-w-[80px]">🏷️ ${rName}</span>`;
 
                     usersHtml += `
                     <div class="bg-white p-2.5 rounded shadow-sm border border-slate-200 mb-2 cursor-grab active:cursor-grabbing hover:border-indigo-400 transition"
                          draggable="true" ondragstart="window.dragStart(event, '${u.id}')">
                          <div class="flex justify-between items-center mb-1.5">
-                             <span class="font-bold text-sm text-indigo-700">${u.username}</span>
-                             <div class="flex gap-1">${roleBadge}${passBadge}</div>
+                             <span class="font-black text-sm text-slate-800">${u.username}</span>
+                             <div class="flex gap-1 items-center">${roleBadge}${passBadge}</div>
                          </div>
                          <div class="flex gap-1 justify-between">
                              <span class="text-[10px] ${u.isActive ? 'text-green-600' : 'text-red-500'} font-bold flex items-center">${u.isActive ? '✅ 允許登入' : '🚫 已停用'}</span>
                              <div class="flex gap-1">
-                                 <button onclick="window.resetSystemUserPassword('${u.id}')" class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-1.5 py-1 rounded transition">重設</button>
-                                 <button onclick="window.confirmToggleSystemUserStatus('${u.id}', ${!u.isActive})" class="text-[10px] ${u.isActive ? 'bg-amber-50 text-amber-700' : 'bg-green-50 text-green-700'} px-1.5 py-1 rounded transition">${u.isActive ? '停用' : '啟用'}</button>
-                                 <button onclick="window.requestDelete('system_user', '${u.id}')" class="text-[10px] bg-red-50 text-red-600 px-1.5 py-1 rounded transition">刪除</button>
+                                 <button onclick="window.resetSystemUserPassword('${u.id}')" class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-1.5 py-1 rounded transition border border-slate-200">重設</button>
+                                 <button onclick="window.confirmToggleSystemUserStatus('${u.id}', ${!u.isActive})" class="text-[10px] ${u.isActive ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-green-50 text-green-700 border-green-200'} border px-1.5 py-1 rounded transition">${u.isActive ? '停用' : '啟用'}</button>
+                                 <button onclick="window.requestDelete('system_user', '${u.id}')" class="text-[10px] bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 px-1.5 py-1 rounded transition">刪除</button>
                              </div>
                          </div>
                     </div>`;
@@ -1249,21 +1370,21 @@
                     `<span>${g}</span>` : 
                     `<div class="flex items-center gap-1">
                         <span>${g}</span>
-                        <button onclick="window.editGroupName('${g}')" class="text-slate-500 hover:text-blue-600 bg-slate-100 hover:bg-slate-300 w-5 h-5 rounded flex items-center justify-center transition" title="編輯群組">✏️</button>
-                        <button onclick="window.deleteGroup('${g}')" class="text-slate-500 hover:text-red-600 bg-slate-100 hover:bg-slate-300 w-5 h-5 rounded flex items-center justify-center transition" title="刪除群組">🗑️</button>
+                        <button onclick="window.editGroupName('${g}')" class="text-slate-500 hover:text-blue-600 bg-slate-100 hover:bg-slate-300 w-6 h-6 rounded flex items-center justify-center transition shadow-sm" title="編輯群組名稱">✏️</button>
+                        <button onclick="window.deleteGroup('${g}')" class="text-slate-500 hover:text-red-600 bg-slate-100 hover:bg-slate-300 w-6 h-6 rounded flex items-center justify-center transition shadow-sm" title="刪除群組">🗑️</button>
                     </div>`;
 
                 container.innerHTML += `
-                <div class="w-64 min-w-[16rem] bg-slate-50 border border-slate-300 rounded-lg flex flex-col shadow-sm max-h-full">
-                    <div class="bg-slate-200 px-3 py-2.5 border-b border-slate-300 font-bold text-slate-700 text-sm flex justify-between items-center shrink-0">
+                <div class="w-72 min-w-[18rem] bg-slate-50 border border-slate-300 rounded-lg flex flex-col shadow max-h-full">
+                    <div class="bg-slate-200 px-3 py-2.5 border-b border-slate-300 font-bold text-slate-800 text-sm flex justify-between items-center shrink-0">
                         ${groupTitleHtml}
-                        <span class="bg-slate-300 text-slate-800 text-[10px] px-2 py-0.5 rounded-full">${usersInGroup.length}</span>
+                        <span class="bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded-full shadow-inner">${usersInGroup.length}</span>
                     </div>
                     <div class="flex-1 p-2 overflow-y-auto min-h-[150px] transition-colors"
                          ondragover="window.allowDrop(event)"
                          ondragleave="window.dragLeave(event)"
                          ondrop="window.dropUser(event, '${g}')">
-                         ${usersHtml || '<div class="text-xs text-slate-400 text-center mt-6 pointer-events-none font-medium border-2 border-dashed border-slate-200 rounded py-4">可拖曳帳號至此</div>'}
+                         ${usersHtml || '<div class="text-xs text-slate-400 text-center mt-6 pointer-events-none font-medium border-2 border-dashed border-slate-200 rounded py-4">可將帳號卡片拖曳至此</div>'}
                     </div>
                 </div>`;
             });
@@ -1433,13 +1554,13 @@
             });
         }
 
-        // --- 核心寫入 (依據角色切換存檔格式) ---
+        // --- 核心寫入 (依據權限切換存檔格式) ---
         window.saveRecordToCloud = async () => {
             const year = document.getElementById('yearInput').value.trim(); const quarter = document.getElementById('quarterSelect').value;
             let empId, empName, recordId, payload;
 
             // 領航員專屬存檔邏輯
-            if (window.currentUserRole === 'navigator') {
+            if (window.currentUserPermissions && window.currentUserPermissions.viewNav && !window.currentUserPermissions.viewGeneral) {
                 empId = document.getElementById('navEmpId').value.trim(); 
                 empName = document.getElementById('navEmpName').value.trim();
                 if (!year || !empId || !empName) return window.showWarningModal("資料未填妥", "請先點擊上方名單載入人員資訊！");
@@ -1453,20 +1574,16 @@
                     return window.showWarningModal("資料不齊全", "請確實填寫訓練日期、主題、內容，並套用簽名檔後再儲存。");
                 }
 
-                // 領航員的紀錄 ID 加上作者前綴，避免覆蓋別人的，也避免跟一般紀錄衝突
                 recordId = `nav_${STORE_ID}_${year}_Q${quarter}_${empId}_${window.currentUserName}`;
-                
                 payload = {
                     id: recordId, type: 'navigator', author: window.currentUserName,
                     storeId: STORE_ID, year, quarter, area: STORE_AREA, store: STORE_NAME, 
                     empId, empName, empTitle: '', extraCol: '',
-                    navigatorData: {
-                        date: navDate, topic: navTopic, content: navContent, sigId: navSig, signature: getSelectedSignatureData('Nav')
-                    },
+                    navigatorData: { date: navDate, topic: navTopic, content: navContent, sigId: navSig, signature: getSelectedSignatureData('Nav') },
                     updatedAt: new Date().toLocaleString()
                 };
             } 
-            // 一般主管存檔邏輯
+            // 一般主管存檔邏輯 (或管理員)
             else {
                 empId = document.getElementById('empId').value.trim(); 
                 empName = document.getElementById('empName').value.trim();
@@ -1535,7 +1652,7 @@
             // 過濾並建立 Map：領航員只看自己的紀錄，一般主管看一般紀錄
             loadedRecords.forEach(r => { 
                 if (String(r.year) === String(curYStr) && parseInt(r.quarter) === curQ) {
-                    if (window.currentUserRole === 'navigator') {
+                    if (window.currentUserPermissions && window.currentUserPermissions.viewNav && !window.currentUserPermissions.viewGeneral) {
                         if (r.type === 'navigator' && r.author === window.currentUserName) curQRecordsMap.set(r.empId, r);
                     } else {
                         if (r.type !== 'navigator') curQRecordsMap.set(r.empId, r);
@@ -1547,11 +1664,9 @@
                 const rec = curQRecordsMap.get(e.id); let isDoneThisMonth = false;
                 
                 if (rec) {
-                    if (window.currentUserRole === 'navigator') {
-                        // 領航員判定達標條件：本季有存檔即可
+                    if (window.currentUserPermissions && window.currentUserPermissions.viewNav && !window.currentUserPermissions.viewGeneral) {
                         isDoneThisMonth = true; 
                     } else {
-                        // 一般主管判定達標條件：本月有紀錄或有特別訪談
                         if (rec.months) {
                             for (let i = 0; i < 3; i++) {
                                 if (rec.months[i]) {
@@ -1575,7 +1690,9 @@
                     const clickQ = document.getElementById('quarterSelect').value;
                     
                     let recordId = `${STORE_ID}_${clickY}_Q${clickQ}_${e.id}`; 
-                    if (window.currentUserRole === 'navigator') recordId = `nav_${STORE_ID}_${clickY}_Q${clickQ}_${e.id}_${window.currentUserName}`;
+                    if (window.currentUserPermissions && window.currentUserPermissions.viewNav && !window.currentUserPermissions.viewGeneral) {
+                        recordId = `nav_${STORE_ID}_${clickY}_Q${clickQ}_${e.id}_${window.currentUserName}`;
+                    }
                     
                     const cloudRec = loadedRecords.find(r => r.id === recordId); 
                     let offRec = null; try { offRec = JSON.parse(localStorage.getItem(`offline_record_${recordId}`)); } catch(err){}
@@ -1583,7 +1700,7 @@
                     if (cloudRec) { window.loadSelectedRecord(recordId, false); } else if (offRec) { window.loadSelectedRecord(recordId, true); } else {
                         window.handleEmpSelect(e.id); window.currentLoadedRecordId = null; 
                         
-                        if (window.currentUserRole === 'navigator') {
+                        if (window.currentUserPermissions && window.currentUserPermissions.viewNav && !window.currentUserPermissions.viewGeneral) {
                             document.getElementById('navDate').value = ""; document.getElementById('navTopic').value = ""; document.getElementById('navContent').value = ""; document.getElementById('navSigSelect').value = ""; window.applySavedSignatureToCanvas('Nav', "");
                         } else {
                             [1,2,3,4].forEach(idx => { document.getElementById(`date${idx}`).value = ""; const vEl = document.getElementById(`visit${idx}`); const fEl = document.getElementById(`feedback${idx}`); if(vEl)vEl.value = ""; if(fEl)fEl.value = ""; window.autoResizeTextarea(vEl); window.autoResizeTextarea(fEl); document.getElementById(`sigSelect${idx}`).value = ""; window.applySavedSignatureToCanvas(idx, ""); });
@@ -1599,7 +1716,7 @@
             doneList.forEach(el => doneDiv.appendChild(el)); notDoneList.forEach(el => notDoneDiv.appendChild(el));
             document.getElementById('titleNotDone').innerText = `❌ 尚未填寫 (${notDoneList.length}人)`; document.getElementById('titleDone').innerText = `✅ 季內有填寫 (${doneList.length}人)`;
 
-            if (window.currentUserRole !== 'navigator') {
+            if (window.currentUserPermissions && window.currentUserPermissions.viewGeneral) {
                 const supervisorStatsContainer = document.getElementById('supervisorStatsContainer'); const supervisorBadgesMonth = document.getElementById('supervisorBadgesMonth'); const supervisorBadgesQuarter = document.getElementById('supervisorBadgesQuarter');
                 supervisorBadgesMonth.innerHTML = ''; supervisorBadgesQuarter.innerHTML = ''; let hasMonthStats = false; let hasQuarterStats = false;
 
@@ -1627,11 +1744,14 @@
             for(let i=0; i<localStorage.length; i++) { const k = localStorage.key(i); if(k && k.startsWith(`offline_record_${STORE_ID}`)) offRecs.push(JSON.parse(localStorage.getItem(k))); }
             const map = new Map(); offRecs.forEach(r => map.set(r.id, {...r, off: true})); cloudRecs.forEach(r => map.set(r.id, {...r, off: false})); allRecs = Array.from(map.values());
             
-            // RBAC 歷史紀錄過濾
+            // Permissions 歷史紀錄過濾
             allRecs = allRecs.filter(r => {
                 if (window.currentUserRole === 'admin') return true; 
-                if (window.currentUserRole === 'navigator') return r.type === 'navigator' && r.author === window.currentUserName;
-                return r.type !== 'navigator'; // 一般主管只看一般表單
+                if (r.type === 'navigator') {
+                    return window.currentUserPermissions.viewNav && r.author === window.currentUserName; 
+                } else {
+                    return window.currentUserPermissions.viewGeneral;
+                }
             });
 
             if(window.currentHistoryQuarterFilter !== 'ALL') allRecs = allRecs.filter(r => String(r.quarter) === window.currentHistoryQuarterFilter);
@@ -1660,7 +1780,6 @@
             document.getElementById('titleYearNav').innerText = target.year || "   ";
             
             if (target.type === 'navigator') {
-                // UI 切換至領航員模式 (僅當管理員調閱時可能需要切換，領航員本身預設就在這)
                 document.getElementById('captureContainer').classList.add('hidden');
                 document.getElementById('navigatorContainer').classList.remove('hidden');
 
@@ -1674,7 +1793,6 @@
                 document.getElementById('navSigSelect').value = navData.sigId || '';
                 window.applySavedSignatureToCanvas('Nav', navData.sigId || '');
             } else {
-                // UI 切換至一般主管模式
                 document.getElementById('captureContainer').classList.remove('hidden');
                 document.getElementById('navigatorContainer').classList.add('hidden');
 
@@ -1715,171 +1833,4 @@
         window.closeConfirmModal = () => { document.querySelector('#confirmModal > div').classList.remove('scale-100', 'opacity-100'); document.querySelector('#confirmModal > div').classList.add('scale-95', 'opacity-0'); setTimeout(() => document.getElementById('confirmModal').classList.add('hidden'), 300); };
         document.getElementById('confirmModalBtn').onclick = () => { if(window.pendingConfirmAction) window.pendingConfirmAction(); window.closeConfirmModal(); };
 
-        window.toggleSpecialInterviewBlock = () => { const row = document.getElementById('specialInterviewRow'); if (row.classList.contains('hidden')) { row.classList.remove('hidden'); setTimeout(() => { const dateInput = document.getElementById('date4'); if(dateInput) { dateInput.focus(); dateInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }, 100); } };
-        window.toggleSpecialSearchModal = (show) => { document.getElementById('specialSearchModal').classList[show ? 'remove' : 'add']('hidden'); if(show) window.renderSpecialSearchList(); };
-        window.renderSpecialSearchList = () => {
-            const queryVal = document.getElementById('specialSearchInput').value.toLowerCase().trim();
-            const tbody = document.getElementById('specialSearchTableBody'); tbody.innerHTML = "";
-            let spRecs = loadedRecords.filter(r => r.type !== 'navigator' && r.special && (r.special.date || r.special.visitContent || r.special.empFeedback));
-            if(queryVal !== "") spRecs = spRecs.filter(r => (r.empName && r.empName.toLowerCase().includes(queryVal)) || (r.empId && r.empId.toLowerCase().includes(queryVal)));
-            if(spRecs.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">查無特別訪談紀錄</td></tr>`; return; }
-            spRecs.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-            spRecs.forEach(r => {
-                tbody.innerHTML += `<tr class="border-b hover:bg-purple-50 transition"><td class="p-3">${r.year}年 Q${r.quarter}</td><td class="p-3 font-bold text-purple-700">${r.empName} (${r.empId})</td><td class="p-3 text-gray-600">${r.special.date || '未填寫日期'}</td><td class="p-3 text-center flex justify-center"><button onclick="window.loadSelectedRecord('${r.id}', false); window.toggleSpecialSearchModal(false);" class="bg-purple-100 text-purple-700 font-bold hover:bg-purple-200 py-1 px-3 rounded-lg transition border border-purple-200 shadow-sm">載入表單</button></td></tr>`;
-            });
-        };
-
-        window.toggleSupervisorListModal = (show) => { document.getElementById('supervisorListModal').classList[show ? 'remove' : 'add']('hidden'); };
-        window.openSupervisorListModal = (sigName, isQuarter, list) => {
-            const currentQ = parseInt(document.getElementById('quarterSelect').value); const m = [[1,2,3], [4,5,6], [7,8,9], [10,11,12]][currentQ - 1];
-            const monthColors = ['bg-emerald-100 border-emerald-300 text-emerald-800', 'bg-amber-100 border-amber-300 text-amber-800', 'bg-sky-100 border-sky-300 text-sky-800'];
-            document.getElementById('supListModalTitle').innerHTML = `👑 主管 ${sigName} - <span class="text-pink-700">${isQuarter ? '當季' : '當月'}訪談名單</span>`;
-            const contentDiv = document.getElementById('supListModalContent'); contentDiv.innerHTML = "";
-            if(list.length === 0) { contentDiv.innerHTML = '<div class="p-4 text-center text-gray-500 text-sm">此主管尚未有訪談紀錄</div>'; } else {
-                list.sort((a,b) => parseInt(a.id) - parseInt(b.id));
-                list.forEach(item => {
-                    const monthText = item.monthIdx === 3 ? '特別' : m[item.monthIdx] + '月';
-                    const mColorClass = item.monthIdx === 3 ? 'bg-purple-100 border-purple-300 text-purple-800' : (monthColors[item.monthIdx] || 'bg-slate-100 border-slate-200 text-slate-600');
-                    contentDiv.innerHTML += `<div class="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-200 shadow-sm hover:border-indigo-400 hover:bg-indigo-50/50 transition"><div class="font-bold text-gray-800 text-sm flex items-center gap-2"><span>${item.id}</span><span class="text-indigo-700">${item.name}</span><span class="text-[10px] border px-2 py-0.5 rounded-full font-bold shadow-sm ${mColorClass}">${monthText}</span></div><button onclick="window.loadSelectedRecordFromSup('${item.recordId}')" class="bg-indigo-600 text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-indigo-700 transition shadow-sm active:scale-95 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg> 載入資料</button></div>`;
-                });
-            }
-            window.toggleSupervisorListModal(true);
-        };
-        window.loadSelectedRecordFromSup = (recordId) => { window.toggleSupervisorListModal(false); window.loadSelectedRecord(recordId, false); };
-
-        window.toggleRosterModal = (show) => { document.getElementById('rosterModal').classList[show ? 'remove' : 'add']('hidden'); if(show) renderRosterTable(); };
-        function renderRosterTable() {
-            const tbody = document.getElementById('rosterTableBody'); tbody.innerHTML = "";
-            const q = parseInt(document.getElementById('quarterSelect').value); const y = document.getElementById('yearInput').value; const m = [[1,2,3], [4,5,6], [7,8,9], [10,11,12]][q-1];
-            document.getElementById('roster-m1').innerText = m[0] + "月"; document.getElementById('roster-m2').innerText = m[1] + "月"; document.getElementById('roster-m3').innerText = m[2] + "月";
-            const sortedEmps = getSortedEmployees(false);
-            if(sortedEmps.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">當前無任何正常名單紀錄</td></tr>`; return; }
-            sortedEmps.forEach(e => { 
-                const record = loadedRecords.find(r => r.empId === e.id && String(r.year) === String(y) && parseInt(r.quarter) === q && r.type !== 'navigator');
-                const status = [0,1,2].map(idx => {
-                    if(!record || !record.months || !record.months[idx]) return '❌';
-                    const chars = (record.months[idx].visitContent + record.months[idx].empFeedback).replace(/[^\u4E00-\u9FA5]/g, '').length;
-                    return chars >= 20 ? '✅' : '❌';
-                });
-                tbody.innerHTML += `<tr class="border-b hover:bg-indigo-50/30 transition"><td class="p-3 font-bold text-gray-700">${e.id}</td><td class="p-3 font-semibold text-indigo-700">${e.name}</td><td class="p-3 text-center text-lg">${status[0]}</td><td class="p-3 text-center text-lg">${status[1]}</td><td class="p-3 text-center text-lg">${status[2]}</td></tr>`; 
-            });
-        }
-
-        window.setHistoryQuarterFilter = (q, btnElement) => { window.currentHistoryQuarterFilter = q; document.querySelectorAll('.q-btn').forEach(btn => btn.className = "q-btn px-3 py-1.5 text-xs rounded-full bg-white border text-slate-600 hover:bg-slate-100 transition font-bold shadow-sm"); btnElement.className = "q-btn active px-3 py-1.5 text-xs rounded-full transition font-bold"; window.filterHistoryList(); };
-        window.toggleHistoryModal = (show) => { document.getElementById('historyModal').classList[show ? 'remove' : 'add']('hidden'); if(show) window.filterHistoryList(); };
-        
-        window.handleEmpSelect = (id) => {
-            const match = employees.find(e => e.id === id);
-            if(match) { 
-                if(window.currentUserRole === 'navigator') {
-                    document.getElementById('navEmpName').value = match.name; document.getElementById('navEmpId').value = match.id;
-                } else {
-                    document.getElementById('empName').value = match.name; document.getElementById('empId').value = match.id; document.getElementById('empTitle').value = match.title || ""; document.getElementById('addSpecialBtn').classList.remove('hidden'); 
-                }
-            } else { 
-                if(window.currentUserRole === 'navigator') {
-                    document.getElementById('navEmpName').value = ""; document.getElementById('navEmpId').value = "";
-                } else {
-                    document.getElementById('empName').value = ""; document.getElementById('empId').value = ""; document.getElementById('empTitle').value = ""; document.getElementById('addSpecialBtn').classList.add('hidden'); 
-                }
-            }
-        };
-        window.handleIdInput = () => {
-            const id = document.getElementById('empId').value.trim(); const match = employees.find(e => e.id === id);
-            if(match) { document.getElementById('empName').value = match.name; document.getElementById('empTitle').value = match.title || ""; document.getElementById('addSpecialBtn').classList.remove('hidden'); } 
-            else { document.getElementById('empName').value = ""; document.getElementById('empTitle').value = ""; document.getElementById('addSpecialBtn').classList.add('hidden'); }
-        };
-
-        window.exportToExcel = () => {
-            const y = document.getElementById('exportYear').value; const mStart = parseInt(document.getElementById('exportMonthStart').value); const mEnd = parseInt(document.getElementById('exportMonthEnd').value);
-            if (mStart > mEnd) return window.showWarningModal("區間錯誤", "起始月份不能大於結束月份！");
-            const data = []; const exportedSpecialIds = new Set(); 
-            for (let m = mStart; m <= mEnd; m++) {
-                const q = Math.ceil(m / 3); const idx = (m - 1) % 3;
-                const targetRecords = loadedRecords.filter(r => String(r.year) === String(y) && parseInt(r.quarter) === q);
-                targetRecords.forEach(r => {
-                    // 一般主管的資料
-                    if(r.type !== 'navigator') {
-                        if(r.months && r.months[idx]) {
-                            const monthData = r.months[idx]; const contentCount = (monthData.visitContent + monthData.empFeedback).replace(/[^\u4E00-\u9FA5]/g, '').length;
-                            data.push({ "紀錄類型": "一般訪談", "年度": y + "年", "月份": m + "月", "區域": r.area, "店別": r.store, "員工編號": r.empId, "員工姓名": r.empName, "職稱": r.empTitle || "", "訪談主題/內容": monthData.visitContent, "回饋內容": monthData.empFeedback, "狀態": contentCount >= 20 ? "達標" : "未達標" });
-                        }
-                        if (r.special && (r.special.visitContent || r.special.empFeedback) && !exportedSpecialIds.has(r.id)) {
-                            exportedSpecialIds.add(r.id); const specialCount = (r.special.visitContent + r.special.empFeedback).replace(/[^\u4E00-\u9FA5]/g, '').length;
-                            data.push({ "紀錄類型": "特別訪談", "年度": y + "年", "月份": "特別訪談", "區域": r.area, "店別": r.store, "員工編號": r.empId, "員工姓名": r.empName, "職稱": r.empTitle || "", "訪談主題/內容": r.special.visitContent, "回饋內容": r.special.empFeedback, "狀態": specialCount >= 20 ? "達標" : "未達標" });
-                        }
-                    }
-                    // 領航員的資料 (匯出一次即可)
-                    else if (r.type === 'navigator' && !exportedSpecialIds.has(r.id)) {
-                        exportedSpecialIds.add(r.id);
-                        if(r.navigatorData) {
-                             data.push({ "紀錄類型": "領航員訓練", "年度": y + "年", "月份": r.navigatorData.date || "未填寫", "區域": r.area, "店別": r.store, "員工編號": r.empId, "員工姓名": r.empName, "職稱": r.empTitle || "", "訪談主題/內容": `[主題] ${r.navigatorData.topic}\n[內容] ${r.navigatorData.content}`, "回饋內容": "-", "狀態": "訓練紀錄" });
-                        }
-                    }
-                });
-            }
-            if (data.length === 0) return window.showWarningModal("查無資料", `找不到 ${y}年 ${mStart}月 至 ${mEnd}月 的任何訪談紀錄！`);
-            const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "訪談紀錄"); XLSX.writeFile(wb, `${STORE_NAME}_${y}年${mStart}-${mEnd}月_訪談紀錄匯出.xlsx`);
-            window.showMsg("🎉 Excel 匯出成功", "success");
-            window.logAction("匯出紀錄", `操作者匯出了 ${y}年 ${mStart}-${mEnd}月 的 Excel 檔案`);
-        };
-
-        // --- 全螢幕 Modal 簽名板 ---
-        function checkOrientation() {
-            const overlay = document.getElementById('portraitOverlay'); if (!overlay) return;
-            if (window.innerHeight > window.innerWidth) { overlay.classList.remove('hidden'); overlay.classList.add('flex'); if (managerSigPad) managerSigPad.canvas.style.pointerEvents = 'none'; } else { overlay.classList.add('hidden'); overlay.classList.remove('flex'); if (managerSigPad) managerSigPad.canvas.style.pointerEvents = 'auto'; }
-        }
-
-        window.toggleSigManagerModal = (show) => { const m = document.getElementById('sigManagerModal'); if(show) { m.classList.remove('hidden'); m.classList.add('flex'); setTimeout(() => { initManagerSignaturePad(); checkOrientation(); window.addEventListener('resize', handleSigPadResize); }, 200); } else { m.classList.add('hidden'); m.classList.remove('flex'); window.removeEventListener('resize', handleSigPadResize); } };
-        window.toggleSigListPanel = () => { const panel = document.getElementById('sigManagerListPanel'); if (panel.classList.contains('hidden')) { panel.classList.remove('hidden'); panel.classList.add('flex'); } else { panel.classList.add('hidden'); panel.classList.remove('flex'); } handleSigPadResize(); };
-
-        let managerSigPad = null; let resizeTimeout = null;
-        function handleSigPadResize() { if(resizeTimeout) clearTimeout(resizeTimeout); resizeTimeout = setTimeout(() => { if(!document.getElementById('sigManagerModal').classList.contains('hidden')) { checkOrientation(); const tempUrl = managerSigPad.canvas.toDataURL(); initManagerSignaturePad(); if(tempUrl.length > 1000) { const img = new Image(); img.onload = () => { const dpr = window.devicePixelRatio || 1; managerSigPad.ctx.drawImage(img, 0, 0, img.width / dpr, img.height / dpr); }; img.src = tempUrl; } } }, 150); }
-
-        function initManagerSignaturePad() {
-            const canvas = document.getElementById('managerSigCanvas'); const ctx = canvas.getContext('2d'); const container = canvas.parentElement;
-            const w = container.clientWidth; const h = container.clientHeight; canvas.style.width = w + "px"; canvas.style.height = h + "px"; 
-            const dpr = window.devicePixelRatio || 1; canvas.width = w * dpr; canvas.height = h * dpr; ctx.scale(dpr, dpr);
-            ctx.strokeStyle = "#000"; ctx.lineWidth = 4; ctx.lineCap = "round"; ctx.lineJoin = "round";
-            let drawing = false, lastX = 0, lastY = 0;
-            const getPos = (e) => { const r = canvas.getBoundingClientRect(); const evt = e.touches ? e.touches[0] : e; return { x: evt.clientX - r.left, y: evt.clientY - r.top }; };
-            canvas.onmousedown = canvas.ontouchstart = (e) => { drawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; };
-            canvas.onmousemove = canvas.ontouchmove = (e) => { if(!drawing) return; e.preventDefault(); const p = getPos(e); ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y); ctx.stroke(); lastX = p.x; lastY = p.y; };
-            canvas.onmouseup = canvas.onmouseleave = canvas.ontouchend = () => drawing = false;
-            managerSigPad = { canvas: canvas, ctx: ctx };
-        }
-        
-        window.uploadNewSignature = async () => {
-            const name = document.getElementById('newSigName').value.trim(); if(!name) return window.showWarningModal("缺少資訊", "請先調用或輸入「主管姓名」，以便建立或更新雲端簽名檔！");
-            const url = managerSigPad.canvas.toDataURL(); if(url.length < 1000) return window.showWarningModal("尚未簽名", "請在下方全螢幕畫布區域親筆簽名！");
-            const existingSig = savedSignatures.find(s => s.name === name); const id = existingSig ? existingSig.id : 'sig_'+Date.now();
-            try {
-                await setDoc(doc(window.db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'signatures', id), { id, name, imageData: url });
-                await window.logAction("電子簽名管理", `建立/更新了簽名檔: ${name}`);
-                document.getElementById('newSigName').value = ""; window.clearManagerSigCanvas(); 
-                if (existingSig) { window.showSuccessModal("簽名檔更新成功", `🎉 主管「${name}」的電子簽章已成功重新繪製並覆蓋更新！`); } else { window.showSuccessModal("簽名檔錄入成功", `🎉 主管「${name}」的電子簽章已安全存入雲端！`); }
-            } catch (err) { window.showErrorModal("雲端儲存失敗", "簽名檔寫入過程遭到 Firebase 阻擋。", err.message || err.toString()); }
-        };
-        window.clearManagerSigCanvas = () => { if(managerSigPad) managerSigPad.ctx.clearRect(0,0,managerSigPad.canvas.width, managerSigPad.canvas.height); };
-        window.loadSigNameForEdit = (name) => { document.getElementById('newSigName').value = name; window.showMsg(`已調用原有名字「${name}」，重新簽名後即可覆蓋原檔`, "info"); };
-
-        function renderSigManagerList() {
-            const list = document.getElementById('sigManagerListHorizontal'); list.innerHTML = ""; if(savedSignatures.length === 0) return;
-            savedSignatures.forEach(sig => {
-                list.innerHTML += `<div class="flex-shrink-0 bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer rounded-lg p-2 flex items-center gap-2 h-14 md:h-16 shadow-sm transition group" onclick="window.loadSigNameForEdit('${sig.name}')"><div class="text-xs font-bold text-slate-700 group-hover:text-blue-700">${sig.name}</div><img src="${sig.imageData}" class="h-8 md:h-10 border bg-slate-50 rounded object-contain" alt="簽名"><button onclick="event.stopPropagation(); window.requestDelete('signature', '${sig.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 rounded-full w-6 h-6 flex items-center justify-center transition active:scale-95 border border-red-100" title="刪除簽名檔">✕</button></div>`;
-            });
-        }
-        
-        function updateMonthlySigSelectors() {
-            [1,2,3,4].forEach(i => { const sel=document.getElementById(`sigSelect${i}`); const v=sel.value; sel.innerHTML='<option value="">-- 選擇 --</option>'; savedSignatures.forEach(s=>sel.innerHTML+=`<option value="${s.id}">${s.name}</option>`); sel.value=v; });
-            const navSel = document.getElementById('navSigSelect'); if (navSel) { const nv = navSel.value; navSel.innerHTML='<option value="">-- 選擇 --</option>'; savedSignatures.forEach(s=>navSel.innerHTML+=`<option value="${s.id}">${s.name}</option>`); navSel.value=nv; }
-            const dl = document.getElementById('existingSigNames'); if (dl) { dl.innerHTML = ""; savedSignatures.forEach(s => dl.innerHTML += `<option value="${s.name}">`); }
-        }
-        
-        window.applySavedSignatureToCanvas = (i, id) => {
-            const img = document.getElementById(`sigImg${i}`); const placeholder = document.getElementById(`sigPlaceholder${i}`); const match = savedSignatures.find(s=>s.id===id);
-            if(match) { img.src = match.imageData; img.classList.remove('hidden'); placeholder.classList.add('hidden'); } else { img.src = ""; img.classList.add('hidden'); placeholder.classList.remove('hidden'); }
-        };
-    </script>
-</body>
-</html>
+        window.toggleSpecialInterviewBlock = () => { const row = document.getElementById('specialInterviewRow'); if (row.classList.contains('hidden')) { row.classList.remove('hidden'); setTimeout(() => { const dateInput = document.getElementById('date4'); if(dateInput) { dateInput.focus(); dateInput
