@@ -1833,4 +1833,296 @@
         window.closeConfirmModal = () => { document.querySelector('#confirmModal > div').classList.remove('scale-100', 'opacity-100'); document.querySelector('#confirmModal > div').classList.add('scale-95', 'opacity-0'); setTimeout(() => document.getElementById('confirmModal').classList.add('hidden'), 300); };
         document.getElementById('confirmModalBtn').onclick = () => { if(window.pendingConfirmAction) window.pendingConfirmAction(); window.closeConfirmModal(); };
 
-        window.toggleSpecialInterviewBlock = () => { const row = document.getElementById('specialInterviewRow'); if (row.classList.contains('hidden')) { row.classList.remove('hidden'); setTimeout(() => { const dateInput = document.getElementById('date4'); if(dateInput) { dateInput.focus(); dateInput
+        window.toggleSpecialInterviewBlock = () => { const row = document.getElementById('specialInterviewRow'); if (row.classList.contains('hidden')) { row.classList.remove('hidden'); setTimeout(() => { const dateInput = document.getElementById('date4'); if(dateInput) { dateInput.focus(); dateInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }, 100); } };
+        window.toggleSpecialSearchModal = (show) => { document.getElementById('specialSearchModal').classList[show ? 'remove' : 'add']('hidden'); if(show) window.renderSpecialSearchList(); };
+        window.renderSpecialSearchList = () => {
+            const queryVal = document.getElementById('specialSearchInput').value.toLowerCase().trim();
+            const tbody = document.getElementById('specialSearchTableBody'); tbody.innerHTML = "";
+            let spRecs = loadedRecords.filter(r => r.type !== 'navigator' && r.special && (r.special.date || r.special.visitContent || r.special.empFeedback));
+            if(queryVal !== "") spRecs = spRecs.filter(r => (r.empName && r.empName.toLowerCase().includes(queryVal)) || (r.empId && r.empId.toLowerCase().includes(queryVal)));
+            if(spRecs.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">查無特別訪談紀錄</td></tr>`; return; }
+            spRecs.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+            spRecs.forEach(r => {
+                tbody.innerHTML += `<tr class="border-b hover:bg-purple-50 transition"><td class="p-3">${r.year}年 Q${r.quarter}</td><td class="p-3 font-bold text-purple-700">${r.empName} (${r.empId})</td><td class="p-3 text-gray-600">${r.special.date || '未填寫日期'}</td><td class="p-3 text-center flex justify-center"><button onclick="window.loadSelectedRecord('${r.id}', false); window.toggleSpecialSearchModal(false);" class="bg-purple-100 text-purple-700 font-bold hover:bg-purple-200 py-1 px-3 rounded-lg transition border border-purple-200 shadow-sm">載入表單</button></td></tr>`;
+            });
+        };
+
+        window.toggleSupervisorListModal = (show) => { document.getElementById('supervisorListModal').classList[show ? 'remove' : 'add']('hidden'); };
+        window.openSupervisorListModal = (sigName, isQuarter, list) => {
+            const currentQ = parseInt(document.getElementById('quarterSelect').value); const m = [[1,2,3], [4,5,6], [7,8,9], [10,11,12]][currentQ - 1];
+            const monthColors = ['bg-emerald-100 border-emerald-300 text-emerald-800', 'bg-amber-100 border-amber-300 text-amber-800', 'bg-sky-100 border-sky-300 text-sky-800'];
+            document.getElementById('supListModalTitle').innerHTML = `👑 主管 ${sigName} - <span class="text-pink-700">${isQuarter ? '當季' : '當月'}訪談名單</span>`;
+            const contentDiv = document.getElementById('supListModalContent'); contentDiv.innerHTML = "";
+            if(list.length === 0) { contentDiv.innerHTML = '<div class="p-4 text-center text-gray-500 text-sm">此主管尚未有訪談紀錄</div>'; } else {
+                list.sort((a,b) => parseInt(a.id) - parseInt(b.id));
+                list.forEach(item => {
+                    const monthText = item.monthIdx === 3 ? '特別' : m[item.monthIdx] + '月';
+                    const mColorClass = item.monthIdx === 3 ? 'bg-purple-100 border-purple-300 text-purple-800' : (monthColors[item.monthIdx] || 'bg-slate-100 border-slate-200 text-slate-600');
+                    contentDiv.innerHTML += `<div class="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-200 shadow-sm hover:border-indigo-400 hover:bg-indigo-50/50 transition"><div class="font-bold text-gray-800 text-sm flex items-center gap-2"><span>${item.id}</span><span class="text-indigo-700">${item.name}</span><span class="text-[10px] border px-2 py-0.5 rounded-full font-bold shadow-sm ${mColorClass}">${monthText}</span></div><button onclick="window.loadSelectedRecordFromSup('${item.recordId}')" class="bg-indigo-600 text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-indigo-700 transition shadow-sm active:scale-95 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg> 載入資料</button></div>`;
+                });
+            }
+            window.toggleSupervisorListModal(true);
+        };
+        window.loadSelectedRecordFromSup = (recordId) => { window.toggleSupervisorListModal(false); window.loadSelectedRecord(recordId, false); };
+
+        window.toggleRosterModal = (show) => { document.getElementById('rosterModal').classList[show ? 'remove' : 'add']('hidden'); if(show) renderRosterTable(); };
+        function renderRosterTable() {
+            const tbody = document.getElementById('rosterTableBody'); tbody.innerHTML = "";
+            const q = parseInt(document.getElementById('quarterSelect').value); const y = document.getElementById('yearInput').value; const m = [[1,2,3], [4,5,6], [7,8,9], [10,11,12]][q-1];
+            document.getElementById('roster-m1').innerText = m[0] + "月"; document.getElementById('roster-m2').innerText = m[1] + "月"; document.getElementById('roster-m3').innerText = m[2] + "月";
+            const sortedEmps = getSortedEmployees(false);
+            if(sortedEmps.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">當前無任何正常名單紀錄</td></tr>`; return; }
+            sortedEmps.forEach(e => { 
+                const record = loadedRecords.find(r => r.empId === e.id && String(r.year) === String(y) && parseInt(r.quarter) === q && r.type !== 'navigator');
+                const status = [0,1,2].map(idx => {
+                    if(!record || !record.months || !record.months[idx]) return '❌';
+                    const chars = (record.months[idx].visitContent + record.months[idx].empFeedback).replace(/[^\u4E00-\u9FA5]/g, '').length;
+                    return chars >= 20 ? '✅' : '❌';
+                });
+                tbody.innerHTML += `<tr class="border-b hover:bg-indigo-50/30 transition"><td class="p-3 font-bold text-gray-700">${e.id}</td><td class="p-3 font-semibold text-indigo-700">${e.name}</td><td class="p-3 text-center text-lg">${status[0]}</td><td class="p-3 text-center text-lg">${status[1]}</td><td class="p-3 text-center text-lg">${status[2]}</td></tr>`; 
+            });
+        }
+
+        window.setHistoryQuarterFilter = (q, btnElement) => { window.currentHistoryQuarterFilter = q; document.querySelectorAll('.q-btn').forEach(btn => btn.className = "q-btn px-3 py-1.5 text-xs rounded-full bg-white border text-slate-600 hover:bg-slate-100 transition font-bold shadow-sm"); btnElement.className = "q-btn active px-3 py-1.5 text-xs rounded-full transition font-bold"; window.filterHistoryList(); };
+        window.toggleHistoryModal = (show) => { document.getElementById('historyModal').classList[show ? 'remove' : 'add']('hidden'); if(show) window.filterHistoryList(); };
+        
+        window.handleEmpSelect = (id) => {
+            const match = employees.find(e => e.id === id);
+            if(match) { 
+                if(window.currentUserPermissions && window.currentUserPermissions.viewNav && !window.currentUserPermissions.viewGeneral) {
+                    document.getElementById('navEmpName').value = match.name; document.getElementById('navEmpId').value = match.id;
+                } else {
+                    document.getElementById('empName').value = match.name; document.getElementById('empId').value = match.id; document.getElementById('empTitle').value = match.title || ""; document.getElementById('addSpecialBtn').classList.remove('hidden'); 
+                }
+            } else { 
+                if(window.currentUserPermissions && window.currentUserPermissions.viewNav && !window.currentUserPermissions.viewGeneral) {
+                    document.getElementById('navEmpName').value = ""; document.getElementById('navEmpId').value = "";
+                } else {
+                    document.getElementById('empName').value = ""; document.getElementById('empId').value = ""; document.getElementById('empTitle').value = ""; document.getElementById('addSpecialBtn').classList.add('hidden'); 
+                }
+            }
+        };
+        window.handleIdInput = () => {
+            const id = document.getElementById('empId').value.trim(); const match = employees.find(e => e.id === id);
+            if(match) { document.getElementById('empName').value = match.name; document.getElementById('empTitle').value = match.title || ""; document.getElementById('addSpecialBtn').classList.remove('hidden'); } 
+            else { document.getElementById('empName').value = ""; document.getElementById('empTitle').value = ""; document.getElementById('addSpecialBtn').classList.add('hidden'); }
+        };
+
+        window.exportToExcel = () => {
+            const y = document.getElementById('exportYear').value; const mStart = parseInt(document.getElementById('exportMonthStart').value); const mEnd = parseInt(document.getElementById('exportMonthEnd').value);
+            if (mStart > mEnd) return window.showWarningModal("區間錯誤", "起始月份不能大於結束月份！");
+            const data = []; const exportedSpecialIds = new Set(); 
+            for (let m = mStart; m <= mEnd; m++) {
+                const q = Math.ceil(m / 3); const idx = (m - 1) % 3;
+                const targetRecords = loadedRecords.filter(r => String(r.year) === String(y) && parseInt(r.quarter) === q);
+                targetRecords.forEach(r => {
+                    if(r.type !== 'navigator' && window.currentUserPermissions.viewGeneral) {
+                        if(r.months && r.months[idx]) {
+                            const monthData = r.months[idx]; const contentCount = (monthData.visitContent + monthData.empFeedback).replace(/[^\u4E00-\u9FA5]/g, '').length;
+                            data.push({ "紀錄類型": "一般訪談", "年度": y + "年", "月份": m + "月", "區域": r.area, "店別": r.store, "員工編號": r.empId, "員工姓名": r.empName, "職稱": r.empTitle || "", "訪談主題/內容": monthData.visitContent, "回饋內容": monthData.empFeedback, "狀態": contentCount >= 20 ? "達標" : "未達標" });
+                        }
+                        if (r.special && (r.special.visitContent || r.special.empFeedback) && !exportedSpecialIds.has(r.id)) {
+                            exportedSpecialIds.add(r.id); const specialCount = (r.special.visitContent + r.special.empFeedback).replace(/[^\u4E00-\u9FA5]/g, '').length;
+                            data.push({ "紀錄類型": "特別訪談", "年度": y + "年", "月份": "特別訪談", "區域": r.area, "店別": r.store, "員工編號": r.empId, "員工姓名": r.empName, "職稱": r.empTitle || "", "訪談主題/內容": r.special.visitContent, "回饋內容": r.special.empFeedback, "狀態": specialCount >= 20 ? "達標" : "未達標" });
+                        }
+                    }
+                    else if (r.type === 'navigator' && (window.currentUserRole === 'admin' || (window.currentUserPermissions.viewNav && r.author === window.currentUserName)) && !exportedSpecialIds.has(r.id)) {
+                        exportedSpecialIds.add(r.id);
+                        if(r.navigatorData) {
+                             data.push({ "紀錄類型": "領航員訓練", "年度": y + "年", "月份": r.navigatorData.date || "未填寫", "區域": r.area, "店別": r.store, "員工編號": r.empId, "員工姓名": r.empName, "職稱": r.empTitle || "", "訪談主題/內容": `[主題] ${r.navigatorData.topic}\n[內容] ${r.navigatorData.content}`, "回饋內容": "-", "狀態": "訓練紀錄" });
+                        }
+                    }
+                });
+            }
+            if (data.length === 0) return window.showWarningModal("查無資料", `找不到 ${y}年 ${mStart}月 至 ${mEnd}月 您有權限匯出的紀錄！`);
+            const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "訪談紀錄"); XLSX.writeFile(wb, `${STORE_NAME}_${y}年${mStart}-${mEnd}月_訪談紀錄匯出.xlsx`);
+            window.showMsg("🎉 Excel 匯出成功", "success");
+            window.logAction("匯出紀錄", `操作者匯出了 ${y}年 ${mStart}-${mEnd}月 的 Excel 檔案`);
+        };
+
+        // --- 全螢幕 Modal 簽名板 ---
+        function checkOrientation() {
+            const overlay = document.getElementById('portraitOverlay'); if (!overlay) return;
+            if (window.innerHeight > window.innerWidth) { overlay.classList.remove('hidden'); overlay.classList.add('flex'); if (managerSigPad) managerSigPad.canvas.style.pointerEvents = 'none'; } else { overlay.classList.add('hidden'); overlay.classList.remove('flex'); if (managerSigPad) managerSigPad.canvas.style.pointerEvents = 'auto'; }
+        }
+
+        window.toggleSigManagerModal = (show) => { const m = document.getElementById('sigManagerModal'); if(show) { m.classList.remove('hidden'); m.classList.add('flex'); setTimeout(() => { initManagerSignaturePad(); checkOrientation(); window.addEventListener('resize', handleSigPadResize); }, 200); } else { m.classList.add('hidden'); m.classList.remove('flex'); window.removeEventListener('resize', handleSigPadResize); } };
+        window.toggleSigListPanel = () => { const panel = document.getElementById('sigManagerListPanel'); if (panel.classList.contains('hidden')) { panel.classList.remove('hidden'); panel.classList.add('flex'); } else { panel.classList.add('hidden'); panel.classList.remove('flex'); } handleSigPadResize(); };
+
+        let managerSigPad = null; let resizeTimeout = null;
+        function handleSigPadResize() { if(resizeTimeout) clearTimeout(resizeTimeout); resizeTimeout = setTimeout(() => { if(!document.getElementById('sigManagerModal').classList.contains('hidden')) { checkOrientation(); const tempUrl = managerSigPad.canvas.toDataURL(); initManagerSignaturePad(); if(tempUrl.length > 1000) { const img = new Image(); img.onload = () => { const dpr = window.devicePixelRatio || 1; managerSigPad.ctx.drawImage(img, 0, 0, img.width / dpr, img.height / dpr); }; img.src = tempUrl; } } }, 150); }
+
+        function initManagerSignaturePad() {
+            const canvas = document.getElementById('managerSigCanvas'); const ctx = canvas.getContext('2d'); const container = canvas.parentElement;
+            const w = container.clientWidth; const h = container.clientHeight; canvas.style.width = w + "px"; canvas.style.height = h + "px"; 
+            const dpr = window.devicePixelRatio || 1; canvas.width = w * dpr; canvas.height = h * dpr; ctx.scale(dpr, dpr);
+            ctx.strokeStyle = "#000"; ctx.lineWidth = 4; ctx.lineCap = "round"; ctx.lineJoin = "round";
+            let drawing = false, lastX = 0, lastY = 0;
+            const getPos = (e) => { const r = canvas.getBoundingClientRect(); const evt = e.touches ? e.touches[0] : e; return { x: evt.clientX - r.left, y: evt.clientY - r.top }; };
+            canvas.onmousedown = canvas.ontouchstart = (e) => { drawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; };
+            canvas.onmousemove = canvas.ontouchmove = (e) => { if(!drawing) return; e.preventDefault(); const p = getPos(e); ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y); ctx.stroke(); lastX = p.x; lastY = p.y; };
+            canvas.onmouseup = canvas.onmouseleave = canvas.ontouchend = () => drawing = false;
+            managerSigPad = { canvas: canvas, ctx: ctx };
+        }
+        
+        window.uploadNewSignature = async () => {
+            const name = document.getElementById('newSigName').value.trim(); if(!name) return window.showWarningModal("缺少資訊", "請先調用或輸入「主管姓名」，以便建立或更新雲端簽名檔！");
+            const url = managerSigPad.canvas.toDataURL(); if(url.length < 1000) return window.showWarningModal("尚未簽名", "請在下方全螢幕畫布區域親筆簽名！");
+            const existingSig = savedSignatures.find(s => s.name === name); const id = existingSig ? existingSig.id : 'sig_'+Date.now();
+            try {
+                await setDoc(doc(window.db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'signatures', id), { id, name, imageData: url });
+                await window.logAction("電子簽名管理", `建立/更新了簽名檔: ${name}`);
+                document.getElementById('newSigName').value = ""; window.clearManagerSigCanvas(); 
+                if (existingSig) { window.showSuccessModal("簽名檔更新成功", `🎉 主管「${name}」的電子簽章已成功重新繪製並覆蓋更新！`); } else { window.showSuccessModal("簽名檔錄入成功", `🎉 主管「${name}」的電子簽章已安全存入雲端！`); }
+            } catch (err) { window.showErrorModal("雲端儲存失敗", "簽名檔寫入過程遭到 Firebase 阻擋。", err.message || err.toString()); }
+        };
+        window.clearManagerSigCanvas = () => { if(managerSigPad) managerSigPad.ctx.clearRect(0,0,managerSigPad.canvas.width, managerSigPad.canvas.height); };
+        window.loadSigNameForEdit = (name) => { document.getElementById('newSigName').value = name; window.showMsg(`已調用原有名字「${name}」，重新簽名後即可覆蓋原檔`, "info"); };
+
+        function renderSigManagerList() {
+            const list = document.getElementById('sigManagerListHorizontal'); list.innerHTML = ""; if(savedSignatures.length === 0) return;
+            savedSignatures.forEach(sig => {
+                list.innerHTML += `<div class="flex-shrink-0 bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer rounded-lg p-2 flex items-center gap-2 h-14 md:h-16 shadow-sm transition group" onclick="window.loadSigNameForEdit('${sig.name}')"><div class="text-xs font-bold text-slate-700 group-hover:text-blue-700">${sig.name}</div><img src="${sig.imageData}" class="h-8 md:h-10 border bg-slate-50 rounded object-contain" alt="簽名"><button onclick="event.stopPropagation(); window.requestDelete('signature', '${sig.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 rounded-full w-6 h-6 flex items-center justify-center transition active:scale-95 border border-red-100" title="刪除簽名檔">✕</button></div>`;
+            });
+        }
+        
+        function updateMonthlySigSelectors() {
+            [1,2,3,4].forEach(i => { const sel=document.getElementById(`sigSelect${i}`); const v=sel.value; sel.innerHTML='<option value="">-- 選擇 --</option>'; savedSignatures.forEach(s=>sel.innerHTML+=`<option value="${s.id}">${s.name}</option>`); sel.value=v; });
+            const navSel = document.getElementById('navSigSelect'); if (navSel) { const nv = navSel.value; navSel.innerHTML='<option value="">-- 選擇 --</option>'; savedSignatures.forEach(s=>navSel.innerHTML+=`<option value="${s.id}">${s.name}</option>`); navSel.value=nv; }
+            const dl = document.getElementById('existingSigNames'); if (dl) { dl.innerHTML = ""; savedSignatures.forEach(s => dl.innerHTML += `<option value="${s.name}">`); }
+        }
+        
+        window.applySavedSignatureToCanvas = (i, id) => {
+            const img = document.getElementById(`sigImg${i}`); const placeholder = document.getElementById(`sigPlaceholder${i}`); const match = savedSignatures.find(s=>s.id===id);
+            if(match) { img.src = match.imageData; img.classList.remove('hidden'); placeholder.classList.add('hidden'); } else { img.src = ""; img.classList.add('hidden'); placeholder.classList.remove('hidden'); }
+        };
+
+        // --- 初始化與連線偵測 ---
+        window.addEventListener('load', async () => {
+            const screenWidth = window.innerWidth;
+            if(screenWidth < 900) { window.currentZoom = (screenWidth - 16) / 850; window.applyZoom(); }
+
+            const initDate = new Date(); const initY = initDate.getFullYear() - 1911; const initQ = Math.ceil((initDate.getMonth() + 1) / 3);
+            document.getElementById('yearInput').value = initY; document.getElementById('titleYear').innerText = initY; document.getElementById('quarterSelect').value = initQ;
+            window.updateQuarterLayout();
+
+            // Handle Session Auto Login
+            const sName = sessionStorage.getItem('currentUserName');
+            if (sName) {
+                window.currentUserName = sName;
+                window.currentUserRole = sessionStorage.getItem('currentUserRole');
+                window.currentUserGroup = sessionStorage.getItem('currentUserGroup') || '未分組';
+                document.getElementById('loginOverlay').classList.add('hidden');
+            }
+
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { 
+                    await signInWithCustomToken(auth, __initial_auth_token); 
+                } else { 
+                    await signInAnonymously(auth); 
+                }
+                document.getElementById('syncStatusText').innerText = "雲端連線成功";
+                document.getElementById('syncStatusIndicator').className = "inline-block w-2.5 h-2.5 rounded-full bg-green-500";
+            } catch (e) { 
+                document.getElementById('syncStatusText').innerText = "驗證失敗 (本機模式)"; 
+                document.getElementById('initStatusText').innerHTML = '<span class="text-red-500 font-bold">⚠️ 連線至伺服器失敗，請確認網路狀態後重新整理網頁。</span>';
+                console.error("Auth error:", e); 
+            }
+
+            onAuthStateChanged(auth, (u) => { 
+                user = u; 
+                if(u) initCloudListeners(); 
+            });
+        });
+
+        function checkAndRenderDataState() {
+            const initText = document.getElementById('initStatusText');
+            if(initText) {
+                initText.innerHTML = `
+                    <div class="flex flex-col items-center justify-center gap-1 text-slate-500">
+                        <span>正在準備雲端資料...</span>
+                        <div class="flex gap-2 text-[10px]">
+                            <span class="${isSystemUsersLoaded?'text-emerald-500':'text-amber-500'}">帳號:${isSystemUsersLoaded?'✔':'⌛'}</span> | 
+                            <span class="${isRolesLoaded?'text-emerald-500':'text-amber-500'}">權限:${isRolesLoaded?'✔':'⌛'}</span> | 
+                            <span class="${isEmployeesLoaded?'text-emerald-500':'text-amber-500'}">名單:${isEmployeesLoaded?'✔':'⌛'}</span> | 
+                            <span class="${isRecordsLoaded?'text-emerald-500':'text-amber-500'}">紀錄:${isRecordsLoaded?'✔':'⌛'}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (isSystemUsersLoaded && isEmployeesLoaded && isRecordsLoaded && isSignaturesLoaded && isRolesLoaded) {
+                if(initText) initText.classList.add('hidden');
+                
+                // If auto-logged in via session, initialize UI now
+                if (window.currentUserName) {
+                    if(document.getElementById('mainAppWrapper').classList.contains('hidden')) {
+                        completeLoginInit();
+                    } else {
+                        renderEmployeeBrief();
+                    }
+                } else {
+                    document.getElementById('loginStatusText').innerHTML = '<span class="text-emerald-600 font-bold">✔ 雲端資料庫已就緒，請登入。</span>';
+                    document.getElementById('loginBtn').disabled = false;
+                }
+            }
+        }
+
+        function initCloudListeners() {
+            if(!window.db || !user) return;
+            
+            // 監聽 系統職級權限
+            onSnapshot(collection(window.db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'roles'), s => {
+                systemRoles = s.docs.map(d => d.data());
+                isRolesLoaded = true;
+                
+                // 初次使用若無資料，由最高權限建立預設值
+                if(systemRoles.length === 0 && window.currentUserRole === 'admin') {
+                    const defaultRoles = [
+                        { id: 'supervisor', name: '一般主管', perms: { viewGeneral: true, viewNav: false, viewRoster: true, viewSpecial: true, manageEmp: true, exportData: false } },
+                        { id: 'navigator', name: '領航員', perms: { viewGeneral: false, viewNav: true, viewRoster: false, viewSpecial: false, manageEmp: false, exportData: false } }
+                    ];
+                    defaultRoles.forEach(r => setDoc(doc(window.db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'roles', r.id), r));
+                } else {
+                    const rSelect = document.getElementById('newAccountRole');
+                    if(rSelect) {
+                        const currentVal = rSelect.value;
+                        rSelect.innerHTML = "";
+                        systemRoles.forEach(r => { rSelect.innerHTML += `<option value="${r.id}">${r.name}</option>`; });
+                        if(currentVal && systemRoles.some(x=>x.id===currentVal)) rSelect.value = currentVal;
+                    }
+                    if(!document.getElementById('adminPanelModal').classList.contains('hidden')) {
+                        window.renderAdminRoles();
+                        window.renderAdminAccounts();
+                    }
+                }
+                checkAndRenderDataState();
+            }, err => { console.error("Roles fetch error:", err); isRolesLoaded = true; checkAndRenderDataState(); });
+
+            // 監聽 系統登入帳號
+            onSnapshot(collection(window.db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'system_users'), s => {
+                systemUsers = s.docs.map(d => d.data()); isSystemUsersLoaded = true; checkAndRenderDataState();
+                if(!document.getElementById('adminPanelModal').classList.contains('hidden')) window.renderAdminAccounts();
+            }, err => { console.error("Users error:", err); isSystemUsersLoaded = true; checkAndRenderDataState(); });
+
+            // 監聽 受訪員工名單
+            onSnapshot(collection(window.db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'employees'), s => {
+                employees = s.docs.map(d => d.data()); isEmployeesLoaded = true; checkAndRenderDataState();
+                if(!document.getElementById('rosterModal').classList.contains('hidden')) renderRosterTable();
+                if(!document.getElementById('employeeManagerModal').classList.contains('hidden')) window.renderAdminEmployeesTable();
+            }, err => { console.error("Emp error:", err); isEmployeesLoaded = true; checkAndRenderDataState(); });
+            
+            // 監聽 紀錄與簽名
+            onSnapshot(collection(window.db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'records'), s => { 
+                loadedRecords = s.docs.map(d => d.data()); isRecordsLoaded = true; checkAndRenderDataState();
+                if(!document.getElementById('historyModal').classList.contains('hidden')) window.filterHistoryList();
+                if(!document.getElementById('specialSearchModal').classList.contains('hidden')) window.renderSpecialSearchList();
+            }, err => { console.error("Records error:", err); isRecordsLoaded = true; checkAndRenderDataState(); });
+            
+            onSnapshot(collection(window.db, 'artifacts', firebaseConfig.appId, 'public', 'data', 'signatures'), s => { 
+                savedSignatures = s.docs.map(d => d.data()); isSignaturesLoaded = true; updateMonthlySigSelectors(); renderSigManagerList(); checkAndRenderDataState();
+            }, err => { console.error("Sig error:", err); isSignaturesLoaded = true; checkAndRenderDataState(); });
+        }
+    </script>
+</body>
+</html>
