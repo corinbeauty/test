@@ -28,7 +28,7 @@
         window.fb = { app, db, auth, doc, setDoc, onSnapshot, collection, signInAnonymously, signInWithCustomToken, onAuthStateChanged };
         setTimeout(() => {
             window.dispatchEvent(new Event('firebase-ready'));
-        }, 300); // 增加延遲確保 React 準備完畢
+        }, 500); 
     </script>
 
     <!-- React & Babel -->
@@ -57,8 +57,6 @@
         input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type="number"] { -moz-appearance: textfield; }
 
-        .screenshot-area { background: white; }
-        
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -66,14 +64,20 @@
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* HR Forms Specific Styles */
-        .hr-table th, .hr-table td { border: 1px solid #cbd5e1; padding: 4px; text-align: center; }
-        .hr-table th { background-color: #f1f5f9; font-weight: bold; }
-        .form-title-bar { background-color: #1e3a8a; color: white; padding: 6px; text-align: center; font-weight: bold; }
-        .form-section-title { background-color: #0d9488; color: white; padding: 4px 12px; border-radius: 999px; display: inline-block; font-size: 0.85rem; font-weight: bold; margin-bottom: 8px;}
-        .sign-box { border: 1px dashed #94a3b8; border-radius: 4px; min-height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; background-color: #f8fafc; color: #94a3b8; font-size: 0.75rem; overflow: hidden; }
+        /* HR Forms 100% Replica Styles */
+        .hr-form-container { width: 100%; max-width: 900px; margin: 0 auto; background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; }
+        .hr-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; text-align: center; }
+        .hr-table th, .hr-table td { border: 1px solid #94a3b8; padding: 6px 4px; }
+        
+        .checkbox-group { display: flex; align-items: center; justify-content: flex-start; gap: 0.5rem; cursor: pointer; text-align: left; }
+        
+        .sign-box { border: 1px dashed #94a3b8; border-radius: 4px; min-height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; background-color: #f8fafc; color: #94a3b8; font-size: 0.75rem; overflow: hidden; width: 100%; }
         .sign-box:hover { background-color: #f1f5f9; border-color: #3b82f6; color: #3b82f6; }
         .sign-img { width: 100%; height: 100%; object-fit: contain; }
+
+        /* Print/Screenshot specific */
+        .print-mode { height: auto !important; overflow: auto !important; background: #e2e8f0 !important; padding: 20px 0; }
+        .print-mode .hr-form-container { box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-bottom: 40px; }
     </style>
 </head>
 <body>
@@ -99,20 +103,20 @@
         ];
 
         const PILOT_ITEMS = [
-            { phase: '配對階段(報到當週)', no: 1, item: '指定領航員', desc: '已指派合適領航員並告知雙方職責', std: '報到當日完成配對' },
-            { phase: '配對階段(報到當週)', no: 2, item: '新人資料建檔', desc: '新人基本資料建立完整並上系統', std: '報到當日完成建檔' },
-            { phase: '配對階段(報到當週)', no: 3, item: '領航員訓練', desc: '領航員已接受職責說明與輔導技巧訓練', std: '報到後3天內完成' },
-            { phase: '配對階段(報到當週)', no: 4, item: '30天培育計畫', desc: '已與新人共同訂定30天學習計畫', std: '報到後7天內完成' },
-            { phase: '30天階段(第1個月)', no: 5, item: '每週訪談紀錄', desc: '每週至少1次關懷訪談並填寫紀錄表', std: '每週完成' },
-            { phase: '30天階段(第1個月)', no: 6, item: '技術訓練進度', desc: '技術項目依計畫完成練習與考核', std: '完成率達80%以上' },
-            { phase: '30天階段(第1個月)', no: 7, item: '服務流程熟悉', desc: '熟悉門店服務流程與話術標準', std: '完成率達80%以上' },
-            { phase: '30天階段(第1個月)', no: 8, item: '30天評估', desc: '完成30天學習評估並回饋改善建議', std: '第30天前完成評估' },
-            { phase: '60天階段(第2個月)', no: 9, item: '持續關懷訪談', desc: '每週至少1次關懷訪談追蹤適應與狀況', std: '每週完成' },
-            { phase: '60天階段(第2個月)', no: 10, item: '技術考核通過', desc: '通過第二階段技術考核', std: '考核分數80分以上' },
-            { phase: '60天階段(第2個月)', no: 11, item: '60天評估', desc: '完成60天評估與下一階段目標設定', std: '第60天前完成評估' },
-            { phase: '90天階段(第3個月)', no: 12, item: '進階技能培訓', desc: '進階手法與應對能力練習與考核', std: '完成率達80%以上' },
-            { phase: '90天階段(第3個月)', no: 13, item: '服務品質達標', desc: '顧客滿意度與服務表現達標', std: '顧客回饋平均4.5分以上' },
-            { phase: '90天階段(第3個月)', no: 14, item: '90天評估', desc: '完成90天評估與後續發展規劃', std: '第90天前完成評估' },
+            { phase: '配對階段\n(報到當週)', no: 1, item: '指定領航員', desc: '已指派合適領航員並告知雙方職責', std: '報到當日完成配對' },
+            { phase: '配對階段\n(報到當週)', no: 2, item: '新人資料建檔', desc: '新人基本資料建立完整並上系統', std: '報到當日完成建檔' },
+            { phase: '配對階段\n(報到當週)', no: 3, item: '領航員訓練', desc: '領航員已接受職責說明與輔導技巧訓練', std: '報到後3天內完成' },
+            { phase: '配對階段\n(報到當週)', no: 4, item: '30天培育計畫', desc: '已與新人共同訂定30天學習計畫', std: '報到後7天內完成' },
+            { phase: '30天階段\n(第1個月)', no: 5, item: '每週訪談紀錄', desc: '每週至少1次關懷訪談並填寫紀錄表', std: '每週完成' },
+            { phase: '30天階段\n(第1個月)', no: 6, item: '技術訓練進度', desc: '技術項目依計畫完成練習與考核', std: '完成率達80%以上' },
+            { phase: '30天階段\n(第1個月)', no: 7, item: '服務流程熟悉', desc: '熟悉門店服務流程與話術標準', std: '完成率達80%以上' },
+            { phase: '30天階段\n(第1個月)', no: 8, item: '30天評估', desc: '完成30天學習評估並回饋改善建議', std: '第30天前完成評估' },
+            { phase: '60天階段\n(第2個月)', no: 9, item: '持續關懷訪談', desc: '每週至少1次關懷訪談追蹤適應與狀況', std: '每週完成' },
+            { phase: '60天階段\n(第2個月)', no: 10, item: '技術考核通過', desc: '通過第二階段技術考核', std: '考核分數80分以上' },
+            { phase: '60天階段\n(第2個月)', no: 11, item: '60天評估', desc: '完成60天評估與下一階段目標設定', std: '第60天前完成評估' },
+            { phase: '90天階段\n(第3個月)', no: 12, item: '進階技能培訓', desc: '進階手法與應對能力練習與考核', std: '完成率達80%以上' },
+            { phase: '90天階段\n(第3個月)', no: 13, item: '服務品質達標', desc: '顧客滿意度與服務表現達標', std: '顧客回饋平均4.5分以上' },
+            { phase: '90天階段\n(第3個月)', no: 14, item: '90天評估', desc: '完成90天評估與後續發展規劃', std: '第90天前完成評估' },
             { phase: '留任與發展', no: 15, item: '留任追蹤', desc: '追蹤新人留任狀況並關懷需求', std: '每月追蹤' },
             { phase: '留任與發展', no: 16, item: '領航員評核', desc: '評核領航員輔導成效與投入度', std: '每季評核1次' },
             { phase: '留任與發展', no: 17, item: '學習成長紀錄', desc: '新人學習歷程與成長紀錄完整保存', std: '持續更新' },
@@ -131,25 +135,21 @@
             const [database, setDatabase] = useState({});
             const safeInputDate = inputDate || todayStr;
 
-            // 三班累加狀態 (補回遺失的變數)
+            // 三班累加狀態
             const [summaryRange, setSummaryRange] = useState('currentMonth');
             const [summaryRangeStart, setSummaryRangeStart] = useState(todayStr.substring(0, 8) + '01');
             const [summaryRangeEnd, setSummaryRangeEnd] = useState(todayStr);
             const [summaryWeek, setSummaryWeek] = useState(() => {
-                const d = new Date();
-                d.setHours(0, 0, 0, 0);
-                d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 4 - (d.getDay() || 7));
                 const yearStart = new Date(d.getFullYear(), 0, 1);
                 const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
                 return `${d.getFullYear()}-W${String(weekNo).padStart(2, '0')}`;
             });
 
-            // 圖表狀態
+            // 圖表與設定狀態
             const [trendFilter, setTrendFilter] = useState('all');
             const [visibleChart, setVisibleChart] = useState(ITEM_CONFIG[0].id);
             const chartRef = useRef(null);
-
-            // 設定狀態
             const [settings, setSettings] = useState(
                 ITEM_CONFIG.reduce((acc, item) => ({ ...acc, [item.id]: { rate: item.defaultRate, score: item.defaultScore } }), {})
             );
@@ -174,6 +174,17 @@
             const canvasRef = useRef(null);
             const isDrawingRef = useRef(false);
 
+            // 最高權限 (Super Admin) States
+            const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+            const [showSuperAuthModal, setShowSuperAuthModal] = useState(false);
+            const [superAccInput, setSuperAccInput] = useState('');
+            const [superPwdInput, setSuperPwdInput] = useState('');
+            const [systemUsers, setSystemUsers] = useState([]);
+            
+            // User Management Form States
+            const [editUser, setEditUser] = useState(null);
+            const [manageUserModal, setManageUserModal] = useState(false);
+
             // 切換分頁邏輯
             const switchTab = (tabName) => {
                 if (tabName !== 'hr') {
@@ -182,6 +193,9 @@
                     setPwdInput('');
                     setPwdErrorModal(false);
                     setFullScreenMode(false); 
+                }
+                if (tabName !== 'admin') {
+                    setIsSuperAdmin(false);
                 }
                 setActiveTab(tabName);
             };
@@ -199,6 +213,19 @@
                 }
             };
 
+            const handleSuperAuthSubmit = () => {
+                if (superAccInput === '信吉' && superPwdInput === '7310168888') {
+                    setIsSuperAdmin(true);
+                    setActiveTab('admin');
+                    setShowSuperAuthModal(false);
+                    setSuperAccInput('');
+                    setSuperPwdInput('');
+                } else {
+                    alert("最高權限帳號或密碼錯誤！");
+                    setSuperPwdInput('');
+                }
+            };
+
             useEffect(() => {
                 const initFb = async () => {
                     if (!window.fb) return;
@@ -210,9 +237,7 @@
                         } else {
                             await signInAnonymously(auth);
                         }
-                    } catch (err) {
-                        console.error("Firebase Auth Exception:", err);
-                    }
+                    } catch (err) { console.error("Firebase Auth Exception:", err); }
 
                     const unsubAuth = onAuthStateChanged(auth, user => {
                         window.firebaseUser = user;
@@ -222,12 +247,11 @@
                         const recordsRef = collection(db, 'artifacts', appId, 'public', 'data', 'records');
                         const settingsRef = collection(db, 'artifacts', appId, 'public', 'data', 'settings');
                         const hrRef = collection(db, 'artifacts', appId, 'public', 'data', 'hr_employees');
+                        const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'system_users');
 
                         onSnapshot(recordsRef, snap => {
-                            const newDb = {};
-                            snap.forEach(d => newDb[d.id] = d.data());
-                            setDatabase(newDb);
-                        }, err => console.error("Records Read Error:", err));
+                            const newDb = {}; snap.forEach(d => newDb[d.id] = d.data()); setDatabase(newDb);
+                        });
                         
                         onSnapshot(settingsRef, snap => {
                             snap.forEach(d => {
@@ -237,19 +261,19 @@
                                     if (data.timeSlots && Array.isArray(data.timeSlots)) setTimeSlots(data.timeSlots);
                                 }
                             });
-                        }, err => console.error("Settings Read Error:", err));
+                        });
 
                         onSnapshot(hrRef, snap => {
-                            const newHr = {};
-                            snap.forEach(d => newHr[d.id] = d.data());
-                            setHrEmployees(newHr);
-                        }, err => console.error("HR Read Error:", err));
+                            const newHr = {}; snap.forEach(d => newHr[d.id] = d.data()); setHrEmployees(newHr);
+                        });
+
+                        onSnapshot(usersRef, snap => {
+                            const users = []; snap.forEach(d => users.push({ id: d.id, ...d.data() })); setSystemUsers(users);
+                        });
                     });
                 };
-
                 if (window.fb) initFb();
                 else window.addEventListener('firebase-ready', initFb);
-                
                 return () => window.removeEventListener('firebase-ready', initFb);
             }, []);
 
@@ -274,9 +298,7 @@
                 const parsedValue = value === '' ? '' : Number(value);
                 setDatabase(prev => {
                     const newDb = { ...prev };
-                    if (!newDb[safeInputDate]) {
-                        newDb[safeInputDate] = { morning: getCurrentShiftData(safeInputDate, 'morning'), evening: getCurrentShiftData(safeInputDate, 'evening'), night: getCurrentShiftData(safeInputDate, 'night'), manager: getCurrentShiftData(safeInputDate, 'manager') };
-                    }
+                    if (!newDb[safeInputDate]) newDb[safeInputDate] = { morning: getCurrentShiftData(safeInputDate, 'morning'), evening: getCurrentShiftData(safeInputDate, 'evening'), night: getCurrentShiftData(safeInputDate, 'night'), manager: getCurrentShiftData(safeInputDate, 'manager') };
                     if (!newDb[safeInputDate].manager) newDb[safeInputDate].manager = getCurrentShiftData(safeInputDate, 'manager');
                     newDb[safeInputDate][shift] = { ...newDb[safeInputDate][shift], [field]: parsedValue };
                     saveToFirebase('records', safeInputDate, newDb[safeInputDate]);
@@ -310,15 +332,12 @@
             const handleAddSlot = () => {
                 if (!newSlotName.trim()) return;
                 const newSlots = [...timeSlots, { id: 'ts_' + Date.now(), label: newSlotName.trim() }];
-                setTimeSlots(newSlots);
-                saveToFirebase('settings', 'global', { timeSlots: newSlots });
-                setNewSlotName('');
+                setTimeSlots(newSlots); saveToFirebase('settings', 'global', { timeSlots: newSlots }); setNewSlotName('');
             };
 
             const handleDeleteSlot = (idToRemove) => {
                 const newSlots = timeSlots.filter(s => s.id !== idToRemove);
-                setTimeSlots(newSlots);
-                saveToFirebase('settings', 'global', { timeSlots: newSlots });
+                setTimeSlots(newSlots); saveToFirebase('settings', 'global', { timeSlots: newSlots });
             };
 
             const calculateTarget = (baseData, itemId) => {
@@ -337,32 +356,24 @@
                 return { gap, achieveRate, gapRate };
             };
 
+            // HR Module 
             const handleAddHrEmployee = () => {
-                if (!newEmpId.trim() || !newEmpName.trim()) {
-                    alert("請輸入完整的員工編號與姓名！");
-                    return;
-                }
-                if (hrEmployees[newEmpId]) {
-                    alert("此員工編號已存在！");
-                    return;
-                }
+                if (!newEmpId.trim() || !newEmpName.trim()) { alert("請輸入完整的員工編號與姓名！"); return; }
+                if (hrEmployees[newEmpId]) { alert("此員工編號已存在！"); return; }
                 const newEmp = {
-                    id: newEmpId,
-                    name: newEmpName,
+                    id: newEmpId, name: newEmpName,
                     form1: { rows: {}, summary: {} },
                     form2: { phase1: {}, phase2: {}, phase3: {}, phase4: {}, eval: {} },
                     form3: { basic: {}, interview: {}, fact: '', emp: '', guide: {}, improve: [{},{},{}], track: {}, concl: {} }
                 };
                 saveToFirebase('hr_employees', newEmpId, newEmp);
-                setNewEmpId(''); setNewEmpName('');
-                setSelectedEmpId(newEmpId);
+                setNewEmpId(''); setNewEmpName(''); setSelectedEmpId(newEmpId);
             };
 
             const handleHrFieldChange = (empId, formType, fieldPath, value) => {
                 setHrEmployees(prev => {
                     const empData = prev[empId];
                     if (!empData) return prev;
-                    
                     const updatedEmp = JSON.parse(JSON.stringify(empData));
                     const keys = fieldPath.split('.');
                     let current = updatedEmp;
@@ -371,12 +382,12 @@
                         current = current[keys[i]];
                     }
                     current[keys[keys.length - 1]] = value;
-                    
                     saveToFirebase('hr_employees', empId, updatedEmp);
                     return { ...prev, [empId]: updatedEmp };
                 });
             };
 
+            // 簽名板
             const startDrawing = (e) => { isDrawingRef.current = true; draw(e); };
             const stopDrawing = () => { isDrawingRef.current = false; if (canvasRef.current) canvasRef.current.getContext('2d').beginPath(); };
             const draw = (e) => {
@@ -420,21 +431,23 @@
                 }, 100);
             };
 
-            const renderSignBox = (label, fieldPath, empData) => {
+            const renderSignBox = (label, fieldPath, empData, customClass="") => {
                 const keys = fieldPath.split('.');
                 let val = empData;
                 for (let k of keys) { val = val && val[k]; }
-
                 return (
-                    <div className="flex flex-col items-center">
-                        <div className="text-[10px] text-gray-500 mb-1">{label}</div>
-                        <div className="sign-box w-24 h-12" onClick={() => openSignature(fieldPath)}>
+                    <div className="flex flex-col items-center justify-center h-full w-full">
+                        {label && <div className="text-[10px] text-gray-500 mb-1">{label}</div>}
+                        <div className={`sign-box w-full ${customClass}`} onClick={() => openSignature(fieldPath)}>
                             {val ? <img src={val} className="sign-img" alt="簽名" /> : <span>點擊簽名</span>}
                         </div>
                     </div>
                 );
             };
 
+            // ---- ALL RENDER FUNCTIONS MUST BE HERE ----
+
+            // 1. 班別戰報
             const renderShiftTab = (shiftKey, shiftName, icon, colorClass, bgColorClass) => {
                 const data = getCurrentShiftData(safeInputDate, shiftKey);
                 const customersNum = Number(data.customers) || 0;
@@ -542,6 +555,7 @@
                 );
             };
 
+            // 2. 三班累加結算
             const renderSummary = () => {
                 const summaryData = { customers: 0, revenue: 0, atv: 0, totalManpower: 0 };
                 ITEM_CONFIG.forEach(i => summaryData[i.id] = 0);
@@ -619,7 +633,6 @@
                 summaryData.atv = summaryData.customers > 0 ? Math.round(summaryData.revenue / summaryData.customers) : 0;
                 const avgEfficiency = summaryData.totalManpower > 0 ? Math.round(summaryData.revenue / summaryData.totalManpower) : 0;
 
-                // --- 月底業績預估邏輯 (區分平假日) ---
                 let maxDateStr = safeInputDate;
                 if (calcKeys.length > 0) {
                     maxDateStr = calcKeys.reduce((a, b) => a > b ? a : b);
@@ -762,6 +775,7 @@
                 );
             };
 
+            // 3. 店長稽核
             const renderAudit = () => {
                 const auditItems = [
                     { id: 'customers', name: '總來客數', isAmount: false },
@@ -939,6 +953,7 @@
                 );
             };
 
+            // 4. 趨勢圖表
             const getMonthlyTrendData = () => {
                 const monthPrefix = safeInputDate.substring(0, 7); 
                 const year = parseInt(monthPrefix.split('-')[0]) || new Date().getFullYear();
@@ -1213,18 +1228,510 @@
                 </div>
             );
 
+            // 6. HR 人員系統 
             const renderHrTab = () => {
-                const selectedEmp = hrEmployees[selectedEmpId];
-                
+                if (!hrAuthUnlocked) return <div className="p-4 text-center text-red-500 mt-10 font-bold">拒絕存取：請由導覽列重新驗證密碼。</div>;
+                const currentEmp = hrEmployees[selectedEmpId] || null;
+
+                const renderHrForm1 = (emp) => {
+                    const fData = emp.form1 || { rows: {}, summary: {} };
+                    const chg = (path, val) => handleHrFieldChange(emp.id, 'form1', path, val);
+
+                    return (
+                        <div className="hr-form-container">
+                            <div className="bg-[#000080] text-white text-center py-4 relative">
+                                <h2 className="text-2xl font-bold tracking-[0.2em] mb-1">領航員執行檢核表 ( 新人培育管理 )</h2>
+                                <p className="text-[10px] font-bold tracking-widest text-red-400 bg-white inline-block px-4 py-0.5 rounded-full mt-1">落實領航員制度．陪伴關懷．提升新人留任率與專業力</p>
+                            </div>
+                            <div className="p-4 text-xs font-bold text-gray-800">
+                                <div className="flex justify-between items-end mb-2">
+                                    <div className="flex items-center gap-1">店名: <input type="text" className="border-b border-gray-400 outline-none w-24 text-center font-bold" value={(fData.store) || ''} onChange={e=>chg('form1.store', e.target.value)}/></div>
+                                    <div className="flex items-center gap-1">店長: <input type="text" className="border-b border-gray-400 outline-none w-20 text-center font-bold" value={(fData.manager) || ''} onChange={e=>chg('form1.manager', e.target.value)}/></div>
+                                    <div className="flex items-center gap-1">總監: <input type="text" className="border-b border-gray-400 outline-none w-20 text-center font-bold" value={(fData.director) || ''} onChange={e=>chg('form1.director', e.target.value)}/></div>
+                                    <div className="flex items-center gap-1 text-xs">檢核日期: <input type="date" className="border-b border-gray-400 outline-none text-xs" value={(fData.date) || ''} onChange={e=>chg('form1.date', e.target.value)}/></div>
+                                </div>
+
+                                <div className="bg-[#000080] text-white p-1.5 text-center text-[11px] font-normal mb-2 tracking-wide">
+                                    檢核說明：本表由店長每月填寫，總監巡店時覆核，確保領航員制度確實執行，落實新人30/60/90天培育計畫。
+                                </div>
+
+                                <table className="w-full hr-table text-[10px] mb-4">
+                                    <thead>
+                                        <tr className="bg-gray-100 border-2 border-gray-400">
+                                            <th rowSpan="2" className="w-[10%]">階段</th>
+                                            <th rowSpan="2" className="w-[12%]">檢核項目</th>
+                                            <th rowSpan="2" className="w-[20%]">檢核內容說明</th>
+                                            <th rowSpan="2" className="w-[14%]">應完成標準</th>
+                                            <th colSpan="3" className="w-[12%] p-0">完成狀況(請勾選)</th>
+                                            <th rowSpan="2" className="w-[8%]">完成日期</th>
+                                            <th rowSpan="2" className="w-[8%]">領航員<br/>簽名</th>
+                                            <th rowSpan="2" className="w-[6%] leading-tight">店長<br/>覆核<br/>(✓)</th>
+                                            <th rowSpan="2" className="w-[6%] leading-tight">總監<br/>覆核<br/>(✓)</th>
+                                            <th rowSpan="2" className="w-[4%]">備註</th>
+                                        </tr>
+                                        <tr className="bg-gray-100 text-[8px] border-2 border-gray-400">
+                                            <th>已完成</th><th>部分完成</th><th>未完成</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {PILOT_ITEMS.map((item, idx) => {
+                                            const row = (fData.rows && fData.rows[item.no]) || {};
+                                            const rChg = (f, v) => chg(`form1.rows.${item.no}.${f}`, v);
+                                            const isFirstInPhase = idx === 0 || PILOT_ITEMS[idx-1].phase !== item.phase;
+                                            const phaseCount = PILOT_ITEMS.filter(i => i.phase === item.phase).length;
+                                            let phaseBg = item.no <= 4 ? 'bg-[#faebd7]' : item.no <= 8 ? 'bg-[#fffacd]' : item.no <= 11 ? 'bg-[#f0fff0]' : item.no <= 14 ? 'bg-[#e0ffff]' : 'bg-[#f0f8ff]';
+
+                                            return (
+                                                <tr key={item.no}>
+                                                    {isFirstInPhase && (
+                                                        <td rowSpan={phaseCount} className={`font-bold whitespace-pre-wrap ${phaseBg}`}>
+                                                            {item.phase}
+                                                        </td>
+                                                    )}
+                                                    <td className="font-bold flex items-center justify-center border-none h-full min-h-[40px]">
+                                                        <span className="w-4 inline-block">{item.no}</span>
+                                                        <span className="text-left flex-1 pl-1">{item.item}</span>
+                                                    </td>
+                                                    <td className="text-left text-[9px] px-1 font-normal leading-tight">{item.desc}</td>
+                                                    <td className="text-[9px] font-normal leading-tight">{item.std}</td>
+                                                    <td className="p-0 border-l border-r"><input type="checkbox" checked={row.status==='done'} onChange={()=>rChg('status','done')} className="scale-100"/></td>
+                                                    <td className="p-0 border-r"><input type="checkbox" checked={row.status==='part'} onChange={()=>rChg('status','part')} className="scale-100"/></td>
+                                                    <td className="p-0"><input type="checkbox" checked={row.status==='none'} onChange={()=>rChg('status','none')} className="scale-100"/></td>
+                                                    <td className="p-0 relative">
+                                                        <input type="text" className="w-full h-full text-center border-none outline-none bg-transparent text-[9px]" placeholder="/  /" value={row.date||''} onChange={e=>rChg('date', e.target.value)}/>
+                                                    </td>
+                                                    <td className="p-0 h-full">{renderSignBox('', `form1.rows.${item.no}.sig1`, emp, "min-h-[30px] border-none")}</td>
+                                                    <td className="p-0 h-full">{renderSignBox('', `form1.rows.${item.no}.sig2`, emp, "min-h-[30px] border-none")}</td>
+                                                    <td className="p-0 h-full">{renderSignBox('', `form1.rows.${item.no}.sig3`, emp, "min-h-[30px] border-none")}</td>
+                                                    <td className="p-0"><input type="text" className="w-full border-none outline-none px-1" value={row.note||''} onChange={e=>rChg('note', e.target.value)}/></td>
+                                                </tr>
+                                            )
+                                        })}
+                                    </tbody>
+                                </table>
+
+                                <table className="w-full hr-table text-[10px] border-collapse border-2 border-gray-400 font-bold">
+                                    <tbody>
+                                        <tr className="bg-gray-100">
+                                            <td colSpan="2" className="w-1/4 py-2">本月新人培育總結</td>
+                                            <td colSpan="2" className="w-3/8 py-2">店長檢核</td>
+                                            <td colSpan="2" className="w-3/8 py-2">總監覆核意見</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="w-24">本月新增<br/>新人數</td>
+                                            <td className="w-16"><input type="number" className="w-8 border-b border-gray-400 outline-none text-center font-bold" value={(fData.summary && fData.summary.newNum) || ''} onChange={e=>chg('form1.summary.newNum',e.target.value)}/> 人</td>
+                                            <td colSpan="2" className="text-left align-top px-2 pb-1 font-normal">
+                                                <div className="flex items-center gap-4 border-b pb-1 mb-1 font-bold">
+                                                    <span>檢核結果:</span>
+                                                    <label className="checkbox-group"><input type="checkbox" checked={fData.summary?.mgrRes==='good'} onChange={()=>chg('form1.summary.mgrRes','good')}/> 良好</label>
+                                                    <label className="checkbox-group"><input type="checkbox" checked={fData.summary?.mgrRes==='bad'} onChange={()=>chg('form1.summary.mgrRes','bad')}/> 需加強</label>
+                                                </div>
+                                                需加強項目:<br/><textarea className="w-full border-none bg-transparent outline-none text-[10px] resize-none h-12" value={(fData.summary && fData.summary.mgrNote) || ''} onChange={e=>chg('form1.summary.mgrNote',e.target.value)}></textarea>
+                                            </td>
+                                            <td colSpan="2" className="text-left align-top px-2 pb-1 font-normal">
+                                                <div className="flex items-center gap-4 border-b pb-1 mb-1 font-bold">
+                                                    <span>覆核結果:</span>
+                                                    <label className="checkbox-group"><input type="checkbox" checked={fData.summary?.dirRes==='good'} onChange={()=>chg('form1.summary.dirRes','good')}/> 良好</label>
+                                                    <label className="checkbox-group"><input type="checkbox" checked={fData.summary?.dirRes==='bad'} onChange={()=>chg('form1.summary.dirRes','bad')}/> 需加強</label>
+                                                </div>
+                                                改善建議:<br/><textarea className="w-full border-none bg-transparent outline-none text-[10px] resize-none h-12" value={(fData.summary && fData.summary.dirNote) || ''} onChange={e=>chg('form1.summary.dirNote',e.target.value)}></textarea>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>30天留任</td><td><input type="number" className="w-8 border-b border-gray-400 outline-none text-center font-bold" value={(fData.summary && fData.summary.r30) || ''} onChange={e=>chg('form1.summary.r30',e.target.value)}/> 人</td>
+                                            <td rowSpan="3" colSpan="2" className="text-left align-top px-2 py-1 leading-relaxed font-normal">
+                                                1、<input type="text" className="border-b border-gray-400 bg-transparent w-[90%] outline-none mb-1" value={(fData.summary && fData.summary.mgrN1) || ''} onChange={e=>chg('form1.summary.mgrN1',e.target.value)}/><br/>
+                                                2、<input type="text" className="border-b border-gray-400 bg-transparent w-[90%] outline-none mb-1" value={(fData.summary && fData.summary.mgrN2) || ''} onChange={e=>chg('form1.summary.mgrN2',e.target.value)}/><br/>
+                                                3、<input type="text" className="border-b border-gray-400 bg-transparent w-[90%] outline-none" value={(fData.summary && fData.summary.mgrN3) || ''} onChange={e=>chg('form1.summary.mgrN3',e.target.value)}/>
+                                            </td>
+                                            <td rowSpan="3" colSpan="2" className="text-left align-top px-2 py-1 leading-relaxed font-normal">
+                                                1、<input type="text" className="border-b border-gray-400 bg-transparent w-[90%] outline-none mb-1" value={(fData.summary && fData.summary.dirN1) || ''} onChange={e=>chg('form1.summary.dirN1',e.target.value)}/><br/>
+                                                2、<input type="text" className="border-b border-gray-400 bg-transparent w-[90%] outline-none mb-1" value={(fData.summary && fData.summary.dirN2) || ''} onChange={e=>chg('form1.summary.dirN2',e.target.value)}/><br/>
+                                                3、<input type="text" className="border-b border-gray-400 bg-transparent w-[90%] outline-none" value={(fData.summary && fData.summary.dirN3) || ''} onChange={e=>chg('form1.summary.dirN3',e.target.value)}/>
+                                            </td>
+                                        </tr>
+                                        <tr><td>60天留任</td><td><input type="number" className="w-8 border-b border-gray-400 outline-none text-center font-bold" value={(fData.summary && fData.summary.r60) || ''} onChange={e=>chg('form1.summary.r60',e.target.value)}/> 人</td></tr>
+                                        <tr><td>90天留任</td><td><input type="number" className="w-8 border-b border-gray-400 outline-none text-center font-bold" value={(fData.summary && fData.summary.r90) || ''} onChange={e=>chg('form1.summary.r90',e.target.value)}/> 人</td></tr>
+                                        <tr>
+                                            <td>整體留任率</td><td><input type="number" className="w-8 border-b border-gray-400 outline-none text-center font-bold" value={(fData.summary && fData.summary.rate) || ''} onChange={e=>chg('form1.summary.rate',e.target.value)}/> %</td>
+                                            <td colSpan="2" className="text-left px-2 py-3 flex items-end gap-2 border-none">
+                                                <span className="shrink-0">店長簽名:</span>
+                                                <div className="flex-1 border-b border-gray-400 h-10">{renderSignBox('', 'form1.summary.mgrSign', emp, "border-none !min-h-0")}</div>
+                                                <span className="shrink-0">日期: <input type="text" className="w-20 border-b border-gray-400 outline-none text-center" placeholder="年/月/日"/></span>
+                                            </td>
+                                            <td colSpan="2" className="text-left px-2 py-3 flex items-end gap-2 border-none">
+                                                <span className="shrink-0">總監簽名:</span>
+                                                <div className="flex-1 border-b border-gray-400 h-10">{renderSignBox('', 'form1.summary.dirSign', emp, "border-none !min-h-0")}</div>
+                                                <span className="shrink-0">日期: <input type="text" className="w-20 border-b border-gray-400 outline-none text-center" placeholder="年/月/日"/></span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div className="text-[10px] text-gray-800 font-bold mt-2 text-center">★ 註：本表每月5日前完成填寫，總監每月至少巡店覆核1次，並追蹤改善進度，確保領航員制度有效執行。</div>
+                                <div className="text-right text-gray-400 text-[9px] mt-1 pr-2">HR-2026-07-15</div>
+                            </div>
+                        </div>
+                    );
+                };
+
+                const renderHrForm2 = (emp) => {
+                    const fData = emp.form2 || { phase1:{}, phase2:{}, phase3:{}, phase4:{}, eval:{} };
+                    const chg = (path, val) => handleHrFieldChange(emp.id, 'form2', path, val);
+
+                    const renderCbx = (path, val, label) => {
+                        const keys = path.split('.');
+                        const currentVal = fData[keys[0]] && fData[keys[0]][keys[1]];
+                        return <label className="checkbox-group mr-6 font-normal"><input type="checkbox" checked={currentVal===val} onChange={()=>chg(`form2.${path}`, val)} className="scale-100"/>{label}</label>
+                    };
+
+                    return (
+                        <div className="hr-form-container text-gray-800 font-bold">
+                            <div className="flex items-center justify-center py-6 border-b-2 border-blue-900 mx-4 mb-4 gap-3 relative">
+                                <i className="fa-solid fa-people-arrows text-[#1e3a8a] text-4xl"></i>
+                                <h2 className="text-3xl font-black text-[#1e3a8a] tracking-[0.1em]">新人關懷追蹤紀錄表</h2>
+                            </div>
+                            <div className="px-6 text-[11px]">
+                                <div className="grid grid-cols-2 gap-x-8 gap-y-4 mb-6">
+                                    <div className="flex items-end">店別：<input type="text" className="border-b border-gray-400 outline-none flex-1 ml-2 font-bold" value={fData.store||''} onChange={e=>chg('form2.store',e.target.value)}/></div>
+                                    <div className="flex items-end">新人姓名：<span className="border-b border-gray-400 flex-1 ml-2 font-bold text-blue-800 text-center">{emp.name}</span></div>
+                                    <div className="flex items-end">到職日期：<input type="date" className="border-b border-gray-400 outline-none flex-1 ml-2 text-center" value={fData.joinDate||''} onChange={e=>chg('form2.joinDate',e.target.value)}/></div>
+                                    <div className="flex items-end">職務：<input type="text" className="border-b border-gray-400 outline-none flex-1 ml-2 font-bold" value={fData.job||'領航員'} onChange={e=>chg('form2.job',e.target.value)}/></div>
+                                    <div className="flex items-end">領航員：<input type="text" className="border-b border-gray-400 outline-none flex-1 ml-2 font-bold" value={fData.pilot||''} onChange={e=>chg('form2.pilot',e.target.value)}/></div>
+                                    <div className="flex items-end">店長：<input type="text" className="border-b border-gray-400 outline-none flex-1 ml-2 font-bold" value={fData.manager||''} onChange={e=>chg('form2.manager',e.target.value)}/></div>
+                                </div>
+
+                                {/* Phase 1 */}
+                                <div className="mb-5">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <div className="bg-[#1e40af] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center tracking-wider">
+                                            <span className="bg-white text-[#1e40af] rounded-full w-4 h-4 flex items-center justify-center mr-2">1</span> 
+                                            第一階段 | 到職第1天關懷
+                                        </div>
+                                        <div className="flex items-end">訪談日期: <input type="date" className="border-b border-gray-400 bg-transparent outline-none text-xs ml-2 text-center w-28" value={(fData.phase1 && fData.phase1.date) || ''} onChange={e=>chg('form2.phase1.date',e.target.value)}/></div>
+                                    </div>
+                                    <div className="space-y-3 pl-4 border-l-2 border-blue-100 ml-2 py-1">
+                                        <div className="flex items-center"><i className="fa-solid fa-building text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">是否了解公司環境？</span> <div className="flex">{renderCbx('phase1.env','A','非常了解')}{renderCbx('phase1.env','B','大致了解')}{renderCbx('phase1.env','C','尚未了解')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-clipboard-list text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">是否了解工作內容？</span> <div className="flex">{renderCbx('phase1.job','A','非常了解')}{renderCbx('phase1.job','B','大致了解')}{renderCbx('phase1.job','C','尚未了解')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-location-dot text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">今天最不適應的地方？</span> <input type="text" className="border-b border-gray-300 outline-none flex-1 font-normal" value={(fData.phase1 && fData.phase1.q1) || ''} onChange={e=>chg('form2.phase1.q1',e.target.value)}/></div>
+                                        <div className="flex items-center"><i className="fa-regular fa-face-smile text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">今天最開心的事情？</span> <input type="text" className="border-b border-gray-300 outline-none flex-1 font-normal" value={(fData.phase1 && fData.phase1.q2) || ''} onChange={e=>chg('form2.phase1.q2',e.target.value)}/></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-user text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">需要主管協助事項？</span> <input type="text" className="border-b border-gray-300 outline-none flex-1 font-normal" value={(fData.phase1 && fData.phase1.q3) || ''} onChange={e=>chg('form2.phase1.q3',e.target.value)}/></div>
+                                    </div>
+                                </div>
+
+                                {/* Phase 2 */}
+                                <div className="mb-5">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <div className="bg-[#1e40af] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center tracking-wider">
+                                            <span className="bg-white text-[#1e40af] rounded-full w-4 h-4 flex items-center justify-center mr-2">2</span> 
+                                            第二階段 | 到職第7天關懷
+                                        </div>
+                                        <div className="flex items-end">訪談日期: <input type="date" className="border-b border-gray-400 bg-transparent outline-none text-xs ml-2 text-center w-28" value={(fData.phase2 && fData.phase2.date) || ''} onChange={e=>chg('form2.phase2.date',e.target.value)}/></div>
+                                    </div>
+                                    <div className="space-y-3 pl-4 border-l-2 border-blue-100 ml-2 py-1">
+                                        <div className="flex items-center"><i className="fa-solid fa-user-group text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">是否已認識同仁？</span> <div className="flex">{renderCbx('phase2.colleague','Y','是')}{renderCbx('phase2.colleague','N','否')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-users text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">是否能融入團隊？</span> <div className="flex">{renderCbx('phase2.team','A','很好')}{renderCbx('phase2.team','B','普通')}{renderCbx('phase2.team','C','困難')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-chart-simple text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">工作上最大的困難？</span> <input type="text" className="border-b border-gray-300 outline-none flex-1 font-normal" value={(fData.phase2 && fData.phase2.q1) || ''} onChange={e=>chg('form2.phase2.q1',e.target.value)}/></div>
+                                        <div className="flex items-center"><i className="fa-regular fa-comment text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">是否有想放棄的念頭？</span> <div className="flex">{renderCbx('phase2.giveup','A','無')}{renderCbx('phase2.giveup','B','偶爾')}{renderCbx('phase2.giveup','C','經常')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-hands-holding text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">如果有困難,希望如何協助？</span> <input type="text" className="border-b border-gray-300 outline-none flex-1 font-normal" value={(fData.phase2 && fData.phase2.q2) || ''} onChange={e=>chg('form2.phase2.q2',e.target.value)}/></div>
+                                    </div>
+                                </div>
+
+                                {/* Phase 3 */}
+                                <div className="mb-5">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <div className="bg-[#1e40af] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center tracking-wider">
+                                            <span className="bg-white text-[#1e40af] rounded-full w-4 h-4 flex items-center justify-center mr-2">3</span> 
+                                            第三階段 | 到職第15天關懷
+                                        </div>
+                                        <div className="flex items-end">訪談日期: <input type="date" className="border-b border-gray-400 bg-transparent outline-none text-xs ml-2 text-center w-28" value={(fData.phase3 && fData.phase3.date) || ''} onChange={e=>chg('form2.phase3.date',e.target.value)}/></div>
+                                    </div>
+                                    <div className="space-y-3 pl-4 border-l-2 border-blue-100 ml-2 py-1">
+                                        <div className="flex items-center"><i className="fa-solid fa-thumbs-up text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">對目前工作是否有信心？</span> <div className="flex">{renderCbx('phase3.conf','A','非常有信心')}{renderCbx('phase3.conf','B','普通')}{renderCbx('phase3.conf','C','沒信心')}</div></div>
+                                        <div className="flex items-center"><i className="fa-regular fa-heart text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">對主管關懷是否滿意？</span> <div className="flex">{renderCbx('phase3.mgr','A','滿意')}{renderCbx('phase3.mgr','B','普通')}{renderCbx('phase3.mgr','C','不滿意')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-handshake-angle text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">對同事相處是否滿意？</span> <div className="flex">{renderCbx('phase3.col','A','滿意')}{renderCbx('phase3.col','B','普通')}{renderCbx('phase3.col','C','不滿意')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-briefcase text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">是否會考慮離職？</span> <div className="flex">{renderCbx('phase3.quit','A','沒有')}{renderCbx('phase3.quit','B','偶爾')}{renderCbx('phase3.quit','C','有')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-triangle-exclamation text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">若有離職念頭，主要原因？</span> <input type="text" className="border-b border-gray-300 outline-none flex-1 font-normal" value={(fData.phase3 && fData.phase3.q1) || ''} onChange={e=>chg('form2.phase3.q1',e.target.value)}/></div>
+                                    </div>
+                                </div>
+
+                                {/* Phase 4 */}
+                                <div className="mb-6">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <div className="bg-[#1e40af] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center tracking-wider">
+                                            <span className="bg-white text-[#1e40af] rounded-full w-4 h-4 flex items-center justify-center mr-2">4</span> 
+                                            第四階段 | 到職第30天關懷
+                                        </div>
+                                        <div className="flex items-end">訪談日期: <input type="date" className="border-b border-gray-400 bg-transparent outline-none text-xs ml-2 text-center w-28" value={(fData.phase4 && fData.phase4.date) || ''} onChange={e=>chg('form2.phase4.date',e.target.value)}/></div>
+                                    </div>
+                                    <div className="space-y-3 pl-4 border-l-2 border-blue-100 ml-2 py-1">
+                                        <div className="flex items-center"><i className="fa-solid fa-bullseye text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">工作適應程度</span> <div className="flex">{renderCbx('phase4.adapt','A','非常適應')}{renderCbx('phase4.adapt','B','普通')}{renderCbx('phase4.adapt','C','不適應')}</div></div>
+                                        <div className="flex items-center"><i className="fa-regular fa-face-smile-beam text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">對公司滿意度</span> <div className="flex">{renderCbx('phase4.satis','A','非常滿意')}{renderCbx('phase4.satis','B','滿意')}{renderCbx('phase4.satis','C','普通')}{renderCbx('phase4.satis','D','不滿意')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-plant-wilt text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">未來是否願意持續留任？</span> <div className="flex">{renderCbx('phase4.stay','A','願意')}{renderCbx('phase4.stay','B','觀察中')}{renderCbx('phase4.stay','C','不願意')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-calendar-check text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">未來三個月最需要協助事項？</span> <input type="text" className="border-b border-gray-300 outline-none flex-1 font-normal" value={(fData.phase4 && fData.phase4.q1) || ''} onChange={e=>chg('form2.phase4.q1',e.target.value)}/></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-bullhorn text-blue-500 w-6 text-center text-sm"></i> <span className="w-40">對公司建議事項？</span> <input type="text" className="border-b border-gray-300 outline-none flex-1 font-normal" value={(fData.phase4 && fData.phase4.q2) || ''} onChange={e=>chg('form2.phase4.q2',e.target.value)}/></div>
+                                    </div>
+                                </div>
+
+                                {/* Evaluation Matrix & Signatures */}
+                                <div className="flex flex-col md:flex-row gap-6 mb-4 items-stretch">
+                                    <div className="flex-1 bg-[#eef2ff] border border-blue-200 rounded p-3">
+                                        <div className="text-center font-bold text-[#1e3a8a] mb-2">店長綜合評語</div>
+                                        <table className="w-full text-center hr-table bg-white">
+                                            <thead><tr className="bg-blue-50 text-blue-900"><th></th><th className="py-2">上班<br/>精神</th><th className="py-2">學習<br/>意願</th><th className="py-2">團隊<br/>互動</th><th className="py-2">出勤<br/>狀況</th><th className="py-2">情緒<br/>穩定</th><th className="py-2">抱怨<br/>頻率</th></tr></thead>
+                                            <tbody>
+                                                {['正常', '注意', '危險'].map((level) => (
+                                                    <tr key={level}>
+                                                        <td className="font-bold py-1 bg-gray-50">{level}</td>
+                                                        {['s1','s2','s3','s4','s5','s6'].map((col) => (
+                                                            <td key={col}><input type="checkbox" checked={fData.eval && fData.eval[col]===level} onChange={()=>chg(`form2.eval.${col}`, level)} className="scale-100" /></td>
+                                                        ))}
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div className="w-full md:w-72 border rounded p-4 flex flex-col justify-center bg-white shadow-sm gap-4">
+                                        <div className="flex items-end justify-between">
+                                            <div className="font-bold text-gray-700 w-24 flex items-center"><i className="fa-solid fa-pen text-[#1e40af] mr-2"></i>新人簽名:</div>
+                                            <div className="flex-1 border-b border-gray-400 h-10">{renderSignBox('', 'form2.empSign', emp, "border-none !min-h-0")}</div>
+                                        </div>
+                                        <div className="flex items-end justify-between">
+                                            <div className="font-bold text-gray-700 w-24 flex items-center"><i className="fa-solid fa-user-tie text-[#1e40af] mr-2"></i>店長簽名:</div>
+                                            <div className="flex-1 border-b border-gray-400 h-10">{renderSignBox('', 'form2.mgrSign', emp, "border-none !min-h-0")}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="text-[10px] text-gray-600 font-bold text-center bg-[#eef2ff] p-2 rounded">★ 備註：本表作為新人關懷追蹤紀錄，請妥善保存並持續追蹤，協助新人順利適應與成長。</div>
+                                <div className="text-right text-gray-400 text-[9px] mt-1 pr-2">HR-2026-07-15</div>
+                            </div>
+                        </div>
+                    );
+                };
+
+                const renderHrForm3 = (emp) => {
+                    const fData = emp.form3 || { basic:{}, interview:{}, fact:'', emp:'', guide:{}, improve:[{},{},{}], track:{}, concl:{} };
+                    const chg = (path, val) => handleHrFieldChange(emp.id, 'form3', path, val);
+
+                    const ckbx = (path, val) => {
+                        const keys = path.split('.');
+                        const obj = fData[keys[0]];
+                        const checked = obj ? !!obj[val] : false;
+                        return <input type="checkbox" checked={checked} onChange={(e)=>chg(`${path}.${val}`, e.target.checked)} className="scale-125 mr-2"/>;
+                    };
+
+                    return (
+                        <div className="hr-form-container text-gray-800 relative">
+                            <div className="flex items-center justify-center py-5 border-b-2 border-emerald-700 mx-4 mb-4 gap-4">
+                                <span className="text-emerald-700 opacity-50 tracking-[0.2em] font-black italic">--</span>
+                                <h2 className="text-2xl font-black text-slate-800 tracking-[0.1em]">員工關懷暨績效改善面談紀錄表</h2>
+                                <span className="text-emerald-700 opacity-50 tracking-[0.2em] font-black italic">--</span>
+                            </div>
+                            <div className="px-6 text-xs space-y-3 pb-6">
+                                
+                                <div>
+                                    <div className="form-section-title bg-emerald-700">一、基本資料</div>
+                                    <table className="w-full hr-table text-left border-2 border-emerald-700">
+                                        <tbody>
+                                            <tr>
+                                                <th className="w-1/6 bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-user mr-1"></i> 姓名</th><td className="w-2/6 font-bold text-center border-emerald-700">{emp.name}</td>
+                                                <th className="w-1/6 bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-id-card mr-1"></i> 員工編號</th><td className="w-1/6 font-bold text-center border-emerald-700">{emp.id}</td>
+                                                <th className="w-1/6 bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-building mr-1"></i> 部門/店別</th><td className="w-1/6 border-emerald-700"><input type="text" className="w-full bg-transparent px-1 outline-none text-center" value={(fData.basic && fData.basic.dept) || ''} onChange={e=>chg('basic.dept',e.target.value)}/></td>
+                                            </tr>
+                                            <tr>
+                                                <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-briefcase mr-1"></i> 職務</th><td className="border-emerald-700"><input type="text" className="w-full bg-transparent px-1 outline-none text-center" value={(fData.basic && fData.basic.job) || ''} onChange={e=>chg('basic.job',e.target.value)}/></td>
+                                                <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-calendar-day mr-1"></i> 到職日</th><td className="border-emerald-700"><input type="date" className="w-full bg-transparent px-1 outline-none text-center" value={(fData.basic && fData.basic.joinDate) || ''} onChange={e=>chg('basic.joinDate',e.target.value)}/></td>
+                                                <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-user-tie mr-1"></i> 直屬主管</th><td className="border-emerald-700"><input type="text" className="w-full bg-transparent px-1 outline-none text-center" value={(fData.basic && fData.basic.mgr) || ''} onChange={e=>chg('basic.mgr',e.target.value)}/></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div>
+                                    <div className="form-section-title bg-emerald-700">二、面談內容</div>
+                                    <table className="w-full hr-table text-left border-2 border-emerald-700">
+                                        <tbody>
+                                            <tr>
+                                                <th className="w-[15%] bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-calendar-days mr-1"></i> 面談日期</th><td className="w-[35%] border-emerald-700"><input type="date" className="w-full outline-none px-2 text-center bg-transparent" value={(fData.interview && fData.interview.date) || ''} onChange={e=>chg('interview.date',e.target.value)}/></td>
+                                                <th className="w-[15%] bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-location-dot mr-1"></i> 面談地點</th><td className="w-[35%] border-emerald-700"><input type="text" className="w-full outline-none px-2 bg-transparent" value={(fData.interview && fData.interview.loc) || ''} onChange={e=>chg('interview.loc',e.target.value)}/></td>
+                                            </tr>
+                                            <tr>
+                                                <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-comments mr-1"></i> 面談類型<br/><span className="text-[9px] font-normal text-gray-500">(可複選)</span></th>
+                                                <td colSpan="3" className="text-left p-3 border-emerald-700">
+                                                    <div className="flex flex-wrap gap-x-6 gap-y-3">
+                                                        <label className="checkbox-group">{ckbx('interview', 'type1')} 關懷面談</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'type2')} 績效改善</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'type3')} 客訴事件</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'type4')} 出勤異常</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'type5')} 工作態度</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'type6')} 其他 <input type="text" className="border-b border-gray-400 w-32 outline-none ml-1 bg-transparent" value={(fData.interview && fData.interview.typeOther) || ''} onChange={e=>chg('interview.typeOther',e.target.value)}/></label>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-clipboard-list mr-1"></i> 面談原因<br/><span className="text-[9px] font-normal text-gray-500">(可複選)</span></th>
+                                                <td colSpan="3" className="text-left p-3 border-emerald-700">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3">
+                                                        <label className="checkbox-group">{ckbx('interview', 'r1')} 工作績效未達標準</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'r2')} 團隊合作問題</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'r3')} 顧客反應或客訴事件</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'r4')} 情緒管理問題</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'r5')} 出勤異常 (遲到、請假)</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'r6')} 違反公司規範</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'r7')} 工作態度需改善</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'r8')} 主動關懷面談</label>
+                                                        <label className="checkbox-group col-span-1 sm:col-span-2">{ckbx('interview', 'r9')} 其他：<input type="text" className="border-b border-gray-400 flex-1 outline-none ml-1 bg-transparent" value={(fData.interview && fData.interview.rOther) || ''} onChange={e=>chg('interview.rOther',e.target.value)}/></label>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-pen-to-square mr-1"></i> 具體事實說明</th>
+                                                <td colSpan="3" className="border-emerald-700 p-0"><textarea className="w-full h-16 outline-none p-2 resize-none text-left align-top bg-transparent" value={fData.fact||''} onChange={e=>chg('fact',e.target.value)}></textarea></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div>
+                                    <div className="form-section-title bg-emerald-700">三、員工說明</div>
+                                    <div className="border-2 border-emerald-700 rounded-sm">
+                                        <div className="text-xs text-gray-700 bg-emerald-50 px-2 py-1 font-bold border-b border-emerald-700">請員工說明事件經過及個人想法：</div>
+                                        <textarea className="w-full h-20 outline-none p-2 resize-none text-left bg-transparent" value={fData.emp||''} onChange={e=>chg('emp',e.target.value)}></textarea>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div className="form-section-title bg-emerald-700">四、主管輔導內容</div>
+                                    <table className="w-full hr-table text-left border-2 border-emerald-700">
+                                        <tbody>
+                                            <tr>
+                                                <th className="w-1/5 bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-list-check mr-1"></i> 面談溝通重點<br/><span className="text-[9px] font-normal text-gray-500">(可複選)</span></th>
+                                                <td className="w-4/5 text-left p-3 border-emerald-700">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3">
+                                                        <label className="checkbox-group">{ckbx('guide', 'g1')} 工作標準說明</label>
+                                                        <label className="checkbox-group">{ckbx('guide', 'g2')} 情緒管理建議</label>
+                                                        <label className="checkbox-group">{ckbx('guide', 'g3')} 顧客服務要求</label>
+                                                        <label className="checkbox-group">{ckbx('guide', 'g4')} 教育訓練安排</label>
+                                                        <label className="checkbox-group">{ckbx('guide', 'g5')} 團隊合作要求</label>
+                                                        <label className="checkbox-group">{ckbx('guide', 'g6')} 公司制度說明</label>
+                                                        <label className="checkbox-group">{ckbx('guide', 'g7')} 出勤管理提醒</label>
+                                                        <label className="checkbox-group">{ckbx('guide', 'g8')} 其他：<input type="text" className="border-b border-gray-400 flex-1 outline-none ml-1 bg-transparent" value={(fData.guide && fData.guide.gOther) || ''} onChange={e=>chg('guide.gOther',e.target.value)}/></label>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-comment-dots mr-1"></i> 主管輔導內容</th>
+                                                <td className="border-emerald-700 p-0"><textarea className="w-full h-20 outline-none p-2 resize-none text-left bg-transparent" value={(fData.guide && fData.guide.content) || ''} onChange={e=>chg('guide.content',e.target.value)}></textarea></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div>
+                                    <div className="form-section-title bg-emerald-700">五、改善計畫</div>
+                                    <table className="w-full hr-table border-2 border-emerald-700">
+                                        <thead><tr className="bg-emerald-50 text-emerald-800 border-emerald-700">
+                                            <th className="border-emerald-700 w-[10%] font-bold">No</th>
+                                            <th className="border-emerald-700 w-[30%] font-bold">改善項目</th>
+                                            <th className="border-emerald-700 w-[40%] font-bold">改善目標</th>
+                                            <th className="border-emerald-700 w-[20%] font-bold">完成期限</th>
+                                        </tr></thead>
+                                        <tbody>
+                                            {[0,1,2].map(idx => (
+                                                <tr key={`imp_${idx}`}>
+                                                    <td className="border-emerald-700 font-bold bg-gray-50">{idx+1}</td>
+                                                    <td className="border-emerald-700 p-0 h-8"><input type="text" className="w-full h-full outline-none px-2 text-left bg-transparent" value={(fData.improve && fData.improve[idx] && fData.improve[idx].item) || ''} onChange={e=>chg(`improve.${idx}.item`,e.target.value)}/></td>
+                                                    <td className="border-emerald-700 p-0"><input type="text" className="w-full h-full outline-none px-2 text-left bg-transparent" value={(fData.improve && fData.improve[idx] && fData.improve[idx].goal) || ''} onChange={e=>chg(`improve.${idx}.goal`,e.target.value)}/></td>
+                                                    <td className="border-emerald-700 p-0"><input type="date" className="w-full h-full outline-none px-2 text-center bg-transparent" value={(fData.improve && fData.improve[idx] && fData.improve[idx].deadline) || ''} onChange={e=>chg(`improve.${idx}.deadline`,e.target.value)}/></td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div>
+                                    <div className="form-section-title bg-emerald-700">六、追蹤評估</div>
+                                    <table className="w-full hr-table text-left border-2 border-emerald-700">
+                                        <tbody>
+                                            <tr>
+                                                <th className="w-1/6 bg-emerald-50 text-emerald-800 text-center border-emerald-700">改善期間</th>
+                                                <td className="w-5/6 flex items-center justify-center gap-4 px-2 py-2 font-bold border-none">
+                                                    自 <input type="date" className="border-b border-gray-400 outline-none text-xs text-center font-normal bg-transparent" value={(fData.track && fData.track.start) || ''} onChange={e=>chg('track.start',e.target.value)}/>
+                                                    至 <input type="date" className="border-b border-gray-400 outline-none text-xs text-center font-normal bg-transparent" value={(fData.track && fData.track.end) || ''} onChange={e=>chg('track.end',e.target.value)}/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th className="bg-emerald-50 text-emerald-800 text-center border-emerald-700">追蹤方式 <br/><span className="text-[9px] font-normal text-gray-500">(可複選)</span></th>
+                                                <td className="flex justify-around p-3 border-emerald-700">
+                                                    <label className="checkbox-group">{ckbx('track', 't1')} 主任追蹤</label>
+                                                    <label className="checkbox-group">{ckbx('track', 't2')} 店長追蹤</label>
+                                                    <label className="checkbox-group">{ckbx('track', 't3')} 總監追蹤</label>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div>
+                                    <div className="form-section-title bg-emerald-700">七、面談結論</div>
+                                    <div className="border-2 border-emerald-700 p-4 grid grid-cols-1 sm:grid-cols-3 gap-y-4 font-bold text-gray-800">
+                                        <label className="checkbox-group">{ckbx('concl', 'c1')} 已了解並願意改善</label>
+                                        <label className="checkbox-group">{ckbx('concl', 'c2')} 持續觀察追蹤</label>
+                                        <label className="checkbox-group">{ckbx('concl', 'c3')} 安排教育訓練</label>
+                                        <label className="checkbox-group">{ckbx('concl', 'c4')} 調整工作內容</label>
+                                        <label className="checkbox-group">{ckbx('concl', 'c5')} 調整排班</label>
+                                        <label className="checkbox-group">{ckbx('concl', 'c6')} 再次面談</label>
+                                        <label className="checkbox-group col-span-1 sm:col-span-3">{ckbx('concl', 'c7')} 其他處理方式：<input type="text" className="border-b border-gray-400 flex-1 outline-none ml-2 font-normal bg-transparent" value={(fData.concl && fData.concl.cOther) || ''} onChange={e=>chg('concl.cOther',e.target.value)}/></label>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div className="form-section-title bg-emerald-700 mb-1">八、雙方確認</div>
+                                    <div className="border-2 border-emerald-700 p-2">
+                                        <div className="text-[10px] text-gray-700 mb-6 font-bold px-2">本人已了解本次面談內容及改善方向，並願意配合後續改善計畫。</div>
+                                        <div className="flex justify-between items-end mb-2 gap-4 px-4 font-bold text-gray-700">
+                                            <div className="flex-1 flex flex-col items-center">
+                                                <div className="border-b border-gray-400 w-full mb-1 h-12 relative">
+                                                    <div className="absolute inset-0 flex items-end justify-center">{renderSignBox('', 'form3.sign.emp', emp, "border-none !min-h-0")}</div>
+                                                </div>
+                                                <span>員工簽名</span>
+                                            </div>
+                                            <div className="flex-1 flex flex-col items-center">
+                                                <div className="border-b border-gray-400 w-full mb-1 h-12 relative">
+                                                    <div className="absolute inset-0 flex items-end justify-center">{renderSignBox('', 'form3.sign.mgr', emp, "border-none !min-h-0")}</div>
+                                                </div>
+                                                <span>主管簽名</span>
+                                            </div>
+                                            <div className="flex-1 flex flex-col items-center">
+                                                <div className="border-b border-gray-400 w-full mb-1 h-12 relative">
+                                                    <div className="absolute inset-0 flex items-end justify-center">{renderSignBox('', 'form3.sign.storeMgr', emp, "border-none !min-h-0")}</div>
+                                                </div>
+                                                <span>店長簽名</span>
+                                            </div>
+                                        </div>
+                                        <div className="text-left text-xs font-bold text-gray-700 pl-4 mt-4 mb-2">日期: <input type="date" className="border-b border-gray-400 bg-transparent outline-none font-normal" value={(fData.sign && fData.sign.date) || ''} onChange={e=>chg('sign.date',e.target.value)}/></div>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-between items-center mt-2">
+                                    <div className="text-[10px] text-emerald-800 font-bold bg-emerald-100 py-1 px-4 rounded-full flex items-center">
+                                        <i className="fa-regular fa-bell text-lg mr-2"></i> 備註：本表僅作為面談紀錄及改善依據，將作為後續追蹤與評估之參考，並依公司相關規定辦理。
+                                    </div>
+                                    <div className="text-right text-gray-400 text-[9px] pr-2 font-bold">HR-2026-07-15</div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                };
+
                 return (
-                    <div className="flex flex-col h-full bg-gray-50 overflow-hidden">
-                        <div className="bg-white border-b px-4 py-2 flex justify-between items-center shrink-0 shadow-sm">
+                    <div className="flex flex-col h-full bg-gray-50 overflow-hidden relative">
+                        <div className="bg-white border-b px-4 py-2 flex justify-between items-center shrink-0 shadow-sm hide-in-fullscreen relative z-20">
                             <div className="flex items-center gap-4">
                                 <h2 className="text-blue-800 font-bold flex items-center">
                                     <i className="fa-solid fa-user-shield mr-2"></i>人事管理系統
                                 </h2>
                                 <select 
-                                    className="border rounded px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="border rounded px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-500 font-bold"
                                     value={selectedEmpId}
                                     onChange={(e) => setSelectedEmpId(e.target.value)}
                                 >
@@ -1243,127 +1750,31 @@
                             </div>
                         </div>
 
-                        {selectedEmp ? (
+                        {currentEmp ? (
                             <div className="flex-1 flex flex-col overflow-hidden">
-                                <div className="flex bg-white border-b shrink-0 overflow-x-auto hide-scroll">
+                                <div className="flex bg-white border-b shrink-0 overflow-x-auto hide-scroll hide-in-fullscreen relative z-20">
                                     <button onClick={() => setHrFormTab('form1')} className={`px-4 py-2 text-sm font-bold whitespace-nowrap ${hrFormTab === 'form1' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:bg-gray-50'}`}>領航員輔導紀錄表</button>
                                     <button onClick={() => setHrFormTab('form2')} className={`px-4 py-2 text-sm font-bold whitespace-nowrap ${hrFormTab === 'form2' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:bg-gray-50'}`}>新人培育領航計畫</button>
                                     <button onClick={() => setHrFormTab('form3')} className={`px-4 py-2 text-sm font-bold whitespace-nowrap ${hrFormTab === 'form3' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:bg-gray-50'}`}>績效改善面談表</button>
+                                    
+                                    <div className="ml-auto flex items-center pr-2">
+                                        <button onClick={() => setFullScreenMode(true)} className="bg-gray-800 text-white px-3 py-1.5 rounded text-xs shadow hover:bg-gray-700 transition font-bold">
+                                            <i className="fa-regular fa-file-pdf mr-1"></i> 整頁截圖模式 (PDF)
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="flex-1 overflow-y-auto p-4">
-                                    <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg border border-gray-200 overflow-hidden">
-                                        {hrFormTab === 'form1' && (
-                                            <div className="p-6">
-                                                <div className="form-title-bar mb-4">領航員輔導紀錄表 (門店專用)</div>
-                                                <div className="grid grid-cols-2 gap-4 mb-6 bg-gray-50 p-3 rounded border">
-                                                    <div className="flex items-center gap-2"><span className="font-bold text-gray-700">受輔導人:</span> <span className="border-b border-gray-400 px-4 flex-1">{selectedEmp.name}</span></div>
-                                                    <div className="flex items-center gap-2"><span className="font-bold text-gray-700">員工編號:</span> <span className="border-b border-gray-400 px-4 flex-1">{selectedEmp.id}</span></div>
-                                                </div>
-                                                <table className="w-full hr-table text-xs mb-6">
-                                                    <thead>
-                                                        <tr>
-                                                            <th className="w-16">週次</th>
-                                                            <th className="w-32">日期</th>
-                                                            <th>輔導內容重點摘要</th>
-                                                            <th className="w-32">領航員簽名</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {[1,2,3,4,5,6,7,8,9,10,11,12].map(wk => (
-                                                            <tr key={wk}>
-                                                                <td>第 {wk} 週</td>
-                                                                <td><input type="date" className="w-full border-none outline-none text-center" value={selectedEmp.form1?.rows?.[wk]?.date || ''} onChange={e => handleHrFieldChange(selectedEmp.id, 'form1', `form1.rows.${wk}.date`, e.target.value)} /></td>
-                                                                <td><textarea className="w-full border-none outline-none p-1 resize-none" rows="2" value={selectedEmp.form1?.rows?.[wk]?.content || ''} onChange={e => handleHrFieldChange(selectedEmp.id, 'form1', `form1.rows.${wk}.content`, e.target.value)} /></td>
-                                                                <td className="p-1">{renderSignBox('', `form1.rows.${wk}.sign`, selectedEmp)}</td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        )}
-                                        {hrFormTab === 'form2' && (
-                                            <div className="p-6">
-                                                <div className="form-title-bar mb-4">新人培育領航計畫與評估表</div>
-                                                <div className="grid grid-cols-2 gap-4 mb-6 bg-gray-50 p-3 rounded border">
-                                                    <div className="flex items-center gap-2"><span className="font-bold text-gray-700">新人姓名:</span> <span className="border-b border-gray-400 px-4 flex-1">{selectedEmp.name}</span></div>
-                                                    <div className="flex items-center gap-2"><span className="font-bold text-gray-700">入職日期:</span> <input type="date" className="border-none bg-transparent outline-none" value={selectedEmp.form2?.entryDate || ''} onChange={e => handleHrFieldChange(selectedEmp.id, 'form2', 'form2.entryDate', e.target.value)} /></div>
-                                                </div>
-                                                <table className="w-full hr-table text-xs mb-6">
-                                                    <thead>
-                                                        <tr className="bg-gray-100">
-                                                            <th className="w-32">培育階段</th>
-                                                            <th className="w-10">No</th>
-                                                            <th>培育/評估項目</th>
-                                                            <th>標準/目標</th>
-                                                            <th className="w-20">達成</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {PILOT_ITEMS.map((item, idx) => (
-                                                            <tr key={idx}>
-                                                                {idx === 0 || PILOT_ITEMS[idx-1].phase !== item.phase ? (
-                                                                    <td rowSpan={PILOT_ITEMS.filter(i => i.phase === item.phase).length} className="font-bold bg-gray-50">{item.phase}</td>
-                                                                ) : null}
-                                                                <td>{item.no}</td>
-                                                                <td className="text-left p-2">
-                                                                    <div className="font-bold">{item.item}</div>
-                                                                    <div className="text-gray-500 text-[10px]">{item.desc}</div>
-                                                                </td>
-                                                                <td>{item.std}</td>
-                                                                <td><input type="checkbox" checked={selectedEmp.form2?.items?.[item.no] || false} onChange={e => handleHrFieldChange(selectedEmp.id, 'form2', `form2.items.${item.no}`, e.target.checked)} /></td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        )}
-                                        {hrFormTab === 'form3' && (
-                                            <div className="p-6">
-                                                <div className="form-title-bar mb-4">績效改善面談紀錄表</div>
-                                                <div className="space-y-4">
-                                                    <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded border">
-                                                        <div className="flex items-center gap-2"><span className="font-bold text-gray-700">面談對象:</span> <span className="border-b border-gray-400 px-4 flex-1">{selectedEmp.name}</span></div>
-                                                        <div className="flex items-center gap-2"><span className="font-bold text-gray-700">面談日期:</span> <input type="date" className="border-none bg-transparent outline-none" value={selectedEmp.form3?.date || ''} onChange={e => handleHrFieldChange(selectedEmp.id, 'form3', 'form3.date', e.target.value)} /></div>
-                                                    </div>
-                                                    <div>
-                                                        <div className="form-section-title">一、 現況描述與事實陳述</div>
-                                                        <textarea className="w-full border rounded p-2 text-sm min-h-[80px] outline-none focus:ring-1 focus:ring-blue-500" placeholder="請描述績效不佳之具體事實..." value={selectedEmp.form3?.fact || ''} onChange={e => handleHrFieldChange(selectedEmp.id, 'form3', 'form3.fact', e.target.value)} />
-                                                    </div>
-                                                    <div>
-                                                        <div className="form-section-title">二、 改善行動計畫 (Action Plan)</div>
-                                                        <table className="w-full hr-table text-xs">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th className="w-10">No</th>
-                                                                    <th>改善項目與具體做法</th>
-                                                                    <th className="w-32">完成期限</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                {[1,2,3].map(i => (
-                                                                    <tr key={i}>
-                                                                        <td>{i}</td>
-                                                                        <td><input className="w-full border-none outline-none p-1" value={selectedEmp.form3?.improve?.[i]?.content || ''} onChange={e => handleHrFieldChange(selectedEmp.id, 'form3', `form3.improve.${i}.content`, e.target.value)} /></td>
-                                                                        <td><input type="date" className="w-full border-none outline-none text-center" value={selectedEmp.form3?.improve?.[i]?.deadline || ''} onChange={e => handleHrFieldChange(selectedEmp.id, 'form3', `form3.improve.${i}.deadline`, e.target.value)} /></td>
-                                                                    </tr>
-                                                                ))}
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                    <div className="flex justify-around border-t pt-6 mt-6">
-                                                        {renderSignBox('面談人簽名', 'form3.interviewerSign', selectedEmp)}
-                                                        {renderSignBox('受面談人簽名', 'form3.intervieweeSign', selectedEmp)}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
+                                <div className="flex-1 overflow-y-auto p-4 relative z-10">
+                                    <div className="w-full max-w-4xl mx-auto">
+                                        {hrFormTab === 'form1' && renderHrForm1(currentEmp)}
+                                        {hrFormTab === 'form2' && renderHrForm2(currentEmp)}
+                                        {hrFormTab === 'form3' && renderHrForm3(currentEmp)}
                                     </div>
                                 </div>
                             </div>
                         ) : (
-                            <div className="flex-1 flex items-center justify-center text-gray-400 flex-col gap-4">
+                            <div className="flex-1 flex items-center justify-center text-gray-400 flex-col gap-4 hide-in-fullscreen">
                                 <i className="fa-solid fa-users text-6xl opacity-20"></i>
-                                <p>請從上方下拉選單選擇員工，或新增一名員工開始管理。</p>
+                                <p className="font-bold">請從上方下拉選單選擇員工，或新增一名員工開始管理。</p>
                             </div>
                         )}
 
@@ -1402,22 +1813,148 @@
                 );
             };
 
+            const renderAdminTab = () => {
+                if (!isSuperAdmin) return <div className="p-4 text-center text-red-500 font-bold">拒絕存取：請重新驗證最高權限。</div>;
+                
+                const handleUpdateUserStatus = (id, newStatus) => {
+                    const user = systemUsers.find(u => u.id === id);
+                    if(user) saveToFirebase('system_users', id, { ...user, status: newStatus });
+                };
+
+                const handleDeleteUser = (id) => {
+                    if(confirm('確定要永久刪除此帳號嗎？')) {
+                        saveToFirebase('system_users', id, { status: 'deleted' });
+                    }
+                };
+
+                const saveUserForm = (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    const userData = {
+                        username: formData.get('username'),
+                        name: formData.get('name'),
+                        role: formData.get('role'),
+                        group: formData.get('group'),
+                        permissions: formData.getAll('permissions'),
+                        status: 'active',
+                        updatedAt: new Date().toISOString()
+                    };
+                    const targetId = editUser ? editUser.id : `user_${Date.now()}`;
+                    saveToFirebase('system_users', targetId, userData);
+                    setManageUserModal(false);
+                    setEditUser(null);
+                };
+
+                const activeUsers = systemUsers.filter(u => u.status !== 'deleted');
+
+                return (
+                    <div className="flex flex-col h-full gap-4 text-sm overflow-hidden p-4 bg-gray-50">
+                        <div className="bg-white p-4 rounded shadow border border-gray-200 flex justify-between items-center">
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-800"><i className="fa-solid fa-crown text-yellow-500 mr-2"></i>總部最高權限管理控制台</h2>
+                                <p className="text-xs text-gray-500 mt-1">目前登入身分：<span className="font-bold text-red-600">信吉 (Super Admin)</span></p>
+                            </div>
+                            <button onClick={() => { setEditUser(null); setManageUserModal(true); }} className="bg-red-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-red-700 transition">
+                                <i className="fa-solid fa-user-plus mr-2"></i>新增系統人員
+                            </button>
+                        </div>
+
+                        <div className="flex-1 bg-white rounded shadow border border-gray-200 overflow-y-auto">
+                            <table className="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr className="bg-gray-100 text-gray-700 border-b-2">
+                                        <th className="p-3">姓名 / 帳號</th>
+                                        <th className="p-3">層級身份</th>
+                                        <th className="p-3">所屬群組 (門店/區域)</th>
+                                        <th className="p-3">資料檢視權限</th>
+                                        <th className="p-3 text-center">狀態</th>
+                                        <th className="p-3 text-right">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {activeUsers.map(user => (
+                                        <tr key={user.id} className="border-b hover:bg-gray-50">
+                                            <td className="p-3">
+                                                <div className="font-bold text-gray-800">{user.name}</div>
+                                                <div className="text-[10px] text-gray-500">{user.username}</div>
+                                            </td>
+                                            <td className="p-3"><span className={`px-2 py-0.5 rounded text-xs font-bold ${user.role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>{user.role === 'admin' ? '區主管' : '店長/店員'}</span></td>
+                                            <td className="p-3 font-bold text-gray-700">{user.group || '未指定'}</td>
+                                            <td className="p-3 text-xs text-gray-600">
+                                                {user.permissions && user.permissions.includes('view_all') ? <span className="text-red-600 font-bold"><i className="fa-solid fa-eye mr-1"></i>跨區/全區資料</span> : <span className="text-blue-600 font-bold"><i className="fa-solid fa-store mr-1"></i>僅限本店資料</span>}
+                                            </td>
+                                            <td className="p-3 text-center">
+                                                {user.status === 'active' ? <span className="text-green-600 font-bold bg-green-50 px-2 py-1 rounded text-xs"><i className="fa-solid fa-check-circle mr-1"></i>啟用中</span> : <span className="text-gray-500 font-bold bg-gray-100 px-2 py-1 rounded text-xs"><i className="fa-solid fa-ban mr-1"></i>已停權</span>}
+                                            </td>
+                                            <td className="p-3 text-right space-x-2">
+                                                <button onClick={() => { setEditUser(user); setManageUserModal(true); }} className="px-2 py-1 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded transition text-xs font-bold"><i className="fa-solid fa-pen"></i></button>
+                                                {user.status === 'active' ? (
+                                                    <button onClick={() => handleUpdateUserStatus(user.id, 'suspended')} className="px-2 py-1 bg-amber-100 text-amber-700 hover:bg-amber-200 rounded transition text-xs font-bold" title="停權"><i className="fa-solid fa-lock"></i></button>
+                                                ) : (
+                                                    <button onClick={() => handleUpdateUserStatus(user.id, 'active')} className="px-2 py-1 bg-green-100 text-green-700 hover:bg-green-200 rounded transition text-xs font-bold" title="啟用"><i className="fa-solid fa-unlock"></i></button>
+                                                )}
+                                                <button onClick={() => handleDeleteUser(user.id)} className="px-2 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded transition text-xs font-bold" title="刪除"><i className="fa-solid fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {activeUsers.length === 0 && <tr><td colSpan="6" className="p-8 text-center text-gray-400">尚無任何人員資料</td></tr>}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* 人員管理 Modal */}
+                        {manageUserModal && (
+                            <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4">
+                                <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+                                    <div className="bg-red-600 text-white p-4 font-bold flex justify-between">
+                                        <span>{editUser ? '編輯人員資料' : '新增系統人員'}</span>
+                                        <button onClick={() => {setManageUserModal(false); setEditUser(null);}}><i className="fa-solid fa-xmark text-xl"></i></button>
+                                    </div>
+                                    <form onSubmit={saveUserForm} className="p-6 space-y-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div><label className="block text-xs text-gray-500 mb-1">登入帳號</label><input required name="username" defaultValue={editUser?.username} className="w-full border p-2 rounded outline-none focus:border-red-500" placeholder="例: A001" /></div>
+                                            <div><label className="block text-xs text-gray-500 mb-1">人員姓名</label><input required name="name" defaultValue={editUser?.name} className="w-full border p-2 rounded outline-none focus:border-red-500" placeholder="例: 王小明" /></div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-gray-500 mb-1">層級身分</label>
+                                                <select name="role" defaultValue={editUser?.role || 'staff'} className="w-full border p-2 rounded outline-none">
+                                                    <option value="staff">店長/店員</option><option value="admin">區主管</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-gray-500 mb-1">群組分類 (門店/區域)</label>
+                                                <input name="group" defaultValue={editUser?.group} className="w-full border p-2 rounded outline-none focus:border-red-500" placeholder="例: 中清店" />
+                                            </div>
+                                        </div>
+                                        <div className="bg-gray-50 p-3 rounded border">
+                                            <label className="block text-xs font-bold text-gray-700 mb-2"><i className="fa-solid fa-shield mr-1"></i>資料檢視權限配置</label>
+                                            <label className="flex items-center gap-2 mb-2 cursor-pointer">
+                                                <input type="checkbox" name="permissions" value="view_self" defaultChecked={editUser ? editUser.permissions?.includes('view_self') : true} className="scale-125" />
+                                                <span className="text-sm font-bold text-gray-800">僅限檢視本店/所屬群組資料</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input type="checkbox" name="permissions" value="view_all" defaultChecked={editUser ? editUser.permissions?.includes('view_all') : false} className="scale-125" />
+                                                <span className="text-sm font-bold text-red-600">開放檢視所有跨區資料 (主管級)</span>
+                                            </label>
+                                        </div>
+                                        <div className="pt-4 flex justify-end gap-3 border-t">
+                                            <button type="button" onClick={() => {setManageUserModal(false); setEditUser(null);}} className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded font-bold transition">取消</button>
+                                            <button type="submit" className="px-6 py-2 bg-red-600 text-white rounded font-bold shadow hover:bg-red-700 transition">儲存設定</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
             // 主畫面 Layout
             return (
-                <div className={`flex flex-col max-w-7xl mx-auto bg-gray-100 relative ${fullScreenMode ? 'fullscreen-container' : 'h-full'}`}>
+                <div className={`flex flex-col max-w-7xl mx-auto bg-gray-100 relative ${fullScreenMode ? 'print-mode' : 'h-full'}`}>
                     
-                    {/* 整頁截圖模式全域樣式 */}
-                    {fullScreenMode && (
-                        <style>
-                            {`
-                                body, #root { height: auto !important; overflow: auto !important; background-color: #f8fafc !important; }
-                                .hide-in-fullscreen { display: none !important; }
-                                .fullscreen-container { height: auto !important; overflow: visible !important; min-height: 100vh; }
-                            `}
-                        </style>
-                    )}
-
-                    {/* 安全驗證對話框 */}
+                    {/* 密碼驗證對話框 */}
                     {showPwdModal && (
                         <div className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4">
                             <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100">
@@ -1425,9 +1962,9 @@
                                     <i className="fa-solid fa-lock"></i> 系統安全驗證
                                 </div>
                                 <div className="p-6">
-                                    <p className="text-gray-600 text-sm mb-4">此為人事機密區域，請輸入授權密碼以解鎖畫面。</p>
+                                    <p className="text-gray-600 text-sm mb-4 font-bold">此為人事機密區域，請輸入授權密碼以解鎖畫面。</p>
                                     <input type="password" 
-                                        className="w-full border-2 border-gray-300 rounded-lg p-3 text-center text-2xl tracking-[0.5em] focus:border-blue-500 outline-none transition-colors" 
+                                        className="w-full border-2 border-gray-300 rounded-lg p-3 text-center text-2xl tracking-[0.5em] focus:border-blue-500 outline-none transition-colors font-sans" 
                                         value={pwdInput} 
                                         onChange={(e) => setPwdInput(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && handlePwdSubmit()}
@@ -1443,7 +1980,30 @@
                         </div>
                     )}
 
-                    {/* 密碼錯誤對話框 */}
+                    {showSuperAuthModal && (
+                        <div className="fixed inset-0 bg-black/80 z-[120] flex items-center justify-center p-4">
+                            <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border-2 border-yellow-500">
+                                <div className="bg-gray-900 text-yellow-500 p-4 font-bold text-lg flex items-center gap-2">
+                                    <i className="fa-solid fa-crown"></i> 總部最高權限登入
+                                </div>
+                                <div className="p-6 space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 mb-1">管理員帳號</label>
+                                        <input type="text" className="w-full border-2 border-gray-300 rounded-lg p-2 text-center text-lg font-bold focus:border-yellow-500 outline-none" value={superAccInput} onChange={e => setSuperAccInput(e.target.value)} placeholder="輸入帳號" autoFocus />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 mb-1">管理員密碼</label>
+                                        <input type="password" className="w-full border-2 border-gray-300 rounded-lg p-2 text-center text-xl tracking-[0.2em] font-sans focus:border-yellow-500 outline-none" value={superPwdInput} onChange={e => setSuperPwdInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSuperAuthSubmit()} placeholder="輸入密碼" />
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 p-4 flex justify-end gap-3 border-t">
+                                    <button onClick={() => {setShowSuperAuthModal(false); setSuperAccInput(''); setSuperPwdInput('');}} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded font-bold transition">取消</button>
+                                    <button onClick={handleSuperAuthSubmit} className="px-6 py-2 bg-yellow-500 text-gray-900 rounded font-bold shadow hover:bg-yellow-400 transition">驗證登入</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {pwdErrorModal && (
                         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[110] p-4">
                             <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full transform transition-all border-l-4 border-red-500">
@@ -1451,26 +2011,25 @@
                                     <i className="fa-solid fa-triangle-exclamation text-3xl mr-2"></i>
                                     <h3 className="font-bold text-lg">存取失敗</h3>
                                 </div>
-                                <p className="text-gray-600 mb-6">密碼錯誤，請重新輸入以驗證您的身份。</p>
-                                <button
-                                    onClick={() => setPwdErrorModal(false)}
-                                    className="w-full bg-gray-900 text-white py-2 rounded-lg font-bold hover:bg-gray-700 transition"
-                                >
+                                <p className="text-gray-600 mb-6 font-bold">密碼錯誤，請重新輸入以驗證您的身份。</p>
+                                <button onClick={() => setPwdErrorModal(false)} className="w-full bg-gray-900 text-white py-2 rounded-lg font-bold hover:bg-gray-700 transition">
                                     我知道了
                                 </button>
                             </div>
                         </div>
                     )}
 
-                    {/* 結束整頁模式懸浮按鈕 */}
                     {fullScreenMode && (
-                        <button onClick={() => setFullScreenMode(false)} className="fixed bottom-6 right-6 bg-red-600 text-white px-5 py-3 rounded-full shadow-2xl font-bold z-[100] hover:bg-red-700 border-2 border-white flex items-center">
-                            <i className="fa-solid fa-compress mr-2"></i>結束整頁模式
+                        <button onClick={() => setFullScreenMode(false)} className="fixed bottom-6 right-6 bg-red-600 text-white px-5 py-3 rounded-full shadow-2xl font-bold z-[100] hover:bg-red-700 border-2 border-white flex items-center no-print">
+                            <i className="fa-solid fa-compress mr-2"></i>結束截圖模式
                         </button>
                     )}
 
                     <header className="px-4 py-2 border-b bg-white flex justify-between items-center shrink-0 shadow-sm relative z-10 hide-in-fullscreen">
                         <h1 className="text-xl font-black text-gray-800 tracking-tight">中清店12生肖戰報</h1>
+                        <button onClick={() => setShowSuperAuthModal(true)} className="bg-gray-900 text-yellow-500 px-3 py-1 rounded text-xs font-bold shadow hover:bg-gray-800 transition">
+                            <i className="fa-solid fa-key mr-1"></i>權限登入
+                        </button>
                     </header>
 
                     <nav className="flex overflow-x-auto border-b bg-white shrink-0 hide-scroll text-sm relative z-10 hide-in-fullscreen">
@@ -1482,9 +2041,12 @@
                         <button onClick={() => switchTab('trend')} className={`flex-1 py-2 px-3 whitespace-nowrap ${activeTab === 'trend' ? 'tab-active' : 'tab-inactive'}`}><i className="fa-solid fa-chart-line mr-1 text-purple-600"></i>趨勢圖表</button>
                         <button onClick={() => switchTab('settings')} className={`flex-1 py-2 px-3 whitespace-nowrap ${activeTab === 'settings' ? 'tab-active' : 'tab-inactive'}`}><i className="fa-solid fa-gear mr-1 text-gray-500"></i>店長設定</button>
                         <button onClick={() => setShowPwdModal(true)} className={`flex-1 py-2 px-3 whitespace-nowrap border-l-2 border-blue-200 ${activeTab === 'hr' ? 'tab-active !border-b-blue-600 !text-blue-800' : 'text-blue-600 hover:bg-blue-50'}`}><i className="fa-solid fa-user-shield mr-1"></i>領航員/績效改善</button>
+                        {isSuperAdmin && (
+                            <button onClick={() => switchTab('admin')} className={`flex-1 py-2 px-3 whitespace-nowrap border-l-2 border-red-200 ${activeTab === 'admin' ? 'tab-active !border-b-red-600 !text-red-700 bg-red-50' : 'text-red-500 hover:bg-red-50'}`}><i className="fa-solid fa-crown mr-1"></i>權限管理</button>
+                        )}
                     </nav>
 
-                    <main className={`flex-1 ${fullScreenMode ? 'fullscreen-container' : 'overflow-hidden'}`}>
+                    <main className={`flex-1 ${fullScreenMode ? 'print-mode' : 'overflow-hidden'}`}>
                         {activeTab === 'night' && <div className="p-2 h-full overflow-hidden">{renderShiftTab('night', '夜班', 'fa-moon', 'text-gray-800', 'bg-gray-800')}</div>}
                         {activeTab === 'morning' && <div className="p-2 h-full overflow-hidden">{renderShiftTab('morning', '早班', 'fa-sun', 'text-orange-600', 'bg-orange-500')}</div>}
                         {activeTab === 'evening' && <div className="p-2 h-full overflow-hidden">{renderShiftTab('evening', '晚班', 'fa-cloud-sun', 'text-indigo-600', 'bg-indigo-500')}</div>}
@@ -1492,11 +2054,8 @@
                         {activeTab === 'audit' && <div className="p-2 h-full overflow-hidden">{renderAudit()}</div>}
                         {activeTab === 'trend' && <div className="p-2 h-full overflow-hidden">{renderTrendTab()}</div>}
                         {activeTab === 'settings' && <div className="p-2 h-full overflow-hidden">{renderSettings()}</div>}
-                        {activeTab === 'hr' && (
-                            <div className="h-full overflow-hidden">
-                                {renderHrTab()}
-                            </div>
-                        )}
+                        {activeTab === 'hr' && renderHrTab()}
+                        {activeTab === 'admin' && renderAdminTab()}
                     </main>
                 </div>
             );
@@ -1507,9 +2066,7 @@
                 super(props);
                 this.state = { hasError: false, error: null, errorInfo: null };
             }
-            static getDerivedStateFromError(error) {
-                return { hasError: true, error };
-            }
+            static getDerivedStateFromError(error) { return { hasError: true, error }; }
             componentDidCatch(error, errorInfo) {
                 console.error("Caught unhandled exception:", error, errorInfo);
                 this.setState({ errorInfo });
@@ -1525,7 +2082,7 @@
                                 {'\n'}
                                 {this.state.errorInfo && this.state.errorInfo.componentStack}
                             </pre>
-                            <button onClick={() => window.location.reload()} style={{ marginTop: '20px', padding: '10px 20px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                            <button onClick={() => window.location.reload()} style={{ marginTop: '20px', padding: '10px 20px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
                                 重新載入
                             </button>
                         </div>
