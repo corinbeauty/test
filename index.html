@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>中清店12生肖戰報 V4</title>
+    <title>中清店12生肖戰報</title>
 
     <!-- Firebase SDK Setup -->
     <script type="module">
@@ -26,7 +26,10 @@
         const auth = getAuth(app);
 
         window.fb = { app, db, auth, doc, setDoc, onSnapshot, collection, signInAnonymously, onAuthStateChanged };
-        window.dispatchEvent(new Event('firebase-ready'));
+        // 延遲發送事件，確保 React 有足夠時間掛載並監聽
+        setTimeout(() => {
+            window.dispatchEvent(new Event('firebase-ready'));
+        }, 100);
     </script>
 
     <!-- React & Babel -->
@@ -119,6 +122,13 @@
 
         function App() {
             const [activeTab, setActiveTab] = useState('night');
+            
+            // 確保元件掛載後才開始進行後續邏輯，避免初次渲染空白
+            const [isMounted, setIsMounted] = useState(false);
+            useEffect(() => {
+                setIsMounted(true);
+            }, []);
+
             const getTodayStr = () => {
                 const today = new Date();
                 return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -164,7 +174,7 @@
                             const appId = typeof __app_id !== 'undefined' ? __app_id : 'akpi-e0698';
                             const recordsRef = collection(db, 'artifacts', appId, 'public', 'data', 'records');
                             const settingsRef = collection(db, 'artifacts', appId, 'public', 'data', 'settings');
-                            const hrRef = collection(db, 'artifacts', appId, 'public', 'data', 'hr_employees'); // V4 HR資料庫
+                            const hrRef = collection(db, 'artifacts', appId, 'public', 'data', 'hr_employees');
 
                             onSnapshot(recordsRef, snap => {
                                 const newDb = {};
@@ -197,6 +207,9 @@
                 
                 return () => window.removeEventListener('firebase-ready', initFb);
             }, []);
+
+            // 在元件尚未完全掛載前，先回傳一個簡單的載入畫面，避免全白
+            if (!isMounted) return <div style={{display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center'}}>載入中...</div>;
 
             // 存取 Firebase 共用函數
             const saveToFirebase = (collectionName, docId, dataToMerge) => {
@@ -424,7 +437,7 @@
 
             // ---- HR 模組主畫面渲染 ----
             const renderHrTab = () => {
-                if (!hrAuthUnlocked) return <div className="p-4 text-center text-red-500">拒絕存取：請由導覽列重新驗證密碼。</div>;
+                if (!hrAuthUnlocked) return <div className="p-4 text-center text-red-500 mt-10 font-bold">拒絕存取：請由導覽列重新驗證密碼。</div>;
 
                 const currentEmp = hrEmployees[selectedEmpId] || null;
 
