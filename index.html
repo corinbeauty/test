@@ -121,14 +121,9 @@
         ];
 
         function App() {
+            // 強制初始狀態為最穩定的「夜班」資料輸入畫面
             const [activeTab, setActiveTab] = useState('night');
             
-            // 確保元件掛載後才開始進行後續邏輯，避免初次渲染空白
-            const [isMounted, setIsMounted] = useState(false);
-            useEffect(() => {
-                setIsMounted(true);
-            }, []);
-
             const getTodayStr = () => {
                 const today = new Date();
                 return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -207,9 +202,6 @@
                 
                 return () => window.removeEventListener('firebase-ready', initFb);
             }, []);
-
-            // 在元件尚未完全掛載前，先回傳一個簡單的載入畫面，避免全白
-            if (!isMounted) return <div style={{display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center'}}>載入中...</div>;
 
             // 存取 Firebase 共用函數
             const saveToFirebase = (collectionName, docId, dataToMerge) => {
