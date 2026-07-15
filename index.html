@@ -1213,6 +1213,195 @@
                 </div>
             );
 
+            const renderHrTab = () => {
+                const selectedEmp = hrEmployees[selectedEmpId];
+                
+                return (
+                    <div className="flex flex-col h-full bg-gray-50 overflow-hidden">
+                        <div className="bg-white border-b px-4 py-2 flex justify-between items-center shrink-0 shadow-sm">
+                            <div className="flex items-center gap-4">
+                                <h2 className="text-blue-800 font-bold flex items-center">
+                                    <i className="fa-solid fa-user-shield mr-2"></i>人事管理系統
+                                </h2>
+                                <select 
+                                    className="border rounded px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                    value={selectedEmpId}
+                                    onChange={(e) => setSelectedEmpId(e.target.value)}
+                                >
+                                    <option value="">-- 選擇員工 --</option>
+                                    {Object.values(hrEmployees).map(emp => (
+                                        <option key={emp.id} value={emp.id}>{emp.id} - {emp.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="flex gap-2">
+                                <input type="text" placeholder="編號" className="border rounded px-2 py-1 text-sm w-16" value={newEmpId} onChange={e => setNewEmpId(e.target.value)} />
+                                <input type="text" placeholder="姓名" className="border rounded px-2 py-1 text-sm w-24" value={newEmpName} onChange={e => setNewEmpName(e.target.value)} />
+                                <button onClick={handleAddHrEmployee} className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition">
+                                    <i className="fa-solid fa-plus mr-1"></i>新增員工
+                                </button>
+                            </div>
+                        </div>
+
+                        {selectedEmp ? (
+                            <div className="flex-1 flex flex-col overflow-hidden">
+                                <div className="flex bg-white border-b shrink-0 overflow-x-auto hide-scroll">
+                                    <button onClick={() => setHrFormTab('form1')} className={`px-4 py-2 text-sm font-bold whitespace-nowrap ${hrFormTab === 'form1' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:bg-gray-50'}`}>領航員輔導紀錄表</button>
+                                    <button onClick={() => setHrFormTab('form2')} className={`px-4 py-2 text-sm font-bold whitespace-nowrap ${hrFormTab === 'form2' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:bg-gray-50'}`}>新人培育領航計畫</button>
+                                    <button onClick={() => setHrFormTab('form3')} className={`px-4 py-2 text-sm font-bold whitespace-nowrap ${hrFormTab === 'form3' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:bg-gray-50'}`}>績效改善面談表</button>
+                                </div>
+                                <div className="flex-1 overflow-y-auto p-4">
+                                    <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg border border-gray-200 overflow-hidden">
+                                        {hrFormTab === 'form1' && (
+                                            <div className="p-6">
+                                                <div className="form-title-bar mb-4">領航員輔導紀錄表 (門店專用)</div>
+                                                <div className="grid grid-cols-2 gap-4 mb-6 bg-gray-50 p-3 rounded border">
+                                                    <div className="flex items-center gap-2"><span className="font-bold text-gray-700">受輔導人:</span> <span className="border-b border-gray-400 px-4 flex-1">{selectedEmp.name}</span></div>
+                                                    <div className="flex items-center gap-2"><span className="font-bold text-gray-700">員工編號:</span> <span className="border-b border-gray-400 px-4 flex-1">{selectedEmp.id}</span></div>
+                                                </div>
+                                                <table className="w-full hr-table text-xs mb-6">
+                                                    <thead>
+                                                        <tr>
+                                                            <th className="w-16">週次</th>
+                                                            <th className="w-32">日期</th>
+                                                            <th>輔導內容重點摘要</th>
+                                                            <th className="w-32">領航員簽名</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {[1,2,3,4,5,6,7,8,9,10,11,12].map(wk => (
+                                                            <tr key={wk}>
+                                                                <td>第 {wk} 週</td>
+                                                                <td><input type="date" className="w-full border-none outline-none text-center" value={selectedEmp.form1?.rows?.[wk]?.date || ''} onChange={e => handleHrFieldChange(selectedEmp.id, 'form1', `form1.rows.${wk}.date`, e.target.value)} /></td>
+                                                                <td><textarea className="w-full border-none outline-none p-1 resize-none" rows="2" value={selectedEmp.form1?.rows?.[wk]?.content || ''} onChange={e => handleHrFieldChange(selectedEmp.id, 'form1', `form1.rows.${wk}.content`, e.target.value)} /></td>
+                                                                <td className="p-1">{renderSignBox('', `form1.rows.${wk}.sign`, selectedEmp)}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                        {hrFormTab === 'form2' && (
+                                            <div className="p-6">
+                                                <div className="form-title-bar mb-4">新人培育領航計畫與評估表</div>
+                                                <div className="grid grid-cols-2 gap-4 mb-6 bg-gray-50 p-3 rounded border">
+                                                    <div className="flex items-center gap-2"><span className="font-bold text-gray-700">新人姓名:</span> <span className="border-b border-gray-400 px-4 flex-1">{selectedEmp.name}</span></div>
+                                                    <div className="flex items-center gap-2"><span className="font-bold text-gray-700">入職日期:</span> <input type="date" className="border-none bg-transparent outline-none" value={selectedEmp.form2?.entryDate || ''} onChange={e => handleHrFieldChange(selectedEmp.id, 'form2', 'form2.entryDate', e.target.value)} /></div>
+                                                </div>
+                                                <table className="w-full hr-table text-xs mb-6">
+                                                    <thead>
+                                                        <tr className="bg-gray-100">
+                                                            <th className="w-32">培育階段</th>
+                                                            <th className="w-10">No</th>
+                                                            <th>培育/評估項目</th>
+                                                            <th>標準/目標</th>
+                                                            <th className="w-20">達成</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {PILOT_ITEMS.map((item, idx) => (
+                                                            <tr key={idx}>
+                                                                {idx === 0 || PILOT_ITEMS[idx-1].phase !== item.phase ? (
+                                                                    <td rowSpan={PILOT_ITEMS.filter(i => i.phase === item.phase).length} className="font-bold bg-gray-50">{item.phase}</td>
+                                                                ) : null}
+                                                                <td>{item.no}</td>
+                                                                <td className="text-left p-2">
+                                                                    <div className="font-bold">{item.item}</div>
+                                                                    <div className="text-gray-500 text-[10px]">{item.desc}</div>
+                                                                </td>
+                                                                <td>{item.std}</td>
+                                                                <td><input type="checkbox" checked={selectedEmp.form2?.items?.[item.no] || false} onChange={e => handleHrFieldChange(selectedEmp.id, 'form2', `form2.items.${item.no}`, e.target.checked)} /></td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                        {hrFormTab === 'form3' && (
+                                            <div className="p-6">
+                                                <div className="form-title-bar mb-4">績效改善面談紀錄表</div>
+                                                <div className="space-y-4">
+                                                    <div className="grid grid-cols-2 gap-4 bg-gray-50 p-3 rounded border">
+                                                        <div className="flex items-center gap-2"><span className="font-bold text-gray-700">面談對象:</span> <span className="border-b border-gray-400 px-4 flex-1">{selectedEmp.name}</span></div>
+                                                        <div className="flex items-center gap-2"><span className="font-bold text-gray-700">面談日期:</span> <input type="date" className="border-none bg-transparent outline-none" value={selectedEmp.form3?.date || ''} onChange={e => handleHrFieldChange(selectedEmp.id, 'form3', 'form3.date', e.target.value)} /></div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="form-section-title">一、 現況描述與事實陳述</div>
+                                                        <textarea className="w-full border rounded p-2 text-sm min-h-[80px] outline-none focus:ring-1 focus:ring-blue-500" placeholder="請描述績效不佳之具體事實..." value={selectedEmp.form3?.fact || ''} onChange={e => handleHrFieldChange(selectedEmp.id, 'form3', 'form3.fact', e.target.value)} />
+                                                    </div>
+                                                    <div>
+                                                        <div className="form-section-title">二、 改善行動計畫 (Action Plan)</div>
+                                                        <table className="w-full hr-table text-xs">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th className="w-10">No</th>
+                                                                    <th>改善項目與具體做法</th>
+                                                                    <th className="w-32">完成期限</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {[1,2,3].map(i => (
+                                                                    <tr key={i}>
+                                                                        <td>{i}</td>
+                                                                        <td><input className="w-full border-none outline-none p-1" value={selectedEmp.form3?.improve?.[i]?.content || ''} onChange={e => handleHrFieldChange(selectedEmp.id, 'form3', `form3.improve.${i}.content`, e.target.value)} /></td>
+                                                                        <td><input type="date" className="w-full border-none outline-none text-center" value={selectedEmp.form3?.improve?.[i]?.deadline || ''} onChange={e => handleHrFieldChange(selectedEmp.id, 'form3', `form3.improve.${i}.deadline`, e.target.value)} /></td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <div className="flex justify-around border-t pt-6 mt-6">
+                                                        {renderSignBox('面談人簽名', 'form3.interviewerSign', selectedEmp)}
+                                                        {renderSignBox('受面談人簽名', 'form3.intervieweeSign', selectedEmp)}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex items-center justify-center text-gray-400 flex-col gap-4">
+                                <i className="fa-solid fa-users text-6xl opacity-20"></i>
+                                <p>請從上方下拉選單選擇員工，或新增一名員工開始管理。</p>
+                            </div>
+                        )}
+
+                        {/* Signature Modal */}
+                        {sigModal.isOpen && (
+                            <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4">
+                                <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col h-[400px]">
+                                    <div className="bg-blue-800 text-white p-4 font-bold flex justify-between items-center">
+                                        <span><i className="fa-solid fa-pen-nib mr-2"></i>電子簽名板</span>
+                                        <button onClick={() => setSigModal({ isOpen: false, fieldPath: '' })} className="text-white/80 hover:text-white"><i className="fa-solid fa-xmark text-xl"></i></button>
+                                    </div>
+                                    <div className="flex-1 bg-gray-50 relative m-4 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden cursor-crosshair">
+                                        <canvas 
+                                            ref={canvasRef}
+                                            onMouseDown={startDrawing}
+                                            onMouseMove={draw}
+                                            onMouseUp={stopDrawing}
+                                            onMouseOut={stopDrawing}
+                                            onTouchStart={startDrawing}
+                                            onTouchMove={draw}
+                                            onTouchEnd={stopDrawing}
+                                            className="w-full h-full"
+                                        />
+                                    </div>
+                                    <div className="p-4 border-t bg-gray-50 flex justify-between gap-3">
+                                        <button onClick={clearCanvas} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded font-bold transition border border-gray-300">清除重簽</button>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => setSigModal({ isOpen: false, fieldPath: '' })} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded font-bold transition">取消</button>
+                                            <button onClick={saveSignature} className="px-6 py-2 bg-blue-600 text-white rounded font-bold shadow hover:bg-blue-700 transition">確認存檔</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
             // 主畫面 Layout
             return (
                 <div className={`flex flex-col max-w-7xl mx-auto bg-gray-100 relative ${fullScreenMode ? 'fullscreen-container' : 'h-full'}`}>
@@ -1303,7 +1492,11 @@
                         {activeTab === 'audit' && <div className="p-2 h-full overflow-hidden">{renderAudit()}</div>}
                         {activeTab === 'trend' && <div className="p-2 h-full overflow-hidden">{renderTrendTab()}</div>}
                         {activeTab === 'settings' && <div className="p-2 h-full overflow-hidden">{renderSettings()}</div>}
-                        {activeTab === 'hr' && renderHrTab()}
+                        {activeTab === 'hr' && (
+                            <div className="h-full overflow-hidden">
+                                {renderHrTab()}
+                            </div>
+                        )}
                     </main>
                 </div>
             );
