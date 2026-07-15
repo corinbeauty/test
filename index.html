@@ -131,6 +131,19 @@
             const [database, setDatabase] = useState({});
             const safeInputDate = inputDate || todayStr;
 
+            // 三班累加狀態 (補回遺失的變數)
+            const [summaryRange, setSummaryRange] = useState('currentMonth');
+            const [summaryRangeStart, setSummaryRangeStart] = useState(todayStr.substring(0, 8) + '01');
+            const [summaryRangeEnd, setSummaryRangeEnd] = useState(todayStr);
+            const [summaryWeek, setSummaryWeek] = useState(() => {
+                const d = new Date();
+                d.setHours(0, 0, 0, 0);
+                d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                const yearStart = new Date(d.getFullYear(), 0, 1);
+                const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                return `${d.getFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+            });
+
             // 圖表狀態
             const [trendFilter, setTrendFilter] = useState('all');
             const [visibleChart, setVisibleChart] = useState(ITEM_CONFIG[0].id);
@@ -529,7 +542,6 @@
                 );
             };
 
-            // 2. 三班累加 (包含平假日預估月底)
             const renderSummary = () => {
                 const summaryData = { customers: 0, revenue: 0, atv: 0, totalManpower: 0 };
                 ITEM_CONFIG.forEach(i => summaryData[i.id] = 0);
@@ -750,7 +762,6 @@
                 );
             };
 
-            // 3. 稽核分頁
             const renderAudit = () => {
                 const auditItems = [
                     { id: 'customers', name: '總來客數', isAmount: false },
@@ -928,7 +939,6 @@
                 );
             };
 
-            // 4. 趨勢圖表
             const getMonthlyTrendData = () => {
                 const monthPrefix = safeInputDate.substring(0, 7); 
                 const year = parseInt(monthPrefix.split('-')[0]) || new Date().getFullYear();
