@@ -57,8 +57,6 @@
         input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type="number"] { -moz-appearance: textfield; }
 
-        .screenshot-area { background: white; }
-        
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -66,7 +64,7 @@
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* HR Forms Specific Styles */
+        /* HR Forms 100% Replica Styles */
         .hr-form-container { width: 100%; max-width: 900px; margin: 0 auto; background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); font-family: "Microsoft JhengHei", "PingFang TC", sans-serif; }
         .hr-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; text-align: center; }
         .hr-table th, .hr-table td { border: 1px solid #94a3b8; padding: 6px 4px; }
@@ -83,12 +81,12 @@
         body.pdf-mode .fullscreen-container { height: auto !important; overflow: visible !important; display: block !important; padding: 20px 0; }
         body.pdf-mode .hide-in-fullscreen { display: none !important; }
         body.pdf-mode .hr-form-container { 
-            width: 210mm; /* A4 寬度 */
+            width: 100%;
+            max-width: 210mm; /* A4 寬度 */
             min-height: 297mm; /* A4 高度 */
             margin: 0 auto; 
             background: white; 
-            padding: 10mm; 
-            box-shadow: 0 0 15px rgba(0,0,0,0.5); 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
             border: none;
         }
 
@@ -143,7 +141,6 @@
         ];
 
         function App() {
-            // 基本狀態
             const [activeTab, setActiveTab] = useState('night');
             const getTodayStr = () => {
                 const today = new Date();
@@ -155,7 +152,6 @@
             const [database, setDatabase] = useState({});
             const safeInputDate = inputDate || todayStr;
 
-            // 三班累加變數
             const [summaryRange, setSummaryRange] = useState('currentMonth');
             const [summaryRangeStart, setSummaryRangeStart] = useState(todayStr.substring(0, 8) + '01');
             const [summaryRangeEnd, setSummaryRangeEnd] = useState(todayStr);
@@ -184,26 +180,24 @@
             const [fullScreenMode, setFullScreenMode] = useState(false);
 
             const [hrEmployees, setHrEmployees] = useState({});
+            const [newEmpStore, setNewEmpStore] = useState('');
+            const [selectedStore, setSelectedStore] = useState(''); 
+            const [selectedEmpId, setSelectedEmpId] = useState(''); 
             
-            // 樹狀員工管理 States
-            const [selectedStore, setSelectedStore] = useState(''); // 選中的店別
-            const [selectedEmpId, setSelectedEmpId] = useState(''); // 選中的員工
-            
-            // 編輯/新增員工 States
             const [showEmpModal, setShowEmpModal] = useState(false);
             const [editEmpData, setEditEmpData] = useState({ id: '', name: '', storeName: '' });
             const [isEditMode, setIsEditMode] = useState(false);
 
             const [hrFormTab, setHrFormTab] = useState('form1');
             
-            // Signature Modal State
             const [sigModal, setSigModal] = useState({ isOpen: false, fieldPath: '' });
             const canvasRef = useRef(null);
             const isDrawingRef = useRef(false);
 
-            // 權限與群組狀態
+            // Admin States
             const [isSuperAdmin, setIsSuperAdmin] = useState(false);
             const [showSuperAuthModal, setShowSuperAuthModal] = useState(false);
+            const [superAuthErrorModal, setSuperAuthErrorModal] = useState(false); 
             const [superAccInput, setSuperAccInput] = useState('');
             const [superPwdInput, setSuperPwdInput] = useState('');
             const [systemUsers, setSystemUsers] = useState([]);
@@ -211,7 +205,6 @@
             const [editUser, setEditUser] = useState(null);
             const [manageUserModal, setManageUserModal] = useState(false);
 
-            // PDF 模式綁定 Body CSS
             useEffect(() => {
                 if (fullScreenMode) document.body.classList.add('pdf-mode');
                 else document.body.classList.remove('pdf-mode');
@@ -227,6 +220,8 @@
                 }
                 if (tabName !== 'admin') {
                     setIsSuperAdmin(false);
+                    // Reset group name when leaving admin
+                    if(tabName !== 'hr') setLoggedInGroup('中清店');
                 }
                 setActiveTab(tabName);
             };
@@ -252,8 +247,9 @@
                     setShowSuperAuthModal(false);
                     setSuperAccInput('');
                     setSuperPwdInput('');
+                    setSuperAuthErrorModal(false);
                 } else {
-                    alert("最高權限帳號或密碼錯誤！");
+                    setSuperAuthErrorModal(true);
                     setSuperPwdInput('');
                 }
             };
@@ -299,7 +295,6 @@
                             const newHr = {}; 
                             snap.forEach(d => {
                                 const data = d.data();
-                                // 過濾掉被標記為刪除的資料
                                 if(!data.isDeleted) newHr[d.id] = data;
                             }); 
                             setHrEmployees(newHr);
@@ -394,24 +389,20 @@
                 return { gap, achieveRate, gapRate };
             };
 
-            // HR Module - 員工儲存與編輯
             const handleSaveHrEmployee = (e) => {
                 e.preventDefault();
                 if (!editEmpData.id.trim() || !editEmpData.name.trim() || !editEmpData.storeName.trim()) { 
                     alert("請輸入完整的店別、員工編號與姓名！"); return; 
                 }
-                
                 if (!isEditMode && hrEmployees[editEmpData.id]) { 
                     alert("此員工編號已存在！"); return; 
                 }
-
                 const newEmp = {
                     ...editEmpData,
                     form1: isEditMode ? (hrEmployees[editEmpData.id].form1 || { rows: {}, summary: {} }) : { rows: {}, summary: {} },
                     form2: isEditMode ? (hrEmployees[editEmpData.id].form2 || { phase1: {}, phase2: {}, phase3: {}, phase4: {}, eval: {} }) : { phase1: {}, phase2: {}, phase3: {}, phase4: {}, eval: {} },
                     form3: isEditMode ? (hrEmployees[editEmpData.id].form3 || { basic: {}, interview: {}, fact: '', emp: '', guide: {}, improve: [{},{},{}], track: {}, concl: {} }) : { basic: {}, interview: {}, fact: '', emp: '', guide: {}, improve: [{},{},{}], track: {}, concl: {} }
                 };
-
                 saveToFirebase('hr_employees', editEmpData.id, newEmp);
                 setSelectedStore(editEmpData.storeName);
                 setSelectedEmpId(editEmpData.id);
@@ -419,9 +410,10 @@
             };
 
             const handleDeleteHrEmployee = () => {
-                if(confirm(`確定要永久刪除員工 ${hrEmployees[selectedEmpId].name} 及其所有表單紀錄嗎？這無法復原！`)) {
-                    // 使用寫入 {isDeleted: true} 標記刪除，阻擋再次讀取
-                    saveToFirebase('hr_employees', selectedEmpId, { isDeleted: true }, false);
+                const currentEmp = hrEmployees[selectedEmpId] || null;
+                if(!currentEmp) return;
+                if(confirm(`確定要永久刪除員工 ${currentEmp.name} 及其所有表單紀錄嗎？這無法復原！`)) {
+                    saveToFirebase('hr_employees', currentEmp.id, { isDeleted: true }, false);
                     setSelectedEmpId('');
                 }
             };
@@ -443,12 +435,12 @@
                 });
             };
 
-            // 簽名板 (修復觸控滑動問題)
+            // 簽名板
             const startDrawing = (e) => { isDrawingRef.current = true; draw(e); };
             const stopDrawing = () => { isDrawingRef.current = false; if (canvasRef.current) canvasRef.current.getContext('2d').beginPath(); };
             const draw = (e) => {
                 if (!isDrawingRef.current || !canvasRef.current) return;
-                e.preventDefault(); // 阻止滑動
+                e.preventDefault();
                 const canvas = canvasRef.current;
                 const ctx = canvas.getContext('2d');
                 const rect = canvas.getBoundingClientRect();
@@ -502,10 +494,7 @@
                 );
             };
 
-            // ----------------------------------------------------
-            // 核心渲染區塊 (保證不拋出未定義)
-            // ----------------------------------------------------
-
+            // ---- Render Shift Data ----
             const renderShiftTab = (shiftKey, shiftName, icon, colorClass, bgColorClass) => {
                 const data = getCurrentShiftData(safeInputDate, shiftKey);
                 const customersNum = Number(data.customers) || 0;
@@ -519,67 +508,42 @@
                                 <h2 className={`text-base font-bold ${colorClass}`}><i className={`fa-solid ${icon} mr-1`}></i>{shiftName} 數據輸入</h2>
                                 <div className="flex items-center">
                                     <label className="text-gray-600 mr-1 font-semibold text-xs">日期:</label>
-                                    <input type="date" value={safeInputDate} onChange={(e) => setInputDate(e.target.value)} 
-                                        className="p-0.5 border rounded shadow-sm outline-none text-xs" />
+                                    <input type="date" value={safeInputDate} onChange={(e) => setInputDate(e.target.value)} className="p-0.5 border rounded shadow-sm outline-none text-xs" />
                                 </div>
                             </div>
-
                             <div className="bg-white p-2 rounded shadow-sm border border-gray-200 flex-1 overflow-y-auto hide-scroll">
                                 <div className="grid grid-cols-2 gap-2 mb-2 bg-gray-50 p-1.5 rounded">
-                                    <div>
-                                        <label className="block text-xs text-gray-600 mb-0.5">來客數</label>
-                                        <input type="number" className="w-full p-1 border rounded outline-none font-bold text-gray-800" 
-                                            value={data.customers !== undefined ? data.customers : ''} onChange={(e) => handleShiftChange(shiftKey, 'customers', e.target.value)} placeholder="0" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs text-gray-600 mb-0.5">總業績 (金額)</label>
-                                        <input type="number" className="w-full p-1 border rounded outline-none font-bold text-blue-700" 
-                                            value={data.revenue !== undefined ? data.revenue : ''} onChange={(e) => handleShiftChange(shiftKey, 'revenue', e.target.value)} placeholder="0" />
-                                    </div>
+                                    <div><label className="block text-xs text-gray-600 mb-0.5">來客數</label><input type="number" className="w-full p-1 border rounded outline-none font-bold text-gray-800" value={data.customers !== undefined ? data.customers : ''} onChange={(e) => handleShiftChange(shiftKey, 'customers', e.target.value)} placeholder="0" /></div>
+                                    <div><label className="block text-xs text-gray-600 mb-0.5">總業績 (金額)</label><input type="number" className="w-full p-1 border rounded outline-none font-bold text-blue-700" value={data.revenue !== undefined ? data.revenue : ''} onChange={(e) => handleShiftChange(shiftKey, 'revenue', e.target.value)} placeholder="0" /></div>
                                 </div>
-
                                 <div className="space-y-1.5">
                                     {ITEM_CONFIG.map(item => (
                                         <div key={`input-${item.id}`} className="flex items-center justify-between border-b pb-0.5">
                                             <span className="font-semibold text-gray-700 w-20 text-xs">{item.name}</span>
                                             <div className="flex items-center w-2/3">
                                                 <span className="text-[10px] text-gray-400 w-12 text-right mr-1">實際:</span>
-                                                <input type="number" className="w-full p-1 border border-blue-200 bg-blue-50/30 rounded outline-none text-blue-900 font-bold" 
-                                                    value={data[item.id] !== undefined ? data[item.id] : ''} onChange={(e) => handleShiftChange(shiftKey, item.id, e.target.value)} placeholder="0" />
+                                                <input type="number" className="w-full p-1 border border-blue-200 bg-blue-50/30 rounded outline-none text-blue-900 font-bold" value={data[item.id] !== undefined ? data[item.id] : ''} onChange={(e) => handleShiftChange(shiftKey, item.id, e.target.value)} placeholder="0" />
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         </div>
-
                         <div className="w-full md:w-1/2 screenshot-area bg-white p-2 rounded shadow-md border border-gray-300 flex flex-col overflow-y-auto hide-scroll">
                             <div className="text-center mb-1.5 shrink-0">
-                                <h2 className="text-lg font-black text-gray-800 tracking-wider">
-                                    <span className={`px-2 py-0.5 rounded text-white ${bgColorClass} mr-2 text-sm`}>{shiftName}</span>
-                                    當班績效戰報
-                                </h2>
+                                <h2 className="text-lg font-black text-gray-800 tracking-wider"><span className={`px-2 py-0.5 rounded text-white ${bgColorClass} mr-2 text-sm`}>{shiftName}</span>當班績效戰報</h2>
                                 <div className="text-gray-500 mt-0.5 font-mono text-[10px]">{safeInputDate}</div>
                             </div>
-
                             <div className="grid grid-cols-2 gap-2 mb-2 shrink-0">
-                                <div className="bg-gray-100 p-1.5 rounded text-center border">
-                                    <div className="text-gray-500 text-[10px]">來客數</div>
-                                    <div className="text-base font-bold text-gray-800">{customersNum}</div>
-                                </div>
-                                <div className="bg-blue-50 p-1.5 rounded text-center border border-blue-100">
-                                    <div className="text-blue-600 text-[10px]">客單價</div>
-                                    <div className="text-base font-bold text-blue-800">${atv.toLocaleString()}</div>
-                                </div>
+                                <div className="bg-gray-100 p-1.5 rounded text-center border"><div className="text-gray-500 text-[10px]">來客數</div><div className="text-base font-bold text-gray-800">{customersNum}</div></div>
+                                <div className="bg-blue-50 p-1.5 rounded text-center border border-blue-100"><div className="text-blue-600 text-[10px]">客單價</div><div className="text-base font-bold text-blue-800">${atv.toLocaleString()}</div></div>
                             </div>
-
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 flex-1 content-start">
                                 {ITEM_CONFIG.map(item => {
                                     const target = calculateTarget(data, item.id);
                                     const actual = Number(data[item.id]) || 0;
                                     const { gap, achieveRate, gapRate } = calcMetrics(target, actual);
                                     const isGood = gap >= 0;
-
                                     return (
                                         <div key={`view-${item.id}`} className="bg-white border rounded p-1.5 shadow-sm relative overflow-hidden flex flex-col justify-center">
                                             <div className={`absolute left-0 top-0 bottom-0 w-1 ${isGood ? 'bg-green-500' : 'bg-red-400'}`}></div>
@@ -591,18 +555,9 @@
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-3 gap-0.5 text-center text-[10px] pl-1.5">
-                                                <div className="bg-gray-50 rounded p-0.5">
-                                                    <div className="text-gray-400 scale-90">目標</div>
-                                                    <div className="font-semibold text-gray-700">{target}</div>
-                                                </div>
-                                                <div className="bg-blue-50 rounded p-0.5">
-                                                    <div className="text-blue-500 scale-90">實際</div>
-                                                    <div className="font-bold text-blue-700">{actual}</div>
-                                                </div>
-                                                <div className={`${isGood ? 'bg-green-50' : 'bg-red-50'} rounded p-0.5`}>
-                                                    <div className={`${isGood ? 'text-green-600' : 'text-red-500'} scale-90`}>差異</div>
-                                                    <div className={`font-bold ${isGood ? 'text-green-700' : 'text-red-600'}`}>{gap > 0 ? `+${gap}` : gap}</div>
-                                                </div>
+                                                <div className="bg-gray-50 rounded p-0.5"><div className="text-gray-400 scale-90">目標</div><div className="font-semibold text-gray-700">{target}</div></div>
+                                                <div className="bg-blue-50 rounded p-0.5"><div className="text-blue-500 scale-90">實際</div><div className="font-bold text-blue-700">{actual}</div></div>
+                                                <div className={`${isGood ? 'bg-green-50' : 'bg-red-50'} rounded p-0.5`}><div className={`${isGood ? 'text-green-600' : 'text-red-500'} scale-90`}>差異</div><div className={`font-bold ${isGood ? 'text-green-700' : 'text-red-600'}`}>{gap > 0 ? `+${gap}` : gap}</div></div>
                                             </div>
                                         </div>
                                     );
@@ -613,28 +568,18 @@
                 );
             };
 
+            // ---- Render Summary Tab ----
             const renderSummary = () => {
                 const summaryData = { customers: 0, revenue: 0, atv: 0, totalManpower: 0 };
                 ITEM_CONFIG.forEach(i => summaryData[i.id] = 0);
-
                 let displayTitle = "三班數據累加結算";
                 let calcKeys = [];
-                
-                const fmtDateSafe = (d) => {
-                    if (!d || isNaN(d.getTime())) return '';
-                    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                };
+                const fmtDateSafe = (d) => { if (!d || isNaN(d.getTime())) return ''; return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 
-                if (summaryRange === 'single') {
-                    displayTitle = `${selectedDate} 單日查詢`;
-                    calcKeys = [selectedDate];
-                } else if (summaryRange === 'customRange') {
-                    displayTitle = `${summaryRangeStart} 至 ${summaryRangeEnd} 累加`;
-                    calcKeys = Object.keys(database).filter(k => k >= summaryRangeStart && k <= summaryRangeEnd);
-                } else if (summaryRange === 'currentMonth' || summaryRange === 'lastMonth') {
-                    const today = new Date();
-                    let targetMonth = summaryRange === 'currentMonth' ? today.getMonth() + 1 : today.getMonth();
-                    let targetYear = today.getFullYear();
+                if (summaryRange === 'single') { displayTitle = `${selectedDate} 單日查詢`; calcKeys = [selectedDate]; }
+                else if (summaryRange === 'customRange') { displayTitle = `${summaryRangeStart} 至 ${summaryRangeEnd} 累加`; calcKeys = Object.keys(database).filter(k => k >= summaryRangeStart && k <= summaryRangeEnd); }
+                else if (summaryRange === 'currentMonth' || summaryRange === 'lastMonth') {
+                    const today = new Date(); let targetMonth = summaryRange === 'currentMonth' ? today.getMonth() + 1 : today.getMonth(); let targetYear = today.getFullYear();
                     if (targetMonth === 0) { targetMonth = 12; targetYear -= 1; }
                     displayTitle = `${targetMonth}月 累計總和`;
                     const prefix = `${targetYear}-${String(targetMonth).padStart(2, '0')}`;
@@ -642,31 +587,20 @@
                 } else if (['currentWeek', 'lastWeek', 'customWeek'].includes(summaryRange)) {
                     let mon, sun;
                     if (summaryRange === 'currentWeek' || summaryRange === 'lastWeek') {
-                        const d = new Date();
-                        if (summaryRange === 'lastWeek') d.setDate(d.getDate() - 7);
-                        const day = d.getDay() || 7; 
-                        mon = new Date(d); mon.setDate(d.getDate() - day + 1);
-                        sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+                        const d = new Date(); if (summaryRange === 'lastWeek') d.setDate(d.getDate() - 7);
+                        const day = d.getDay() || 7; mon = new Date(d); mon.setDate(d.getDate() - day + 1); sun = new Date(mon); sun.setDate(mon.getDate() + 6);
                         displayTitle = summaryRange === 'currentWeek' ? `本週 (${fmtDateSafe(mon).substring(5)}~${fmtDateSafe(sun).substring(5)})` : `上週 (${fmtDateSafe(mon).substring(5)}~${fmtDateSafe(sun).substring(5)})`;
                     } else {
                         if (summaryWeek) {
                             const parts = summaryWeek.split('-W');
                             if (parts.length === 2) {
-                                const year = parseInt(parts[0], 10);
-                                const week = parseInt(parts[1], 10);
-                                const jan4 = new Date(year, 0, 4);
-                                const dayOffset = jan4.getDay() || 7;
-                                mon = new Date(year, 0, 4 - dayOffset + 1 + (week - 1) * 7);
-                                sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+                                const year = parseInt(parts[0], 10); const week = parseInt(parts[1], 10); const jan4 = new Date(year, 0, 4); const dayOffset = jan4.getDay() || 7;
+                                mon = new Date(year, 0, 4 - dayOffset + 1 + (week - 1) * 7); sun = new Date(mon); sun.setDate(mon.getDate() + 6);
                                 displayTitle = `指定週 (${fmtDateSafe(mon).substring(5)}~${fmtDateSafe(sun).substring(5)})`;
                             }
                         }
                     }
-                    if (mon && sun) {
-                        const sStart = fmtDateSafe(mon);
-                        const sEnd = fmtDateSafe(sun);
-                        calcKeys = Object.keys(database).filter(k => k >= sStart && k <= sEnd);
-                    }
+                    if (mon && sun) { const sStart = fmtDateSafe(mon); const sEnd = fmtDateSafe(sun); calcKeys = Object.keys(database).filter(k => k >= sStart && k <= sEnd); }
                 }
 
                 calcKeys.forEach(dateKey => {
@@ -686,60 +620,38 @@
                         }
                     }
                 });
-                
                 summaryData.atv = summaryData.customers > 0 ? Math.round(summaryData.revenue / summaryData.customers) : 0;
                 const avgEfficiency = summaryData.totalManpower > 0 ? Math.round(summaryData.revenue / summaryData.totalManpower) : 0;
 
                 let maxDateStr = safeInputDate;
-                if (calcKeys.length > 0) {
-                    maxDateStr = calcKeys.reduce((a, b) => a > b ? a : b);
-                }
+                if (calcKeys.length > 0) maxDateStr = calcKeys.reduce((a, b) => a > b ? a : b);
                 const targetYear = parseInt(maxDateStr.substring(0, 4)) || new Date().getFullYear();
                 const targetMonth = parseInt(maxDateStr.substring(5, 7)) || (new Date().getMonth() + 1);
                 const daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
-                
-                let pastWeekdayRev = 0, pastWeekdayCount = 0;
-                let pastWeekendRev = 0, pastWeekendCount = 0;
-                let futureWeekdayCount = 0, futureWeekendCount = 0;
-                
+                let pastWeekdayRev = 0, pastWeekdayCount = 0, pastWeekendRev = 0, pastWeekendCount = 0, futureWeekdayCount = 0, futureWeekendCount = 0;
                 const boundaryDateStr = maxDateStr > todayStr ? todayStr : maxDateStr;
 
                 for (let i = 1; i <= daysInMonth; i++) {
                     const dStr = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
                     const dObj = new Date(targetYear, targetMonth - 1, i);
                     const isWeekend = dObj.getDay() === 0 || dObj.getDay() === 6;
-                    
                     if (dStr <= boundaryDateStr) {
                         let dayRev = 0;
                         if (database[dStr]) {
                             ['morning', 'evening', 'night'].forEach(shift => {
-                                if (database[dStr][shift] && database[dStr][shift].revenue) {
-                                    dayRev += Number(database[dStr][shift].revenue);
-                                }
+                                if (database[dStr][shift] && database[dStr][shift].revenue) dayRev += Number(database[dStr][shift].revenue);
                             });
                         }
-                        if (isWeekend) {
-                            pastWeekendRev += dayRev;
-                            pastWeekendCount++;
-                        } else {
-                            pastWeekdayRev += dayRev;
-                            pastWeekdayCount++;
-                        }
+                        if (isWeekend) { pastWeekendRev += dayRev; pastWeekendCount++; } else { pastWeekdayRev += dayRev; pastWeekdayCount++; }
                     } else {
-                        if (isWeekend) {
-                            futureWeekendCount++;
-                        } else {
-                            futureWeekdayCount++;
-                        }
+                        if (isWeekend) futureWeekendCount++; else futureWeekdayCount++;
                     }
                 }
                 
                 let avgWeekday = pastWeekdayCount > 0 ? pastWeekdayRev / pastWeekdayCount : 0;
                 let avgWeekend = pastWeekendCount > 0 ? pastWeekendRev / pastWeekendCount : 0;
-                
                 if (avgWeekend === 0 && pastWeekendCount === 0) avgWeekend = avgWeekday;
                 if (avgWeekday === 0 && pastWeekdayCount === 0) avgWeekday = avgWeekend;
-                
                 const predictedMonthEndRev = pastWeekdayRev + pastWeekendRev + (futureWeekdayCount * avgWeekday) + (futureWeekendCount * avgWeekend);
 
                 return (
@@ -786,14 +698,10 @@
                                 <div className="text-2xl font-black text-emerald-600">${avgEfficiency.toLocaleString()}</div>
                             </div>
                             <div className="bg-amber-50 p-3 rounded border border-amber-200 text-center relative group">
-                                <div className="text-amber-700 text-xs mb-1">
-                                    預估月底業績 <i className="fa-solid fa-circle-info cursor-help"></i>
-                                </div>
+                                <div className="text-amber-700 text-xs mb-1">預估月底業績 <i className="fa-solid fa-circle-info cursor-help"></i></div>
                                 <div className="text-2xl font-black text-amber-600">${Math.round(predictedMonthEndRev).toLocaleString()}</div>
                                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-48 p-2 bg-gray-800 text-white text-[10px] rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity text-left">
-                                    依本月平/假日均值推算未來：<br/>
-                                    平日均值: ${Math.round(avgWeekday).toLocaleString()} ({futureWeekdayCount}天)<br/>
-                                    假日均值: ${Math.round(avgWeekend).toLocaleString()} ({futureWeekendCount}天)
+                                    依本月平/假日均值推算未來：<br/>平日均值: ${Math.round(avgWeekday).toLocaleString()} ({futureWeekdayCount}天)<br/>假日均值: ${Math.round(avgWeekend).toLocaleString()} ({futureWeekendCount}天)
                                 </div>
                             </div>
                         </div>
@@ -801,12 +709,7 @@
                         <table className="w-full text-left border-collapse text-sm">
                             <thead>
                                 <tr className="bg-gray-800 text-white">
-                                    <th className="p-2 rounded-tl">評估項目</th>
-                                    <th className="p-2 text-right">目標</th>
-                                    <th className="p-2 text-right">實際總和</th>
-                                    <th className="p-2 text-right">差異數</th>
-                                    <th className="p-2 text-right">達成率</th>
-                                    <th className="p-2 text-right rounded-tr">差異率</th>
+                                    <th className="p-2 rounded-tl">評估項目</th><th className="p-2 text-right">目標</th><th className="p-2 text-right">實際總和</th><th className="p-2 text-right">差異數</th><th className="p-2 text-right">達成率</th><th className="p-2 text-right rounded-tr">差異率</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -832,6 +735,7 @@
                 );
             };
 
+            // ---- Render Audit Tab ----
             const renderAudit = () => {
                 const auditItems = [
                     { id: 'customers', name: '總來客數', isAmount: false },
@@ -849,20 +753,15 @@
                     }, 0);
                 };
 
-                let totalHc = 0;
-                let sumSlotRevenue = 0;
-                
+                let totalHc = 0, sumSlotRevenue = 0;
                 timeSlots.forEach(slot => {
                     totalHc += slotsData[slot.id] && slotsData[slot.id].hc ? Number(slotsData[slot.id].hc) : 0;
                     sumSlotRevenue += slotsData[slot.id] && slotsData[slot.id].rev ? Number(slotsData[slot.id].rev) : 0;
                 });
-                
                 const managerRev = Number(managerData.revenue) || 0;
-                // 單日平均人效：總業績 / 總出勤人數
                 const dailyEfficiency = totalHc > 0 ? Math.round(managerRev / totalHc) : 0;
 
-                let totalEarnedScore = 0;
-                let maxPossibleScore = 0;
+                let totalEarnedScore = 0, maxPossibleScore = 0;
                 const performanceScores = ITEM_CONFIG.map(item => {
                     const target = calculateTarget(managerData, item.id);
                     const actual = Number(managerData[item.id]) || 0;
@@ -878,25 +777,20 @@
                             <h2 className="text-lg font-bold text-red-700"><i className="fa-solid fa-clipboard-check mr-2"></i>店長日結稽核</h2>
                             <div className="flex items-center">
                                 <label className="text-gray-600 mr-1 font-semibold text-xs">稽核日期:</label>
-                                <input type="date" value={safeInputDate} onChange={(e) => setInputDate(e.target.value)} 
-                                    className="p-0.5 border rounded shadow-sm outline-none text-xs text-red-800 font-bold" />
+                                <input type="date" value={safeInputDate} onChange={(e) => setInputDate(e.target.value)} className="p-0.5 border rounded shadow-sm outline-none text-xs text-red-800 font-bold" />
                             </div>
                         </div>
 
                         <div className="bg-blue-50/50 border border-blue-200 rounded p-3 mb-4">
                             <div className="flex justify-between items-end border-b border-blue-200 pb-2 mb-3">
-                                <h3 className="font-bold text-blue-800 text-sm">
-                                    <i className="fa-solid fa-users-gear mr-1"></i>各時段產值與人效獨立分析
-                                </h3>
+                                <h3 className="font-bold text-blue-800 text-sm"><i className="fa-solid fa-users-gear mr-1"></i>各時段產值與人效獨立分析</h3>
                                 <div className="text-[10px] text-gray-500 bg-white px-2 py-0.5 rounded border">時段業績加總: <span className="font-bold text-gray-700">${sumSlotRevenue.toLocaleString()}</span></div>
                             </div>
-                            
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
                                 {timeSlots.map(slot => {
                                     const hc = slotsData[slot.id] && slotsData[slot.id].hc ? Number(slotsData[slot.id].hc) : 0;
                                     const rev = slotsData[slot.id] && slotsData[slot.id].rev ? Number(slotsData[slot.id].rev) : 0;
                                     const eff = hc > 0 ? Math.round(rev / hc) : rev; 
-                                    
                                     return (
                                         <div key={slot.id} className="bg-white p-2 rounded border border-blue-100 shadow-sm flex flex-col relative overflow-hidden">
                                             <div className="absolute top-0 left-0 w-1 h-full bg-blue-400"></div>
@@ -904,80 +798,43 @@
                                             <div className="grid grid-cols-2 gap-2 mb-2 pl-2">
                                                 <div>
                                                     <div className="text-[10px] text-gray-400 mb-0.5">人數 (HC)</div>
-                                                    <input type="number" step="0.5" min="0" placeholder="0"
-                                                        className="w-full text-center border rounded p-1 outline-none font-bold text-gray-700 bg-gray-50 focus:bg-white"
-                                                        value={(slotsData[slot.id] && slotsData[slot.id].hc !== undefined) ? slotsData[slot.id].hc : ''}
-                                                        onChange={(e) => handleSlotChange(slot.id, 'hc', e.target.value)}
-                                                    />
+                                                    <input type="number" step="0.5" min="0" placeholder="0" className="w-full text-center border rounded p-1 outline-none font-bold text-gray-700 bg-gray-50 focus:bg-white" value={(slotsData[slot.id] && slotsData[slot.id].hc !== undefined) ? slotsData[slot.id].hc : ''} onChange={(e) => handleSlotChange(slot.id, 'hc', e.target.value)} />
                                                 </div>
                                                 <div>
                                                     <div className="text-[10px] text-gray-400 mb-0.5">時段產值 ($)</div>
-                                                    <input type="number" min="0" placeholder="0"
-                                                        className="w-full text-center border rounded p-1 outline-none font-bold text-blue-700 bg-blue-50 focus:bg-white"
-                                                        value={(slotsData[slot.id] && slotsData[slot.id].rev !== undefined) ? slotsData[slot.id].rev : ''}
-                                                        onChange={(e) => handleSlotChange(slot.id, 'rev', e.target.value)}
-                                                    />
+                                                    <input type="number" min="0" placeholder="0" className="w-full text-center border rounded p-1 outline-none font-bold text-blue-700 bg-blue-50 focus:bg-white" value={(slotsData[slot.id] && slotsData[slot.id].rev !== undefined) ? slotsData[slot.id].rev : ''} onChange={(e) => handleSlotChange(slot.id, 'rev', e.target.value)} />
                                                 </div>
                                             </div>
                                             <div className="bg-emerald-50 rounded p-1.5 flex justify-between items-center pl-2 ml-2 border border-emerald-100">
-                                                <span className="text-[10px] text-emerald-700">時段人效</span>
-                                                <span className="font-black text-emerald-600 text-sm">${eff.toLocaleString()}</span>
+                                                <span className="text-[10px] text-emerald-700">時段人效</span><span className="font-black text-emerald-600 text-sm">${eff.toLocaleString()}</span>
                                             </div>
                                         </div>
                                     )
                                 })}
                             </div>
-
                             <div className="flex items-center justify-between bg-blue-600 text-white p-2 rounded shadow-sm">
-                                <div>
-                                    <span className="text-xs opacity-80 block">單日總出勤人力</span>
-                                    <span className="text-xl font-black">{totalHc} <span className="text-sm font-normal">人</span></span>
-                                </div>
-                                <div className="text-right border-l border-blue-400 pl-4">
-                                    <span className="text-xs opacity-80 block">單日平均人效 (以日結總業績計)</span>
-                                    <span className="text-xl font-black">${dailyEfficiency.toLocaleString()}</span>
-                                </div>
+                                <div><span className="text-xs opacity-80 block">單日總出勤人力</span><span className="text-xl font-black">{totalHc} <span className="text-sm font-normal">人</span></span></div>
+                                <div className="text-right border-l border-blue-400 pl-4"><span className="text-xs opacity-80 block">單日平均人效 (以日結總業績計)</span><span className="text-xl font-black">${dailyEfficiency.toLocaleString()}</span></div>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-start">
                             <div className="bg-purple-50/50 border border-purple-200 rounded p-3 flex flex-col h-full">
-                                <h3 className="font-bold text-purple-800 mb-2 text-sm border-b border-purple-200 pb-1">
-                                    <i className="fa-solid fa-ranking-star mr-1"></i>今日綜合績效指標
-                                </h3>
+                                <h3 className="font-bold text-purple-800 mb-2 text-sm border-b border-purple-200 pb-1"><i className="fa-solid fa-ranking-star mr-1"></i>今日綜合績效指標</h3>
                                 <div className="flex-1 overflow-y-auto hide-scroll text-xs">
                                     {performanceScores.map(score => (
                                         <div key={`score-${score.id}`} className="flex justify-between items-center border-b border-purple-100 py-1">
-                                            <span className="text-gray-700 w-1/3">{score.name}</span>
-                                            <span className="text-gray-400 w-1/3 text-center text-[10px]">達標: {score.actual}/{score.target}</span>
-                                            <span className="font-bold text-purple-700 w-1/3 text-right">
-                                                {score.earned.toFixed(1)} <span className="text-gray-400 font-normal text-[10px]">/ {score.maxScore}</span>
-                                            </span>
+                                            <span className="text-gray-700 w-1/3">{score.name}</span><span className="text-gray-400 w-1/3 text-center text-[10px]">達標: {score.actual}/{score.target}</span><span className="font-bold text-purple-700 w-1/3 text-right">{score.earned.toFixed(1)} <span className="text-gray-400 font-normal text-[10px]">/ {score.maxScore}</span></span>
                                         </div>
                                     ))}
                                 </div>
-                                <div className="mt-2 pt-2 border-t border-purple-300 flex justify-between items-end">
-                                    <span className="font-bold text-purple-900">總項得分</span>
-                                    <span className="text-2xl font-black text-purple-700">
-                                        {totalEarnedScore.toFixed(1)} <span className="text-sm font-normal text-gray-500">/ {maxPossibleScore} 分</span>
-                                    </span>
-                                </div>
+                                <div className="mt-2 pt-2 border-t border-purple-300 flex justify-between items-end"><span className="font-bold text-purple-900">總項得分</span><span className="text-2xl font-black text-purple-700">{totalEarnedScore.toFixed(1)} <span className="text-sm font-normal text-gray-500">/ {maxPossibleScore} 分</span></span></div>
                             </div>
-                            
                             <div className="bg-white border rounded shadow-sm p-2 flex flex-col h-full">
-                                <p className="text-[10px] text-gray-500 mb-2 bg-red-50 p-1.5 rounded border border-red-100">
-                                    <i className="fa-solid fa-circle-info mr-1"></i>系統自動比對三班輸入總和，紅字代表異常或漏KEY。
-                                </p>
+                                <p className="text-[10px] text-gray-500 mb-2 bg-red-50 p-1.5 rounded border border-red-100"><i className="fa-solid fa-circle-info mr-1"></i>系統自動比對三班輸入總和，紅字代表異常或漏KEY。</p>
                                 <div className="overflow-x-auto hide-scroll flex-1">
                                     <table className="w-full text-xs border-collapse">
-                                        <thead>
-                                            <tr className="bg-gray-100 text-gray-700">
-                                                <th className="p-1.5 border text-left">項目</th>
-                                                <th className="p-1.5 border text-right">系統加總</th>
-                                                <th className="p-1.5 border text-center bg-red-50 text-red-700">日結輸入</th>
-                                                <th className="p-1.5 border text-right">差異</th>
-                                            </tr>
-                                        </thead>
+                                        <thead><tr className="bg-gray-100 text-gray-700"><th className="p-1.5 border text-left">項目</th><th className="p-1.5 border text-right">系統加總</th><th className="p-1.5 border text-center bg-red-50 text-red-700">日結輸入</th><th className="p-1.5 border text-right">差異</th></tr></thead>
                                         <tbody>
                                             {auditItems.map(item => {
                                                 const sysSum = getSystemSum(item.id);
@@ -985,18 +842,12 @@
                                                 const hasInput = managerVal !== undefined && managerVal !== '';
                                                 const diff = hasInput ? (Number(managerVal) || 0) - sysSum : null;
                                                 let diffDisplay = '-'; let diffColor = 'text-gray-300';
-                                                if (hasInput) {
-                                                    if (diff === 0) { diffDisplay = '相符'; diffColor = 'text-green-600 bg-green-50'; }
-                                                    else { diffDisplay = diff > 0 ? `+${diff}` : diff; diffColor = 'text-red-600 bg-red-50 font-bold'; }
-                                                }
+                                                if (hasInput) { if (diff === 0) { diffDisplay = '相符'; diffColor = 'text-green-600 bg-green-50'; } else { diffDisplay = diff > 0 ? `+${diff}` : diff; diffColor = 'text-red-600 bg-red-50 font-bold'; } }
                                                 return (
                                                     <tr key={item.id} className="border-b hover:bg-gray-50">
                                                         <td className="p-1.5 font-bold text-gray-700">{item.name}</td>
                                                         <td className="p-1.5 text-right text-gray-500">{item.isAmount ? '$' : ''}{sysSum.toLocaleString()}</td>
-                                                        <td className="p-1 text-center bg-red-50/30 w-[80px]">
-                                                            <input type="number" className="w-full p-1 border border-red-300 rounded text-right text-xs text-red-800 font-bold outline-none" 
-                                                                value={managerVal !== undefined ? managerVal : ''} onChange={(e) => handleShiftChange('manager', item.id, e.target.value)} />
-                                                        </td>
+                                                        <td className="p-1 text-center bg-red-50/30 w-[80px]"><input type="number" className="w-full p-1 border border-red-300 rounded text-right text-xs text-red-800 font-bold outline-none" value={managerVal !== undefined ? managerVal : ''} onChange={(e) => handleShiftChange('manager', item.id, e.target.value)} /></td>
                                                         <td className={`p-1.5 text-right ${diffColor}`}>{diffDisplay}</td>
                                                     </tr>
                                                 )
@@ -1010,6 +861,7 @@
                 );
             };
 
+            // ---- Render Trend Tab ----
             const getMonthlyTrendData = () => {
                 const monthPrefix = safeInputDate.substring(0, 7); 
                 const year = parseInt(monthPrefix.split('-')[0]) || new Date().getFullYear();
@@ -1017,16 +869,10 @@
                 const daysInMonth = new Date(year, month, 0).getDate();
                 const sortedDates = Array.from({length: daysInMonth}, (_, i) => `${monthPrefix}-${(i+1).toString().padStart(2, '0')}`);
                 const trendData = { dates: sortedDates, dailyTotals: {}, cumulative: {}, shiftBreakdown: {}, chartDatasets: [] };
-                
                 const currentCumulative = { customers: 0, revenue: 0 };
                 const currentShiftBreakdown = { morning: { customers: 0, revenue: 0 }, evening: { customers: 0, revenue: 0 }, night: { customers: 0, revenue: 0 } };
                 
-                ITEM_CONFIG.forEach(i => {
-                    currentCumulative[i.id] = 0;
-                    currentShiftBreakdown.morning[i.id] = 0;
-                    currentShiftBreakdown.evening[i.id] = 0;
-                    currentShiftBreakdown.night[i.id] = 0;
-                });
+                ITEM_CONFIG.forEach(i => { currentCumulative[i.id] = 0; currentShiftBreakdown.morning[i.id] = 0; currentShiftBreakdown.evening[i.id] = 0; currentShiftBreakdown.night[i.id] = 0; });
 
                 sortedDates.forEach(date => {
                     let hasData = false;
@@ -1068,9 +914,7 @@
                 ITEM_CONFIG.forEach(item => {
                     if(item.id === visibleChart) {
                         const dataPoints = sortedDates.map(date => trendData.dailyTotals[date] ? trendData.dailyTotals[date][item.id] : null);
-                        trendData.chartDatasets.push({
-                            label: item.name, data: dataPoints, borderColor: item.color, backgroundColor: item.color, tension: 0.3, fill: false, borderWidth: 2, pointRadius: 2, spanGaps: true
-                        });
+                        trendData.chartDatasets.push({ label: item.name, data: dataPoints, borderColor: item.color, backgroundColor: item.color, tension: 0.3, fill: false, borderWidth: 2, pointRadius: 2, spanGaps: true });
                     }
                 });
                 return trendData;
@@ -1223,6 +1067,7 @@
                 );
             };
 
+            // ---- Render Settings Tab ----
             const renderSettings = () => {
                 const totalScore = ITEM_CONFIG.reduce((sum, item) => sum + (Number(settings[item.id]?.score) || 0), 0);
 
@@ -1293,154 +1138,13 @@
                 );
             };
 
-            const renderAdminTab = () => {
-                if (!isSuperAdmin) return <div className="p-4 text-center text-red-500 font-bold">拒絕存取：請重新驗證最高權限。</div>;
-                
-                const handleUpdateUserStatus = (id, newStatus) => {
-                    const user = systemUsers.find(u => u.id === id);
-                    if(user) saveToFirebase('system_users', id, { ...user, status: newStatus });
-                };
-
-                const handleDeleteUser = (id) => {
-                    if(confirm('確定要永久刪除此帳號嗎？')) {
-                        saveToFirebase('system_users', id, { status: 'deleted' });
-                    }
-                };
-
-                const saveUserForm = (e) => {
-                    e.preventDefault();
-                    const formData = new FormData(e.target);
-                    const userData = {
-                        username: formData.get('username'),
-                        name: formData.get('name'),
-                        role: formData.get('role'),
-                        group: formData.get('group'),
-                        permissions: formData.getAll('permissions'),
-                        status: 'active',
-                        updatedAt: new Date().toISOString()
-                    };
-                    const targetId = editUser ? editUser.id : `user_${Date.now()}`;
-                    saveToFirebase('system_users', targetId, userData);
-                    setManageUserModal(false);
-                    setEditUser(null);
-                };
-
-                const activeUsers = systemUsers.filter(u => u.status !== 'deleted');
-
-                return (
-                    <div className="flex flex-col h-full gap-4 text-sm overflow-hidden p-4 bg-gray-50">
-                        <div className="bg-white p-4 rounded shadow border border-gray-200 flex justify-between items-center">
-                            <div>
-                                <h2 className="text-xl font-bold text-gray-800"><i className="fa-solid fa-crown text-yellow-500 mr-2"></i>總部最高權限管理控制台</h2>
-                                <p className="text-xs text-gray-500 mt-1">目前登入身分：<span className="font-bold text-red-600">信吉 (Super Admin)</span></p>
-                            </div>
-                            <button onClick={() => { setEditUser(null); setManageUserModal(true); }} className="bg-red-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-red-700 transition">
-                                <i className="fa-solid fa-user-plus mr-2"></i>新增系統人員
-                            </button>
-                        </div>
-
-                        <div className="flex-1 bg-white rounded shadow border border-gray-200 overflow-y-auto">
-                            <table className="w-full text-left border-collapse text-sm">
-                                <thead>
-                                    <tr className="bg-gray-100 text-gray-700 border-b-2">
-                                        <th className="p-3">姓名 / 帳號</th>
-                                        <th className="p-3">層級身份</th>
-                                        <th className="p-3">所屬群組 (門店/區域)</th>
-                                        <th className="p-3">資料檢視權限</th>
-                                        <th className="p-3 text-center">狀態</th>
-                                        <th className="p-3 text-right">操作</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {activeUsers.map(user => (
-                                        <tr key={user.id} className="border-b hover:bg-gray-50">
-                                            <td className="p-3">
-                                                <div className="font-bold text-gray-800">{user.name}</div>
-                                                <div className="text-[10px] text-gray-500">{user.username}</div>
-                                            </td>
-                                            <td className="p-3"><span className={`px-2 py-0.5 rounded text-xs font-bold ${user.role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>{user.role === 'admin' ? '區主管' : '店長/店員'}</span></td>
-                                            <td className="p-3 font-bold text-gray-700">{user.group || '未指定'}</td>
-                                            <td className="p-3 text-xs text-gray-600">
-                                                {user.permissions && user.permissions.includes('view_all') ? <span className="text-red-600 font-bold"><i className="fa-solid fa-eye mr-1"></i>跨區/全區資料</span> : <span className="text-blue-600 font-bold"><i className="fa-solid fa-store mr-1"></i>僅限本店資料</span>}
-                                            </td>
-                                            <td className="p-3 text-center">
-                                                {user.status === 'active' ? <span className="text-green-600 font-bold bg-green-50 px-2 py-1 rounded text-xs"><i className="fa-solid fa-check-circle mr-1"></i>啟用中</span> : <span className="text-gray-500 font-bold bg-gray-100 px-2 py-1 rounded text-xs"><i className="fa-solid fa-ban mr-1"></i>已停權</span>}
-                                            </td>
-                                            <td className="p-3 text-right space-x-2">
-                                                <button onClick={() => { setEditUser(user); setManageUserModal(true); }} className="px-2 py-1 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded transition text-xs font-bold"><i className="fa-solid fa-pen"></i></button>
-                                                {user.status === 'active' ? (
-                                                    <button onClick={() => handleUpdateUserStatus(user.id, 'suspended')} className="px-2 py-1 bg-amber-100 text-amber-700 hover:bg-amber-200 rounded transition text-xs font-bold" title="停權"><i className="fa-solid fa-lock"></i></button>
-                                                ) : (
-                                                    <button onClick={() => handleUpdateUserStatus(user.id, 'active')} className="px-2 py-1 bg-green-100 text-green-700 hover:bg-green-200 rounded transition text-xs font-bold" title="啟用"><i className="fa-solid fa-unlock"></i></button>
-                                                )}
-                                                <button onClick={() => handleDeleteUser(user.id)} className="px-2 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded transition text-xs font-bold" title="刪除"><i className="fa-solid fa-trash"></i></button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                    {activeUsers.length === 0 && <tr><td colSpan="6" className="p-8 text-center text-gray-400">尚無任何人員資料</td></tr>}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* 人員管理 Modal */}
-                        {manageUserModal && (
-                            <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4">
-                                <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
-                                    <div className="bg-red-600 text-white p-4 font-bold flex justify-between">
-                                        <span>{editUser ? '編輯人員資料' : '新增系統人員'}</span>
-                                        <button onClick={() => {setManageUserModal(false); setEditUser(null);}}><i className="fa-solid fa-xmark text-xl"></i></button>
-                                    </div>
-                                    <form onSubmit={saveUserForm} className="p-6 space-y-4">
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div><label className="block text-xs text-gray-500 mb-1">登入帳號</label><input required name="username" defaultValue={editUser?.username} className="w-full border p-2 rounded outline-none focus:border-red-500" placeholder="例: A001" /></div>
-                                            <div><label className="block text-xs text-gray-500 mb-1">人員姓名</label><input required name="name" defaultValue={editUser?.name} className="w-full border p-2 rounded outline-none focus:border-red-500" placeholder="例: 王小明" /></div>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-xs text-gray-500 mb-1">層級身分</label>
-                                                <select name="role" defaultValue={editUser?.role || 'staff'} className="w-full border p-2 rounded outline-none">
-                                                    <option value="staff">店長/店員</option><option value="admin">區主管</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-gray-500 mb-1">群組分類 (門店/區域)</label>
-                                                <input name="group" defaultValue={editUser?.group} className="w-full border p-2 rounded outline-none focus:border-red-500" placeholder="例: 中清店" />
-                                            </div>
-                                        </div>
-                                        <div className="bg-gray-50 p-3 rounded border">
-                                            <label className="block text-xs font-bold text-gray-700 mb-2"><i className="fa-solid fa-shield mr-1"></i>資料檢視權限配置</label>
-                                            <label className="flex items-center gap-2 mb-2 cursor-pointer">
-                                                <input type="checkbox" name="permissions" value="view_self" defaultChecked={editUser ? editUser.permissions?.includes('view_self') : true} className="scale-125" />
-                                                <span className="text-sm font-bold text-gray-800">僅限檢視本店/所屬群組資料</span>
-                                            </label>
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input type="checkbox" name="permissions" value="view_all" defaultChecked={editUser ? editUser.permissions?.includes('view_all') : false} className="scale-125" />
-                                                <span className="text-sm font-bold text-red-600">開放檢視所有跨區資料 (主管級)</span>
-                                            </label>
-                                        </div>
-                                        <div className="pt-4 flex justify-end gap-3 border-t">
-                                            <button type="button" onClick={() => {setManageUserModal(false); setEditUser(null);}} className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded font-bold transition">取消</button>
-                                            <button type="submit" className="px-6 py-2 bg-red-600 text-white rounded font-bold shadow hover:bg-red-700 transition">儲存設定</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                );
-            };
-
+            // ---- Render HR Forms (Forms 1, 2, 3 nested logic) ----
             const renderHrTab = () => {
                 if (!hrAuthUnlocked) return <div className="p-4 text-center text-red-500 mt-10 font-bold">拒絕存取：請由導覽列重新驗證密碼。</div>;
                 
-                // 動態取得所有獨立店別
                 const availableStores = [...new Set(Object.values(hrEmployees).map(emp => emp.storeName).filter(Boolean))];
-                
-                // 過濾出當前選定店別下的員工
                 const empsInStore = Object.values(hrEmployees).filter(emp => emp.storeName === selectedStore);
                 const currentEmp = hrEmployees[selectedEmpId] || null;
-
-                const [newEmpStore, setNewEmpStore] = useState('');
 
                 const handleAddHrEmployeeWithStore = () => {
                     if (!newEmpId.trim() || !newEmpName.trim() || !newEmpStore.trim()) { alert("請填寫完整的店別、員工編號與姓名！"); return; }
@@ -1455,14 +1159,6 @@
                     setNewEmpId(''); setNewEmpName(''); setNewEmpStore('');
                     setSelectedStore(newEmpStore);
                     setSelectedEmpId(newEmpId);
-                };
-
-                const handleDeleteHrEmployee = () => {
-                    if(!currentEmp) return;
-                    if(confirm(`確定要永久刪除員工 ${currentEmp.name} 及其所有表單紀錄嗎？這無法復原！`)) {
-                        saveToFirebase('hr_employees', currentEmp.id, { isDeleted: true }, false);
-                        setSelectedEmpId('');
-                    }
                 };
 
                 const renderHrForm1 = (emp) => {
@@ -1516,29 +1212,20 @@
                                             return (
                                                 <tr key={item.no}>
                                                     {isFirstInPhase && (
-                                                        <td rowSpan={phaseCount} className={`font-bold whitespace-pre-wrap ${phaseBg}`}>
-                                                            {item.phase}
-                                                        </td>
+                                                        <td rowSpan={phaseCount} className={`font-bold whitespace-pre-wrap ${phaseBg}`}>{item.phase}</td>
                                                     )}
                                                     <td className="font-bold flex items-center justify-center border-none h-full min-h-[40px]">
-                                                        <span className="w-4 inline-block">{item.no}</span>
-                                                        <span className="text-left flex-1 pl-1">{item.item}</span>
+                                                        <span className="w-4 inline-block">{item.no}</span><span className="text-left flex-1 pl-1">{item.item}</span>
                                                     </td>
                                                     <td className="text-left text-[9px] px-1 font-normal leading-tight">{item.desc}</td>
                                                     <td className="text-[9px] font-normal leading-tight">{item.std}</td>
                                                     <td className="p-0 border-l border-r"><input type="checkbox" checked={row.status==='done'} onChange={()=>rChg('status', row.status==='done' ? '' : 'done')} className="scale-100"/></td>
                                                     <td className="p-0 border-r"><input type="checkbox" checked={row.status==='part'} onChange={()=>rChg('status', row.status==='part' ? '' : 'part')} className="scale-100"/></td>
                                                     <td className="p-0"><input type="checkbox" checked={row.status==='none'} onChange={()=>rChg('status', row.status==='none' ? '' : 'none')} className="scale-100"/></td>
-                                                    <td className="p-0 relative">
-                                                        <input type="text" className="w-full h-full text-center border-none outline-none bg-transparent text-[9px]" placeholder="/  /" value={row.date||''} onChange={e=>rChg('date', e.target.value)}/>
-                                                    </td>
+                                                    <td className="p-0 relative"><input type="date" className="w-full h-full text-center border-none outline-none bg-transparent text-[9px]" value={row.date||''} onChange={e=>rChg('date', e.target.value)}/></td>
                                                     <td className="p-0 h-full">{renderSignBox('', `form1.rows.${item.no}.sig1`, emp, "min-h-[30px] border-none")}</td>
-                                                    <td className="p-0 text-center align-middle">
-                                                        <input type="checkbox" checked={row.mgrCheck||false} onChange={(e) => rChg('mgrCheck', e.target.checked)} className="scale-125" />
-                                                    </td>
-                                                    <td className="p-0 text-center align-middle">
-                                                        <input type="checkbox" checked={row.dirCheck||false} onChange={(e) => rChg('dirCheck', e.target.checked)} className="scale-125" />
-                                                    </td>
+                                                    <td className="p-0 text-center align-middle"><input type="checkbox" checked={row.mgrCheck||false} onChange={(e) => rChg('mgrCheck', e.target.checked)} className="scale-125" /></td>
+                                                    <td className="p-0 text-center align-middle"><input type="checkbox" checked={row.dirCheck||false} onChange={(e) => rChg('dirCheck', e.target.checked)} className="scale-125" /></td>
                                                     <td className="p-0"><input type="text" className="w-full border-none outline-none px-1" value={row.note||''} onChange={e=>rChg('note', e.target.value)}/></td>
                                                 </tr>
                                             )
@@ -1591,14 +1278,14 @@
                                         <tr>
                                             <td>整體留任率</td><td><input type="number" className="w-8 border-b border-gray-400 outline-none text-center font-bold" value={(fData.summary && fData.summary.rate) || ''} onChange={e=>chg('form1.summary.rate',e.target.value)}/> %</td>
                                             <td colSpan="2" className="text-left px-2 py-3 flex items-end gap-2 border-none">
-                                                <span className="shrink-0">店長簽名:</span>
-                                                <div className="flex-1 border-b border-gray-400 h-10">{renderSignBox('', 'form1.summary.mgrSign', emp, "border-none !min-h-0")}</div>
-                                                <span className="shrink-0">日期: <input type="text" className="w-20 border-b border-gray-400 outline-none text-center" placeholder="年/月/日"/></span>
+                                                <span className="shrink-0 flex items-center">店長簽核: <input type="checkbox" className="scale-125 ml-2" checked={fData.summary?.mgrSignDone || false} onChange={e=>chg('form1.summary.mgrSignDone', e.target.checked)}/></span>
+                                                <div className="flex-1"></div>
+                                                <span className="shrink-0">日期: <input type="date" className="border-b border-gray-400 outline-none text-center bg-transparent" value={(fData.summary && fData.summary.mgrDate) || ''} onChange={e=>chg('form1.summary.mgrDate', e.target.value)}/></span>
                                             </td>
                                             <td colSpan="2" className="text-left px-2 py-3 flex items-end gap-2 border-none">
-                                                <span className="shrink-0">總監簽名:</span>
-                                                <div className="flex-1 border-b border-gray-400 h-10">{renderSignBox('', 'form1.summary.dirSign', emp, "border-none !min-h-0")}</div>
-                                                <span className="shrink-0">日期: <input type="text" className="w-20 border-b border-gray-400 outline-none text-center" placeholder="年/月/日"/></span>
+                                                <span className="shrink-0 flex items-center">總監簽核: <input type="checkbox" className="scale-125 ml-2" checked={fData.summary?.dirSignDone || false} onChange={e=>chg('form1.summary.dirSignDone', e.target.checked)}/></span>
+                                                <div className="flex-1"></div>
+                                                <span className="shrink-0">日期: <input type="date" className="border-b border-gray-400 outline-none text-center bg-transparent" value={(fData.summary && fData.summary.dirDate) || ''} onChange={e=>chg('form1.summary.dirDate', e.target.value)}/></span>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -1613,7 +1300,6 @@
                 const renderHrForm2 = (emp) => {
                     const fData = emp.form2 || { phase1:{}, phase2:{}, phase3:{}, phase4:{}, eval:{} };
                     const chg = (path, val) => handleHrFieldChange(emp.id, 'form2', path, val);
-
                     const renderCbx = (path, val, label) => {
                         const keys = path.split('.');
                         const currentVal = fData[keys[0]] && fData[keys[0]][keys[1]];
@@ -1636,13 +1322,9 @@
                                     <div className="flex items-end">店長：<input type="text" className="border-b border-gray-400 outline-none flex-1 ml-2 font-bold text-center" value={fData.manager||''} onChange={e=>chg('form2.manager',e.target.value)}/></div>
                                 </div>
 
-                                {/* Phase 1 */}
                                 <div className="mb-5">
                                     <div className="flex justify-between items-center mb-3">
-                                        <div className="bg-[#1e40af] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center tracking-wider">
-                                            <span className="bg-white text-[#1e40af] rounded-full w-4 h-4 flex items-center justify-center mr-2">1</span> 
-                                            第一階段 | 到職第1天關懷
-                                        </div>
+                                        <div className="bg-[#1e40af] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center tracking-wider"><span className="bg-white text-[#1e40af] rounded-full w-4 h-4 flex items-center justify-center mr-2">1</span> 第一階段 | 到職第1天關懷</div>
                                         <div className="flex items-end">訪談日期: <input type="date" className="border-b border-gray-400 bg-transparent outline-none text-xs ml-2 text-center w-28" value={(fData.phase1 && fData.phase1.date) || ''} onChange={e=>chg('form2.phase1.date',e.target.value)}/></div>
                                     </div>
                                     <div className="space-y-3 pl-4 border-l-2 border-blue-100 ml-2 py-1">
@@ -1654,13 +1336,9 @@
                                     </div>
                                 </div>
 
-                                {/* Phase 2 */}
                                 <div className="mb-5">
                                     <div className="flex justify-between items-center mb-3">
-                                        <div className="bg-[#1e40af] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center tracking-wider">
-                                            <span className="bg-white text-[#1e40af] rounded-full w-4 h-4 flex items-center justify-center mr-2">2</span> 
-                                            第二階段 | 到職第7天關懷
-                                        </div>
+                                        <div className="bg-[#1e40af] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center tracking-wider"><span className="bg-white text-[#1e40af] rounded-full w-4 h-4 flex items-center justify-center mr-2">2</span> 第二階段 | 到職第7天關懷</div>
                                         <div className="flex items-end">訪談日期: <input type="date" className="border-b bg-transparent outline-none text-xs ml-2 text-center w-28" value={(fData.phase2 && fData.phase2.date) || ''} onChange={e=>chg('form2.phase2.date',e.target.value)}/></div>
                                     </div>
                                     <div className="space-y-3 pl-4 border-l-2 border-blue-100 ml-2 py-1">
@@ -1672,13 +1350,9 @@
                                     </div>
                                 </div>
 
-                                {/* Phase 3 */}
                                 <div className="mb-5">
                                     <div className="flex justify-between items-center mb-3">
-                                        <div className="bg-[#1e40af] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center tracking-wider">
-                                            <span className="bg-white text-[#1e40af] rounded-full w-4 h-4 flex items-center justify-center mr-2">3</span> 
-                                            第三階段 | 到職第15天關懷
-                                        </div>
+                                        <div className="bg-[#1e40af] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center tracking-wider"><span className="bg-white text-[#1e40af] rounded-full w-4 h-4 flex items-center justify-center mr-2">3</span> 第三階段 | 到職第15天關懷</div>
                                         <div className="flex items-end">訪談日期: <input type="date" className="border-b bg-transparent outline-none text-xs ml-2 text-center w-28" value={(fData.phase3 && fData.phase3.date) || ''} onChange={e=>chg('form2.phase3.date',e.target.value)}/></div>
                                     </div>
                                     <div className="space-y-3 pl-4 border-l-2 border-blue-100 ml-2 py-1">
@@ -1690,13 +1364,9 @@
                                     </div>
                                 </div>
 
-                                {/* Phase 4 */}
                                 <div className="mb-6">
                                     <div className="flex justify-between items-center mb-3">
-                                        <div className="bg-[#1e40af] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center tracking-wider">
-                                            <span className="bg-white text-[#1e40af] rounded-full w-4 h-4 flex items-center justify-center mr-2">4</span> 
-                                            第四階段 | 到職第30天關懷
-                                        </div>
+                                        <div className="bg-[#1e40af] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center tracking-wider"><span className="bg-white text-[#1e40af] rounded-full w-4 h-4 flex items-center justify-center mr-2">4</span> 第四階段 | 到職第30天關懷</div>
                                         <div className="flex items-end">訪談日期: <input type="date" className="border-b bg-transparent outline-none text-xs ml-2 text-center w-28" value={(fData.phase4 && fData.phase4.date) || ''} onChange={e=>chg('form2.phase4.date',e.target.value)}/></div>
                                     </div>
                                     <div className="space-y-3 pl-4 border-l-2 border-blue-100 ml-2 py-1">
@@ -1708,7 +1378,6 @@
                                     </div>
                                 </div>
 
-                                {/* Evaluation Matrix & Signatures */}
                                 <div className="flex flex-col md:flex-row gap-6 mb-4 items-stretch">
                                     <div className="flex-1 bg-[#eef2ff] border border-blue-200 rounded p-3">
                                         <div className="text-center font-bold text-[#1e3a8a] mb-2">店長綜合評語</div>
@@ -1748,11 +1417,11 @@
                     const fData = emp.form3 || { basic:{}, interview:{}, fact:'', emp:'', guide:{}, improve:[{},{},{}], track:{}, concl:{} };
                     const chg = (path, val) => handleHrFieldChange(emp.id, 'form3', path, val);
 
+                    // 確保綁定 form3 的深層資料並支援取消
                     const ckbx = (path, val) => {
                         const keys = path.split('.');
-                        const obj = fData[keys[0]] || {};
-                        const isChecked = !!obj[val];
-                        return <input type="checkbox" checked={isChecked} onChange={(e)=>chg(`form3.${path}.${val}`, e.target.checked)} className="scale-125 mr-2"/>;
+                        const current = fData[keys[0]] && fData[keys[0]][val];
+                        return <input type="checkbox" checked={!!current} onChange={(e) => chg(`form3.${path}.${val}`, e.target.checked)} className="scale-125 mr-2" />;
                     };
 
                     return (
@@ -1763,26 +1432,25 @@
                                 <span className="text-emerald-700 opacity-50 tracking-[0.2em] font-black italic">--</span>
                             </div>
                             <div className="px-6 text-xs space-y-3 pb-6">
-                                
                                 <div>
                                     <div className="form-section-title bg-emerald-700">一、基本資料</div>
                                     <table className="w-full hr-table text-left border-2 border-emerald-700">
                                         <tbody>
                                             <tr>
                                                 <th className="w-24 bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-user mr-1"></i> 姓名</th>
-                                                <td className="w-32 font-bold text-blue-700 px-2 border-emerald-700">{emp.name}</td>
+                                                <td className="w-32 font-bold text-blue-700 px-2 border-emerald-700 text-center">{emp.name}</td>
                                                 <th className="w-24 bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-id-card mr-1"></i> 員工編號</th>
                                                 <td className="w-32 font-bold text-center border-emerald-700">{emp.id}</td>
                                                 <th className="w-24 bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-building mr-1"></i> 部門/店別</th>
-                                                <td className="border-emerald-700"><input type="text" className="w-full bg-transparent px-1 outline-none text-left" value={(fData.basic && fData.basic.dept) || emp.storeName || ''} onChange={e=>chg('form3.basic.dept',e.target.value)}/></td>
+                                                <td className="border-emerald-700"><input type="text" className="w-full bg-transparent px-1 outline-none text-center" value={(fData.basic && fData.basic.dept) || emp.storeName || ''} onChange={e=>chg('form3.basic.dept',e.target.value)}/></td>
                                             </tr>
                                             <tr>
                                                 <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-briefcase mr-1"></i> 職務</th>
-                                                <td className="border-emerald-700"><input type="text" className="w-full bg-transparent px-1 outline-none text-left" value={(fData.basic && fData.basic.job) || ''} onChange={e=>chg('form3.basic.job',e.target.value)}/></td>
+                                                <td className="border-emerald-700"><input type="text" className="w-full bg-transparent px-1 outline-none text-center" value={(fData.basic && fData.basic.job) || ''} onChange={e=>chg('form3.basic.job',e.target.value)}/></td>
                                                 <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-calendar-day mr-1"></i> 到職日</th>
                                                 <td className="border-emerald-700"><input type="date" className="w-full bg-transparent px-1 outline-none text-center" value={(fData.basic && fData.basic.joinDate) || ''} onChange={e=>chg('form3.basic.joinDate',e.target.value)}/></td>
                                                 <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-user-tie mr-1"></i> 直屬主管</th>
-                                                <td className="border-emerald-700"><input type="text" className="w-full bg-transparent px-1 outline-none text-left" value={(fData.basic && fData.basic.mgr) || ''} onChange={e=>chg('form3.basic.mgr',e.target.value)}/></td>
+                                                <td className="border-emerald-700"><input type="text" className="w-full bg-transparent px-1 outline-none text-center" value={(fData.basic && fData.basic.mgr) || ''} onChange={e=>chg('form3.basic.mgr',e.target.value)}/></td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -1793,26 +1461,26 @@
                                     <table className="w-full hr-table text-left border-2 border-emerald-700">
                                         <tbody>
                                             <tr>
-                                                <th className="w-[15%] bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-calendar-days mr-1"></i> 面談日期</th><td className="w-[35%] border-emerald-700"><input type="date" className="w-full outline-none px-2 text-left bg-transparent" value={(fData.interview && fData.interview.date) || ''} onChange={e=>chg('form3.interview.date',e.target.value)}/></td>
+                                                <th className="w-[15%] bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-calendar-days mr-1"></i> 面談日期</th><td className="w-[35%] border-emerald-700"><input type="date" className="w-full outline-none px-2 text-center bg-transparent" value={(fData.interview && fData.interview.date) || ''} onChange={e=>chg('form3.interview.date',e.target.value)}/></td>
                                                 <th className="w-[15%] bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-location-dot mr-1"></i> 面談地點</th><td className="w-[35%] border-emerald-700"><input type="text" className="w-full outline-none px-2 bg-transparent" value={(fData.interview && fData.interview.loc) || ''} onChange={e=>chg('form3.interview.loc',e.target.value)}/></td>
                                             </tr>
                                             <tr>
                                                 <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-comments mr-1"></i> 面談類型<br/><span className="text-[9px] font-normal text-gray-500">(可複選)</span></th>
-                                                <td colSpan="3" className="text-left p-2 border-emerald-700">
-                                                    <div className="flex flex-wrap gap-x-6 gap-y-2">
+                                                <td colSpan="3" className="text-left p-3 border-emerald-700">
+                                                    <div className="flex flex-wrap gap-x-6 gap-y-3 font-bold text-gray-800">
                                                         <label className="checkbox-group">{ckbx('interview', 'type1')} 關懷面談</label>
                                                         <label className="checkbox-group">{ckbx('interview', 'type2')} 績效改善</label>
                                                         <label className="checkbox-group">{ckbx('interview', 'type3')} 客訴事件</label>
                                                         <label className="checkbox-group">{ckbx('interview', 'type4')} 出勤異常</label>
                                                         <label className="checkbox-group">{ckbx('interview', 'type5')} 工作態度</label>
-                                                        <label className="checkbox-group">{ckbx('interview', 'type6')} 其他 <input type="text" className="border-b border-gray-400 w-32 outline-none ml-1 bg-transparent font-normal" value={(fData.interview && fData.interview.typeOther) || ''} onChange={e=>chg('form3.interview.typeOther',e.target.value)}/></label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'type6')} 其他 <input type="text" className="border-b border-gray-400 w-32 outline-none ml-1 bg-transparent font-normal text-blue-700" value={(fData.interview && fData.interview.typeOther) || ''} onChange={e=>chg('form3.interview.typeOther',e.target.value)}/></label>
                                                     </div>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-clipboard-list mr-1"></i> 面談原因<br/><span className="text-[9px] font-normal text-gray-500">(可複選)</span></th>
-                                                <td colSpan="3" className="text-left p-2 border-emerald-700">
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2">
+                                                <td colSpan="3" className="text-left p-3 border-emerald-700">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 font-bold text-gray-800 pl-2">
                                                         <label className="checkbox-group">{ckbx('interview', 'r1')} 工作績效未達標準</label>
                                                         <label className="checkbox-group">{ckbx('interview', 'r2')} 團隊合作問題</label>
                                                         <label className="checkbox-group">{ckbx('interview', 'r3')} 顧客反應或客訴事件</label>
@@ -1821,13 +1489,13 @@
                                                         <label className="checkbox-group">{ckbx('interview', 'r6')} 違反公司規範</label>
                                                         <label className="checkbox-group">{ckbx('interview', 'r7')} 工作態度需改善</label>
                                                         <label className="checkbox-group">{ckbx('interview', 'r8')} 主動關懷面談</label>
-                                                        <label className="checkbox-group col-span-1 sm:col-span-2">{ckbx('interview', 'r9')} 其他：<input type="text" className="border-b border-gray-400 flex-1 outline-none ml-1 font-normal bg-transparent" value={(fData.interview && fData.interview.rOther) || ''} onChange={e=>chg('form3.interview.rOther',e.target.value)}/></label>
+                                                        <label className="checkbox-group col-span-1 sm:col-span-2">{ckbx('interview', 'r9')} 其他：<input type="text" className="border-b border-gray-400 flex-1 outline-none ml-1 font-normal bg-transparent text-blue-700" value={(fData.interview && fData.interview.rOther) || ''} onChange={e=>chg('form3.interview.rOther',e.target.value)}/></label>
                                                     </div>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-pen-to-square mr-1"></i> 具體事實說明</th>
-                                                <td colSpan="3" className="border-emerald-700 p-0"><textarea className="w-full h-16 outline-none p-2 resize-none text-left align-top bg-transparent" value={fData.fact||''} onChange={e=>chg('form3.fact',e.target.value)}></textarea></td>
+                                                <td colSpan="3" className="border-emerald-700 p-0"><textarea className="w-full h-16 outline-none p-2 resize-none text-left align-top bg-transparent text-blue-800 font-bold" value={fData.fact||''} onChange={e=>chg('form3.fact',e.target.value)}></textarea></td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -1837,7 +1505,7 @@
                                     <div className="form-section-title bg-emerald-700">三、員工說明</div>
                                     <div className="border-2 border-emerald-700 rounded-sm">
                                         <div className="text-xs text-gray-700 bg-emerald-50 px-2 py-1 font-bold border-b border-emerald-700">請員工說明事件經過及個人想法：</div>
-                                        <textarea className="w-full h-20 outline-none p-2 resize-none text-left bg-transparent" value={fData.emp||''} onChange={e=>chg('form3.emp',e.target.value)}></textarea>
+                                        <textarea className="w-full h-20 outline-none p-2 resize-none text-left bg-transparent text-blue-800 font-bold" value={fData.emp||''} onChange={e=>chg('form3.emp',e.target.value)}></textarea>
                                     </div>
                                 </div>
 
@@ -1847,8 +1515,8 @@
                                         <tbody>
                                             <tr>
                                                 <th className="w-1/5 bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-list-check mr-1"></i> 面談溝通重點<br/><span className="text-[9px] font-normal text-gray-500">(可複選)</span></th>
-                                                <td className="w-4/5 text-left p-2 border-emerald-700">
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2">
+                                                <td className="w-4/5 text-left p-3 border-emerald-700">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 font-bold text-gray-800 pl-2">
                                                         <label className="checkbox-group">{ckbx('guide', 'g1')} 工作標準說明</label>
                                                         <label className="checkbox-group">{ckbx('guide', 'g2')} 情緒管理建議</label>
                                                         <label className="checkbox-group">{ckbx('guide', 'g3')} 顧客服務要求</label>
@@ -1856,13 +1524,13 @@
                                                         <label className="checkbox-group">{ckbx('guide', 'g5')} 團隊合作要求</label>
                                                         <label className="checkbox-group">{ckbx('guide', 'g6')} 公司制度說明</label>
                                                         <label className="checkbox-group">{ckbx('guide', 'g7')} 出勤管理提醒</label>
-                                                        <label className="checkbox-group">{ckbx('guide', 'g8')} 其他：<input type="text" className="border-b border-gray-400 flex-1 outline-none ml-1 font-normal bg-transparent" value={(fData.guide && fData.guide.gOther) || ''} onChange={e=>chg('form3.guide.gOther',e.target.value)}/></label>
+                                                        <label className="checkbox-group">{ckbx('guide', 'g8')} 其他：<input type="text" className="border-b border-gray-400 flex-1 outline-none ml-1 font-normal bg-transparent text-blue-700" value={(fData.guide && fData.guide.gOther) || ''} onChange={e=>chg('form3.guide.gOther',e.target.value)}/></label>
                                                     </div>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-comment-dots mr-1"></i> 主管輔導內容</th>
-                                                <td className="border-emerald-700 p-0"><textarea className="w-full h-20 outline-none p-2 resize-none text-left bg-transparent" value={(fData.guide && fData.guide.content) || ''} onChange={e=>chg('form3.guide.content',e.target.value)}></textarea></td>
+                                                <td className="border-emerald-700 p-0"><textarea className="w-full h-20 outline-none p-2 resize-none text-left bg-transparent text-blue-800 font-bold" value={(fData.guide && fData.guide.content) || ''} onChange={e=>chg('form3.guide.content',e.target.value)}></textarea></td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -1881,9 +1549,9 @@
                                             {[0,1,2].map(idx => (
                                                 <tr key={`imp_${idx}`}>
                                                     <td className="border-emerald-700 font-bold bg-gray-50">{idx+1}</td>
-                                                    <td className="border-emerald-700 p-0 h-8"><input type="text" className="w-full h-full outline-none px-2 text-left bg-transparent" value={(fData.improve && fData.improve[idx] && fData.improve[idx].item) || ''} onChange={e=>chg(`form3.improve.${idx}.item`,e.target.value)}/></td>
-                                                    <td className="border-emerald-700 p-0"><input type="text" className="w-full h-full outline-none px-2 text-left bg-transparent" value={(fData.improve && fData.improve[idx] && fData.improve[idx].goal) || ''} onChange={e=>chg(`form3.improve.${idx}.goal`,e.target.value)}/></td>
-                                                    <td className="border-emerald-700 p-0"><input type="date" className="w-full h-full outline-none px-2 text-center bg-transparent" value={(fData.improve && fData.improve[idx] && fData.improve[idx].deadline) || ''} onChange={e=>chg(`form3.improve.${idx}.deadline`,e.target.value)}/></td>
+                                                    <td className="border-emerald-700 p-0 h-8"><input type="text" className="w-full h-full outline-none px-2 text-left bg-transparent text-blue-800 font-bold" value={(fData.improve && fData.improve[idx] && fData.improve[idx].item) || ''} onChange={e=>chg(`form3.improve.${idx}.item`,e.target.value)}/></td>
+                                                    <td className="border-emerald-700 p-0"><input type="text" className="w-full h-full outline-none px-2 text-left bg-transparent text-blue-800 font-bold" value={(fData.improve && fData.improve[idx] && fData.improve[idx].goal) || ''} onChange={e=>chg(`form3.improve.${idx}.goal`,e.target.value)}/></td>
+                                                    <td className="border-emerald-700 p-0"><input type="date" className="w-full h-full outline-none px-2 text-center bg-transparent text-blue-800 font-bold" value={(fData.improve && fData.improve[idx] && fData.improve[idx].deadline) || ''} onChange={e=>chg(`form3.improve.${idx}.deadline`,e.target.value)}/></td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -1896,14 +1564,14 @@
                                         <tbody>
                                             <tr>
                                                 <th className="w-1/6 bg-emerald-50 text-emerald-800 text-center border-emerald-700">改善期間</th>
-                                                <td className="w-5/6 flex items-center justify-center gap-4 px-2 py-1 font-bold border-none">
+                                                <td className="w-5/6 flex items-center justify-center gap-4 px-2 py-1 font-bold border-none text-blue-800">
                                                     自 <input type="date" className="border-b border-gray-400 outline-none text-xs text-center font-normal bg-transparent" value={(fData.track && fData.track.start) || ''} onChange={e=>chg('form3.track.start',e.target.value)}/>
                                                     至 <input type="date" className="border-b border-gray-400 outline-none text-xs text-center font-normal bg-transparent" value={(fData.track && fData.track.end) || ''} onChange={e=>chg('form3.track.end',e.target.value)}/>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <th className="bg-emerald-50 text-emerald-800 text-center border-emerald-700">追蹤方式 <br/><span className="text-[9px] font-normal text-gray-500">(可複選)</span></th>
-                                                <td className="flex justify-around p-2 border-emerald-700">
+                                                <td className="flex justify-around p-3 border-emerald-700 font-bold text-gray-800">
                                                     <label className="checkbox-group">{ckbx('track', 't1')} 主任追蹤</label>
                                                     <label className="checkbox-group">{ckbx('track', 't2')} 店長追蹤</label>
                                                     <label className="checkbox-group">{ckbx('track', 't3')} 總監追蹤</label>
@@ -1915,14 +1583,14 @@
 
                                 <div>
                                     <div className="form-section-title bg-emerald-700">七、面談結論</div>
-                                    <div className="border-2 border-emerald-700 p-3 grid grid-cols-1 sm:grid-cols-3 gap-y-3 font-bold text-gray-800">
+                                    <div className="border-2 border-emerald-700 p-4 grid grid-cols-1 sm:grid-cols-3 gap-y-4 font-bold text-gray-800 pl-6">
                                         <label className="checkbox-group">{ckbx('concl', 'c1')} 已了解並願意改善</label>
                                         <label className="checkbox-group">{ckbx('concl', 'c2')} 持續觀察追蹤</label>
                                         <label className="checkbox-group">{ckbx('concl', 'c3')} 安排教育訓練</label>
                                         <label className="checkbox-group">{ckbx('concl', 'c4')} 調整工作內容</label>
                                         <label className="checkbox-group">{ckbx('concl', 'c5')} 調整排班</label>
                                         <label className="checkbox-group">{ckbx('concl', 'c6')} 再次面談</label>
-                                        <label className="checkbox-group col-span-1 sm:col-span-3">{ckbx('concl', 'c7')} 其他處理方式：<input type="text" className="border-b border-gray-400 flex-1 outline-none ml-2 font-normal bg-transparent" value={(fData.concl && fData.concl.cOther) || ''} onChange={e=>chg('form3.concl.cOther',e.target.value)}/></label>
+                                        <label className="checkbox-group col-span-1 sm:col-span-3">{ckbx('concl', 'c7')} 其他處理方式：<input type="text" className="border-b border-gray-400 flex-1 outline-none ml-2 font-normal bg-transparent text-blue-700" value={(fData.concl && fData.concl.cOther) || ''} onChange={e=>chg('form3.concl.cOther',e.target.value)}/></label>
                                     </div>
                                 </div>
 
@@ -1950,7 +1618,7 @@
                                                 <span>店長簽名</span>
                                             </div>
                                         </div>
-                                        <div className="text-left text-xs font-bold text-gray-700 pl-4 mt-4 mb-2">日期: <input type="date" className="border-b border-gray-400 bg-transparent outline-none font-normal" value={(fData.sign && fData.sign.date) || ''} onChange={e=>chg('form3.sign.date',e.target.value)}/></div>
+                                        <div className="text-left text-xs font-bold text-gray-700 pl-4 mt-4 mb-2">日期: <input type="date" className="border-b border-gray-400 bg-transparent outline-none font-normal text-blue-800" value={(fData.sign && fData.sign.date) || ''} onChange={e=>chg('form3.sign.date',e.target.value)}/></div>
                                     </div>
                                 </div>
 
@@ -1973,14 +1641,13 @@
                                     <i className="fa-solid fa-user-shield mr-2"></i>人事系統
                                 </h2>
                                 
-                                {/* 樹狀結構選擇器：先選店，再選員工 */}
                                 <div className="flex items-center gap-2">
                                     <select 
                                         className="border rounded px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-500 font-bold bg-blue-50 text-blue-800"
                                         value={selectedStore}
                                         onChange={(e) => {
                                             setSelectedStore(e.target.value);
-                                            setSelectedEmpId(''); // 換店別時清空已選員工
+                                            setSelectedEmpId(''); 
                                         }}
                                     >
                                         <option value="">-- 選擇店別 --</option>
@@ -2047,7 +1714,6 @@
                                         {hrFormTab === 'form2' && renderHrForm2(currentEmp)}
                                         {hrFormTab === 'form3' && renderHrForm3(currentEmp)}
                                         
-                                        {/* A4 模式下的輔助列印按鈕 */}
                                         {fullScreenMode && (
                                             <div className="text-center mt-6 no-print">
                                                 <button onClick={() => window.print()} className="bg-blue-600 text-white px-6 py-3 rounded-full shadow-xl font-bold hover:bg-blue-700 text-lg">
@@ -2164,7 +1830,7 @@
                         )}
                     </nav>
 
-                    <main className={`flex-1 ${fullScreenMode ? 'fullscreen-container' : 'overflow-hidden'}`}>
+                    <main className={`flex-1 ${fullScreenMode ? 'print-mode' : 'overflow-hidden'}`}>
                         {activeTab === 'night' && <div className="p-2 h-full overflow-hidden">{renderShiftTab('night', '夜班', 'fa-moon', 'text-gray-800', 'bg-gray-800')}</div>}
                         {activeTab === 'morning' && <div className="p-2 h-full overflow-hidden">{renderShiftTab('morning', '早班', 'fa-sun', 'text-orange-600', 'bg-orange-500')}</div>}
                         {activeTab === 'evening' && <div className="p-2 h-full overflow-hidden">{renderShiftTab('evening', '晚班', 'fa-cloud-sun', 'text-indigo-600', 'bg-indigo-500')}</div>}
@@ -2176,7 +1842,7 @@
                         {activeTab === 'admin' && renderAdminTab()}
                     </main>
 
-                    {/* 密碼驗證對話框群... */}
+                    {/* HR 專區密碼驗證對話框 */}
                     {showPwdModal && (
                         <div className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4">
                             <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100">
@@ -2202,6 +1868,7 @@
                         </div>
                     )}
 
+                    {/* 最高權限登入對話框 */}
                     {showSuperAuthModal && (
                         <div className="fixed inset-0 bg-black/80 z-[120] flex items-center justify-center p-4">
                             <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border-2 border-yellow-500">
@@ -2226,6 +1893,7 @@
                         </div>
                     )}
 
+                    {/* HR 專區密碼錯誤對話框 */}
                     {pwdErrorModal && (
                         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[110] p-4">
                             <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full transform transition-all border-l-4 border-red-500">
@@ -2236,6 +1904,25 @@
                                 <p className="text-gray-600 mb-6 font-bold">密碼錯誤，請重新輸入以驗證您的身份。</p>
                                 <button onClick={() => setPwdErrorModal(false)} className="w-full bg-gray-900 text-white py-2 rounded-lg font-bold hover:bg-gray-700 transition">
                                     我知道了
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 總部最高權限密碼錯誤對話框 */}
+                    {superAuthErrorModal && (
+                        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[130] p-4">
+                            <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full transform transition-all border-l-4 border-red-600 border-t-2 border-r-2 border-b-2">
+                                <div className="flex items-center text-red-600 mb-4">
+                                    <i className="fa-solid fa-ban text-3xl mr-3"></i>
+                                    <h3 className="font-black text-xl tracking-wider">權限驗證失敗</h3>
+                                </div>
+                                <p className="text-gray-700 mb-6 font-bold leading-relaxed">
+                                    您輸入的最高權限帳號或密碼不正確。<br/>
+                                    <span className="text-sm text-gray-500 font-normal mt-1 block">請重新確認後再試一次。</span>
+                                </p>
+                                <button onClick={() => setSuperAuthErrorModal(false)} className="w-full bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700 transition shadow-md">
+                                    返回重新輸入
                                 </button>
                             </div>
                         </div>
