@@ -193,13 +193,17 @@
 
             const [hrEmployees, setHrEmployees] = useState({});
             
-            // 員工管理 States (改為兩層式架構，強制綁定)
+            // 員工管理 States
             const [selectedStore, setSelectedStore] = useState(''); // 選中的店別群組
             const [selectedEmpId, setSelectedEmpId] = useState(''); 
             const [newEmpId, setNewEmpId] = useState('');
             const [newEmpName, setNewEmpName] = useState('');
-            
             const [hrFormTab, setHrFormTab] = useState('form1');
+            
+            // 新增 / 編輯員工 Modal States (解決 React Error 310)
+            const [showEmpModal, setShowEmpModal] = useState(false);
+            const [isEditMode, setIsEditMode] = useState(false);
+            const [editEmpData, setEditEmpData] = useState({ id: '', name: '', storeName: '' });
             
             // Signature Modal State
             const [sigModal, setSigModal] = useState({ isOpen: false, fieldPath: '' });
@@ -402,7 +406,7 @@
 
             // HR Module - 員工儲存與編輯
             const handleAddHrEmployee = () => {
-                if (!selectedStore) { alert("請先從左方選擇或輸入一個新店別名稱！"); return; }
+                if (!selectedStore) { alert("請先從左方選擇店別！或點擊「完整新增」建立新店別與員工。"); return; }
                 if (!newEmpId.trim() || !newEmpName.trim()) { alert("請輸入完整的員工編號與姓名！"); return; }
                 if (hrEmployees[newEmpId]) { alert("此員工編號已存在！"); return; }
                 
@@ -418,6 +422,38 @@
                 saveToFirebase('hr_employees', newEmpId, newEmp);
                 setNewEmpId(''); setNewEmpName('');
                 setSelectedEmpId(newEmpId);
+            };
+
+            const handleSaveHrEmployee = (e) => {
+                e.preventDefault();
+                if (!editEmpData.storeName.trim() || !editEmpData.id.trim() || !editEmpData.name.trim()) {
+                    alert("請填寫完整的店別、員工編號與姓名！");
+                    return;
+                }
+                
+                if (isEditMode) {
+                    const currentEmp = hrEmployees[editEmpData.id];
+                    if (currentEmp) {
+                        const updatedEmp = { ...currentEmp, name: editEmpData.name, storeName: editEmpData.storeName };
+                        saveToFirebase('hr_employees', editEmpData.id, updatedEmp);
+                        setSelectedStore(editEmpData.storeName);
+                    }
+                } else {
+                    if (hrEmployees[editEmpData.id]) { alert("此員工編號已存在！"); return; }
+                    const newEmp = {
+                        id: editEmpData.id,
+                        name: editEmpData.name,
+                        storeName: editEmpData.storeName,
+                        form1: { rows: {}, summary: {} },
+                        form2: { phase1: {}, phase2: {}, phase3: {}, phase4: {}, eval: {} },
+                        form3: { basic: {}, interview: {}, fact: '', emp: '', guide: {}, improve: [{},{},{}], track: {}, concl: {} }
+                    };
+                    saveToFirebase('hr_employees', editEmpData.id, newEmp);
+                    setSelectedStore(editEmpData.storeName);
+                    setSelectedEmpId(editEmpData.id);
+                }
+                setShowEmpModal(false);
+                setEditEmpData({ id: '', name: '', storeName: '' });
             };
 
             const handleDeleteHrEmployee = () => {
@@ -1154,31 +1190,6 @@
                 const empsInStore = Object.values(hrEmployees).filter(emp => emp.storeName === selectedStore);
                 const currentEmp = hrEmployees[selectedEmpId] || null;
 
-                const [newEmpStore, setNewEmpStore] = useState('');
-
-                const handleAddHrEmployeeWithStore = () => {
-                    if (!newEmpId.trim() || !newEmpName.trim() || !newEmpStore.trim()) { alert("請填寫完整的店別、員工編號與姓名！"); return; }
-                    if (hrEmployees[newEmpId]) { alert("此員工編號已存在！"); return; }
-                    const newEmp = {
-                        id: newEmpId, name: newEmpName, storeName: newEmpStore,
-                        form1: { rows: {}, summary: {} },
-                        form2: { phase1: {}, phase2: {}, phase3: {}, phase4: {}, eval: {} },
-                        form3: { basic: {}, interview: {}, fact: '', emp: '', guide: {}, improve: [{},{},{}], track: {}, concl: {} }
-                    };
-                    saveToFirebase('hr_employees', newEmpId, newEmp);
-                    setNewEmpId(''); setNewEmpName(''); setNewEmpStore('');
-                    setSelectedStore(newEmpStore);
-                    setSelectedEmpId(newEmpId);
-                };
-
-                const handleDeleteHrEmployee = () => {
-                    if(!currentEmp) return;
-                    if(confirm(`確定要永久刪除員工 ${currentEmp.name} 及其所有表單紀錄嗎？這無法復原！`)) {
-                        saveToFirebase('hr_employees', currentEmp.id, { isDeleted: true }, false);
-                        setSelectedEmpId('');
-                    }
-                };
-
                 // 表單 1：領航員執行檢核表 (極度壓縮版)
                 const renderHrForm1 = (emp) => {
                     const fData = emp.form1 || { rows: {}, summary: {} };
@@ -1708,7 +1719,7 @@
                                 </div>
                             </div>
 
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 items-center">
                                 {currentEmp && (
                                     <>
                                         <button onClick={() => {
@@ -1726,7 +1737,14 @@
                                 <input type="text" placeholder="編號" className="border rounded px-2 py-1 text-sm w-16" value={newEmpId} onChange={e => setNewEmpId(e.target.value)} />
                                 <input type="text" placeholder="姓名" className="border rounded px-2 py-1 text-sm w-24" value={newEmpName} onChange={e => setNewEmpName(e.target.value)} />
                                 <button onClick={handleAddHrEmployee} className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition whitespace-nowrap">
-                                    <i className="fa-solid fa-plus mr-1"></i>新增員工
+                                    <i className="fa-solid fa-plus mr-1"></i>快速新增
+                                </button>
+                                <button onClick={() => {
+                                    setEditEmpData({ id: '', name: '', storeName: selectedStore });
+                                    setIsEditMode(false);
+                                    setShowEmpModal(true);
+                                }} className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition whitespace-nowrap">
+                                    <i className="fa-solid fa-user-plus mr-1"></i>完整新增
                                 </button>
                             </div>
                         </div>
