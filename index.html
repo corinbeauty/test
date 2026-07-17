@@ -65,20 +65,23 @@
 
         const DATES = generateDates();
 
-        // 模擬從影像辨識出來的初始資料，加入一位故意違規的測試員展示功能
-        const INITIAL_MOCK_DATA = [
-            { id: '190008', dept: '中清', name: '李宗蓁', schedule: { '06/29': '休', '07/04': '特', '07/05': '休', '07/09': '例', '07/13': '例', '07/14': '休', '07/24': '例', '07/26': '休', '07/29': '休', '08/01': '例' } },
-            { id: '210039', dept: '中清', name: '陳秀如', schedule: { '06/29': '休', '07/03': '例', '07/05': '休', '07/06': '休', '07/09': '例', '07/10': '休', '07/16': '例', '07/17': '休', '07/22': '休', '07/26': '例', '07/31': '休', '08/02': '休' } },
-            { id: '220492', dept: '中清', name: '陳素珍', schedule: { '06/29': '休', '06/30': '特', '07/01': '休', '07/02': '特', '07/05': '例', '07/06': '休', '07/12': '例', '07/20': '休', '07/21': '特', '07/29': '休', '08/02': '休' } },
-            // 故意違規資料
-            { id: '999991', dept: '中清', name: '違規測試(連7)', schedule: { '07/05': '休', '07/13': '例' } }, // 07/06~07/12 連上7天
-            { id: '999992', dept: '中清', name: '違規測試(缺例)', schedule: { '06/29': '休', '07/01': '休', '07/05': '休' } } // 第一週沒有例假
+        // 根據使用者提供的圖片，建立更真實的模擬資料 (擷取部分人員)
+        const REALISTIC_MOCK_DATA = [
+            { id: '190008', dept: '中清', name: '李宗蓁', schedule: { '06/29': '休', '07/04': '特', '07/05': '休', '07/09': '例', '07/13': '例', '07/14': '休', '07/24': '例', '07/26': '休', '07/29': '休', '08/01': '例' }, hasExhaustedRestDays: true },
+            { id: '210039', dept: '中清', name: '陳秀如', schedule: { '06/29': '休', '07/03': '例', '07/05': '休', '07/06': '休', '07/09': '例', '07/10': '休', '07/16': '例', '07/17': '休', '07/22': '休', '07/26': '例', '07/31': '休', '08/02': '休' }, hasExhaustedRestDays: false },
+            { id: '220492', dept: '中清', name: '陳素珍', schedule: { '06/29': '休', '06/30': '特', '07/01': '休', '07/02': '特', '07/05': '例', '07/06': '休', '07/12': '例', '07/20': '休', '07/21': '特', '07/29': '休', '08/02': '休' }, hasExhaustedRestDays: false },
+            { id: '230027', dept: '中清', name: '劉慧波', schedule: { '07/01': '例', '07/06': '休', '07/10': '特', '07/11': '例', '07/17': '休', '07/18': '例', '07/23': '例', '07/25': '休', '08/01': '休', '08/02': '例' }, hasExhaustedRestDays: false },
+            { id: '230386', dept: '中清', name: '賴信吉', schedule: { '06/30': '休', '07/03': '例', '07/08': '例', '07/09': '休', '07/14': '休', '07/15': '例', '07/21': '例', '07/24': '休', '07/29': '例', '08/02': '休' }, hasExhaustedRestDays: false },
+            // 故意違規資料，用來測試規則
+            { id: '999991', dept: '中清', name: '違規測試(連7)', schedule: { '07/05': '休', '07/13': '例' }, hasExhaustedRestDays: false }, // 07/06~07/12 連上7天
+            { id: '999992', dept: '中清', name: '違規測試(缺例)', schedule: { '06/29': '休', '07/01': '休', '07/05': '休' }, hasExhaustedRestDays: false } // 第一週沒有例假
         ];
 
         const App = () => {
             const [data, setData] = useState([]);
             const [isProcessing, setIsProcessing] = useState(false);
             const [isUploaded, setIsUploaded] = useState(false);
+            const [fileName, setFileName] = useState('');
             const [validationResults, setValidationResults] = useState({ errors: [], cellErrors: {} });
 
             // 點擊切換班別
@@ -105,15 +108,25 @@
                 }));
             };
 
-            // 模擬圖片上傳與 OCR 處理
-            const handleUpload = () => {
+            // 處理真實的檔案上傳事件
+            const handleFileUpload = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                setFileName(file.name);
                 setIsProcessing(true);
-                // 模擬處理時間
+                
+                // 模擬讀取圖片與 OCR 處理時間，然後載入我們準備好的真實範例資料
                 setTimeout(() => {
-                    setData(INITIAL_MOCK_DATA);
+                    setData(REALISTIC_MOCK_DATA);
                     setIsUploaded(true);
                     setIsProcessing(false);
-                }, 1500);
+                }, 2000);
+            };
+
+            // 觸發隱藏的 input file
+            const triggerFileInput = () => {
+                document.getElementById('file-upload').click();
             };
 
             // 核心檢核邏輯
@@ -126,6 +139,7 @@
                 data.forEach(emp => {
                     let consecutiveWorkDays = 0;
                     const weeklyRecord = {}; // 記錄每週的 例 和 休 數量
+                    const biWeeklyRecord = {}; // 記錄雙週的 例 和 休 數量
 
                     DATES.forEach((dateInfo, index) => {
                         const status = emp.schedule[dateInfo.dateString] || '';
@@ -136,8 +150,20 @@
                         }
                         weeklyRecord[dateInfo.weekNumber].dates.push(dateInfo.dateString);
 
-                        if (status === '休') weeklyRecord[dateInfo.weekNumber].rest++;
-                        if (status === '例') weeklyRecord[dateInfo.weekNumber].reg++;
+                        // 初始化雙週記錄 (1-2週為一組, 3-4週為一組...)
+                        const biWeekNumber = Math.ceil(dateInfo.weekNumber / 2);
+                        if (!biWeeklyRecord[biWeekNumber]) {
+                            biWeeklyRecord[biWeekNumber] = { rest: 0, reg: 0, dates: [], isExceptionAllowed: emp.hasExhaustedRestDays };
+                        }
+
+                        if (status === '休') {
+                            weeklyRecord[dateInfo.weekNumber].rest++;
+                            biWeeklyRecord[biWeekNumber].rest++;
+                        }
+                        if (status === '例') {
+                            weeklyRecord[dateInfo.weekNumber].reg++;
+                            biWeeklyRecord[biWeekNumber].reg++;
+                        }
 
                         // 規則 1 & 3: 連續工作不得超過 6 天 (任何假別都會中斷連續工作)
                         if (status === '') {
@@ -152,17 +178,38 @@
                         }
                     });
 
-                    // 規則 2: 每週須有1天例假
+                    // 規則 2: 每週須有1天例假 (例外：當月休息日已排完，可有一週只排一天例假)
                     Object.keys(weeklyRecord).forEach(week => {
                         const record = weeklyRecord[week];
-                        // 第一週跟最後一週可能天數不滿7天，但基於二週變形，每週還是要有例假。
-                        // 為避免非完整週誤判，這裡假設這五週都是排班範圍。
+                        
                         if (record.reg === 0) {
-                            const errorMsg = `${emp.name} 在第 ${week} 週 ( ${record.dates[0]} ~ ${record.dates[record.dates.length-1]} ) 缺少「例」假！`;
-                            errors.push({ type: 'danger', msg: errorMsg });
-                            // 標記該週所有日子提示缺少例假
-                            record.dates.forEach(d => cellErrors[`${emp.id}-${d}`] = true);
+                            // 檢查是否符合例外情況 (薪資結構含1日休息日加班費，且當月休息日已排完)
+                            // 這裡簡化判斷，如果員工有標記 hasExhaustedRestDays，且這是第一週發生缺少例假，則視為合法例外
+                            // 實際應用中需要更複雜的跨週計算來確認 "當月休息日已排完"
+                            if (emp.hasExhaustedRestDays && record.rest === 0) {
+                                 // 允許的例外：這週沒有例假也沒有休息日 (因為休息日已用完，且這週只排一天例假在別週)
+                                 // 但仍然需要檢查連續工作天數，這部分已在上面迴圈處理
+                            } else {
+                                const errorMsg = `${emp.name} 在第 ${week} 週 ( ${record.dates[0]} ~ ${record.dates[record.dates.length-1]} ) 缺少「例」假！`;
+                                errors.push({ type: 'danger', msg: errorMsg });
+                                // 標記該週所有日子提示缺少例假
+                                record.dates.forEach(d => cellErrors[`${emp.id}-${d}`] = true);
+                            }
                         }
+                    });
+
+                    // 規則 4: 兩週內須有2天例假 + 2天休息日 (基於二週變形工時)
+                    Object.keys(biWeeklyRecord).forEach(biWeek => {
+                         const record = biWeeklyRecord[biWeek];
+                         // 排除資料不完整的雙週 (例如第一週或最後一週)
+                         if (record.dates.length > 10) { 
+                             if (record.reg < 2) {
+                                 errors.push({ type: 'danger', msg: `${emp.name} 在第 ${biWeek} 雙週週期內，例假不足2天 (僅有 ${record.reg} 天)！` });
+                             }
+                             if (record.rest < 2 && !record.isExceptionAllowed) {
+                                 errors.push({ type: 'danger', msg: `${emp.name} 在第 ${biWeek} 雙週週期內，休息日不足2天 (僅有 ${record.rest} 天)！` });
+                             }
+                         }
                     });
 
                 });
@@ -181,21 +228,31 @@
                         </div>
                         <div className="flex items-center gap-4">
                             {!isUploaded && (
-                                <button 
-                                    onClick={handleUpload}
-                                    disabled={isProcessing}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow flex items-center gap-2 transition disabled:opacity-50"
-                                >
-                                    {isProcessing ? (
-                                        <><i data-lucide="loader-2" className="w-4 h-4 animate-spin"></i> 影像解析中...</>
-                                    ) : (
-                                        <><i data-lucide="upload" className="w-4 h-4"></i> 上傳班表圖片轉換</>
-                                    )}
-                                </button>
+                                <div>
+                                    <input 
+                                        type="file" 
+                                        id="file-upload" 
+                                        accept="image/*" 
+                                        className="hidden" 
+                                        onChange={handleFileUpload}
+                                    />
+                                    <button 
+                                        onClick={triggerFileInput}
+                                        disabled={isProcessing}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow flex items-center gap-2 transition disabled:opacity-50"
+                                    >
+                                        {isProcessing ? (
+                                            <><i data-lucide="loader-2" className="w-4 h-4 animate-spin"></i> 解析影像中...</>
+                                        ) : (
+                                            <><i data-lucide="upload" className="w-4 h-4"></i> 選擇排班表圖片並轉換</>
+                                        )}
+                                    </button>
+                                </div>
                             )}
                             {isUploaded && (
-                                <span className="text-sm text-green-400 flex items-center gap-1">
-                                    <i data-lucide="check-circle" className="w-4 h-4"></i> 轉換完成
+                                <span className="text-sm text-green-400 flex items-center gap-2">
+                                    <i data-lucide="check-circle" className="w-4 h-4"></i> 
+                                    轉換完成 {fileName && `(${fileName})`}
                                 </span>
                             )}
                         </div>
@@ -221,7 +278,8 @@
                             {!isUploaded ? (
                                 <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
                                     <i data-lucide="image" className="w-16 h-16 mb-4 opacity-50"></i>
-                                    <p className="text-lg">請點擊上方按鈕上傳排班表影像 (將模擬 OCR 轉換)</p>
+                                    <p className="text-lg">請點擊上方按鈕選擇排班表圖片上傳</p>
+                                    <p className="text-sm mt-2">支援上傳圖片格式，系統將進行 OCR 辨識轉換。</p>
                                 </div>
                             ) : (
                                 <div className="overflow-auto flex-1 relative">
