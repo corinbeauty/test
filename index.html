@@ -141,7 +141,7 @@
                     const weeklyRecord = {}; // 記錄每週的 例 和 休 數量
                     const biWeeklyRecord = {}; // 記錄雙週的 例 和 休 數量
 
-                    DATES.forEach((dateInfo, index) => {
+                    DATES.forEach((dateInfo) => {
                         const status = emp.schedule[dateInfo.dateString] || '';
                         
                         // 初始化該週記錄
@@ -201,8 +201,8 @@
                     // 規則 4: 兩週內須有2天例假 + 2天休息日 (基於二週變形工時)
                     Object.keys(biWeeklyRecord).forEach(biWeek => {
                          const record = biWeeklyRecord[biWeek];
-                         // 排除資料不完整的雙週 (例如第一週或最後一週)
-                         if (record.dates.length > 10) { 
+                         // 排除資料不完整的雙週 (例如天數不足 14 天的週期，避免誤判)
+                         if (record.dates.length >= 10) { 
                              if (record.reg < 2) {
                                  errors.push({ type: 'danger', msg: `${emp.name} 在第 ${biWeek} 雙週週期內，例假不足2天 (僅有 ${record.reg} 天)！` });
                              }
