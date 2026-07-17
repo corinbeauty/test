@@ -223,8 +223,15 @@
                 const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
                 return `${d.getFullYear()}-W${String(weekNo).padStart(2, '0')}`;
             });
+
+            // 12生肖月數選擇器與類型
+            const [zodiacPeriodType, setZodiacPeriodType] = useState('week');
+            const [zodiacMonth, setZodiacMonth] = useState(() => {
+                const today = new Date();
+                return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+            });
             
-            // 新增 / 編輯員工 Modal States
+            // 新增 / 編輯員工 Modal States (解決 React Error 310)
             const [showEmpModal, setShowEmpModal] = useState(false);
             const [isEditMode, setIsEditMode] = useState(false);
             const [editEmpData, setEditEmpData] = useState({ id: '', name: '', storeName: '' });
@@ -1234,14 +1241,27 @@
                     return { start: fmt(mon), end: fmt(sun) };
                 };
 
+                const getMonthDates = (monthStr) => {
+                    if (!monthStr) return { start: '', end: '' };
+                    const [year, month] = monthStr.split('-');
+                    const start = new Date(year, parseInt(month) - 1, 1);
+                    const end = new Date(year, parseInt(month), 0);
+                    const fmt = (d) => `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+                    return { start: fmt(start), end: fmt(end) };
+                };
+
                 const handleStoreReviewChange = (fieldPath, value) => {
-                    if (!selectedStore || !selectedZodiacWeek) return;
-                    const docId = `${selectedStore}_${selectedZodiacWeek}`;
+                    if (!selectedStore) return;
+                    const activePeriod = zodiacPeriodType === 'week' ? selectedZodiacWeek : zodiacMonth;
+                    if (!activePeriod) return;
+
+                    const docId = `${selectedStore}_${activePeriod}`;
                     setStoreReviews(prev => {
                         const currentData = prev[docId] || { rows: {}, summary: {} };
                         const updatedData = JSON.parse(JSON.stringify(currentData));
                         updatedData.storeName = selectedStore;
-                        updatedData.week = selectedZodiacWeek;
+                        updatedData.periodType = zodiacPeriodType;
+                        updatedData.period = activePeriod;
 
                         const keys = fieldPath.split('.');
                         let current = updatedData;
@@ -1749,11 +1769,12 @@
 
                 // 表單 4：12生肖績效檢討表
                 const renderHrForm4 = () => {
-                    if (!selectedStore) return <div className="p-4 text-center text-gray-500 font-bold">請先於上方選取「店別」與「週數」以填寫此表格。</div>;
+                    if (!selectedStore) return <div className="p-4 text-center text-gray-500 font-bold">請先於上方選取「店別」以填寫此表格。</div>;
                     
-                    const docId = `${selectedStore}_${selectedZodiacWeek}`;
+                    const activePeriod = zodiacPeriodType === 'week' ? selectedZodiacWeek : zodiacMonth;
+                    const docId = `${selectedStore}_${activePeriod}`;
                     const fData = storeReviews[docId] || { rows: {}, summary: {} };
-                    const weekDates = getWeekDates(selectedZodiacWeek);
+                    const periodDates = zodiacPeriodType === 'week' ? getWeekDates(selectedZodiacWeek) : getMonthDates(zodiacMonth);
                     const chg = (path, val) => handleStoreReviewChange(path, val);
 
                     // 自動計分邏輯
@@ -1782,8 +1803,8 @@
                                     <div className="flex items-center gap-1 w-[25%]">店長：<input type="text" className="border-b border-gray-400 outline-none flex-1 px-1 text-center bg-transparent" value={fData.manager || ''} onChange={e=>chg('manager', e.target.value)}/></div>
                                     <div className="flex items-center gap-2 flex-1 justify-end">
                                         檢討期間：
-                                        <label className="checkbox-group mr-2"><input type="checkbox" checked={true} readOnly className="scale-90"/> 週 ( <span className="text-[#000080] px-1">{weekDates.start}</span> ~ <span className="text-[#000080] px-1">{weekDates.end}</span> )</label>
-                                        <label className="checkbox-group"><input type="checkbox" checked={fData.isMonth || false} onChange={e=>chg('isMonth', e.target.checked)} className="scale-90"/> 月 ( <input type="text" className="w-8 border-b text-center outline-none bg-transparent" value={fData.m1||''} onChange={e=>chg('m1',e.target.value)}/> / <input type="text" className="w-8 border-b text-center outline-none bg-transparent" value={fData.m2||''} onChange={e=>chg('m2',e.target.value)}/> ~ <input type="text" className="w-8 border-b text-center outline-none bg-transparent" value={fData.m3||''} onChange={e=>chg('m3',e.target.value)}/> / <input type="text" className="w-8 border-b text-center outline-none bg-transparent" value={fData.m4||''} onChange={e=>chg('m4',e.target.value)}/> )</label>
+                                        <label className="checkbox-group mr-2 cursor-default"><input type="checkbox" checked={zodiacPeriodType === 'week'} readOnly className="scale-90"/> 週 {zodiacPeriodType === 'week' && <span className="text-[#000080] font-black">( {periodDates.start} ~ {periodDates.end} )</span>}</label>
+                                        <label className="checkbox-group cursor-default"><input type="checkbox" checked={zodiacPeriodType === 'month'} readOnly className="scale-90"/> 月 {zodiacPeriodType === 'month' && <span className="text-[#000080] font-black">( {periodDates.start} ~ {periodDates.end} )</span>}</label>
                                     </div>
                                 </div>
 
@@ -1902,12 +1923,31 @@
                                     </select>
 
                                     {hrFormTab === 'form4' ? (
-                                        <input 
-                                            type="week" 
-                                            className="border rounded px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-500 font-bold bg-amber-50 text-amber-800"
-                                            value={selectedZodiacWeek}
-                                            onChange={(e) => setSelectedZodiacWeek(e.target.value)}
-                                        />
+                                        <div className="flex items-center gap-1 bg-amber-50 rounded border border-amber-200 overflow-hidden px-1 py-0.5">
+                                            <select 
+                                                className="bg-transparent text-amber-800 font-bold text-sm outline-none cursor-pointer pr-1 border-r border-amber-300"
+                                                value={zodiacPeriodType}
+                                                onChange={(e) => setZodiacPeriodType(e.target.value)}
+                                            >
+                                                <option value="week">週評估</option>
+                                                <option value="month">月評估</option>
+                                            </select>
+                                            {zodiacPeriodType === 'week' ? (
+                                                <input 
+                                                    type="week" 
+                                                    className="bg-transparent text-amber-800 font-bold text-sm outline-none px-1"
+                                                    value={selectedZodiacWeek}
+                                                    onChange={(e) => setSelectedZodiacWeek(e.target.value)}
+                                                />
+                                            ) : (
+                                                <input 
+                                                    type="month" 
+                                                    className="bg-transparent text-amber-800 font-bold text-sm outline-none px-1"
+                                                    value={zodiacMonth}
+                                                    onChange={(e) => setZodiacMonth(e.target.value)}
+                                                />
+                                            )}
+                                        </div>
                                     ) : (
                                         <select 
                                             className="border rounded px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-500 font-bold"
