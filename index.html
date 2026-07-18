@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>中清店12生肖戰報 - 智能管理系統</title>
+    <title>中清店12生肖戰報</title>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -412,6 +412,7 @@
                 });
             };
 
+            // 簽名板
             const handleAddHrEmployee = () => {
                 if (!selectedStore) { alert("請先從左方選擇店別！或點擊「完整新增」建立新店別與員工。"); return; }
                 if (!newEmpId.trim() || !newEmpName.trim()) { alert("請輸入完整的員工編號與姓名！"); return; }
@@ -1172,6 +1173,7 @@
 
             const renderHrTab = () => {
                 if (!hrAuthUnlocked) return <div className="p-4 text-center text-red-500 mt-10 font-bold">拒絕存取：請由導覽列重新驗證密碼。</div>;
+                
                 const availableStores = [...new Set(Object.values(hrEmployees).map(emp => emp.storeName).filter(Boolean))];
                 const empsInStore = Object.values(hrEmployees).filter(emp => emp.storeName === selectedStore);
                 const currentEmp = hrEmployees[selectedEmpId] || null;
@@ -1179,42 +1181,122 @@
                 const renderHrForm1 = (emp) => {
                     const fData = emp.form1 || { rows: {}, summary: {} };
                     const chg = (path, val) => handleHrFieldChange(emp.id, 'form1', path, val);
+
                     return (
                         <div className="hr-form-container">
                             <div className="bg-[#000080] text-white text-center py-2">
                                 <h2 className="text-lg font-bold tracking-widest mb-1">領航員執行檢核表 ( 新人培育管理 )</h2>
+                                <p className="text-[9px] font-bold tracking-widest text-red-400 bg-white inline-block px-3 py-0.5 rounded-full">落實領航員制度．陪伴關懷．提升新人留任率與專業力</p>
                             </div>
                             <div className="p-2 text-[10px] font-bold text-gray-800">
                                 <div className="flex justify-between items-end mb-1">
-                                    <div className="flex items-center gap-1">店名: <input type="text" className="border-b border-gray-400 outline-none w-20 text-center font-bold bg-transparent" value={(fData.store) || emp.storeName || ''} onChange={e=>chg('form1.store', e.target.value)}/></div>
-                                    <div className="flex items-center gap-1">店長: <input type="text" className="border-b border-gray-400 outline-none w-16 text-center font-bold bg-transparent" value={(fData.manager) || ''} onChange={e=>chg('form1.manager', e.target.value)}/></div>
-                                    <div className="flex items-center gap-1">總監: <input type="text" className="border-b border-gray-400 outline-none w-16 text-center font-bold bg-transparent" value={(fData.director) || ''} onChange={e=>chg('form1.director', e.target.value)}/></div>
-                                    <div className="flex items-center gap-1">檢核日期: <input type="date" className="border-b border-gray-400 outline-none text-[9px] bg-transparent" value={(fData.date) || ''} onChange={e=>chg('form1.date', e.target.value)}/></div>
+                                    <div className="flex items-center gap-1">店名: <input type="text" className="border-b border-gray-400 outline-none w-20 text-center font-bold" value={(fData.store) || emp.storeName || ''} onChange={e=>chg('form1.store', e.target.value)}/></div>
+                                    <div className="flex items-center gap-1">店長: <input type="text" className="border-b border-gray-400 outline-none w-16 text-center font-bold" value={(fData.manager) || ''} onChange={e=>chg('form1.manager', e.target.value)}/></div>
+                                    <div className="flex items-center gap-1">總監: <input type="text" className="border-b border-gray-400 outline-none w-16 text-center font-bold" value={(fData.director) || ''} onChange={e=>chg('form1.director', e.target.value)}/></div>
+                                    <div className="flex items-center gap-1">檢核日期: <input type="date" className="border-b border-gray-400 outline-none text-[9px]" value={(fData.date) || ''} onChange={e=>chg('form1.date', e.target.value)}/></div>
                                 </div>
+
                                 <table className="w-full hr-table mb-2">
                                     <thead>
                                         <tr className="bg-gray-100 border-2 border-gray-400">
-                                            <th className="w-[8%]">階段</th><th className="w-[10%]">檢核項目</th><th className="w-[20%]">檢核內容說明</th><th className="w-[12%]">應完成標準</th><th className="w-[8%]">完成日期</th><th className="w-[8%]">領航員簽名</th><th className="w-[5%] leading-tight">店長<br/>覆核</th><th className="w-[5%] leading-tight">總監<br/>覆核</th><th className="w-[6%]">備註</th>
+                                            <th rowSpan="2" className="w-[8%]">階段</th>
+                                            <th rowSpan="2" className="w-[10%]">檢核項目</th>
+                                            <th rowSpan="2" className="w-[20%]">檢核內容說明</th>
+                                            <th rowSpan="2" className="w-[12%]">應完成標準</th>
+                                            <th colSpan="3" className="w-[12%] p-0">完成狀況</th>
+                                            <th rowSpan="2" className="w-[8%]">完成日期</th>
+                                            <th rowSpan="2" className="w-[8%]">領航員<br/>簽名</th>
+                                            <th rowSpan="2" className="w-[5%] leading-tight">店長<br/>覆核</th>
+                                            <th rowSpan="2" className="w-[5%] leading-tight">總監<br/>覆核</th>
+                                            <th rowSpan="2" className="w-[6%]">備註</th>
+                                        </tr>
+                                        <tr className="bg-gray-100 text-[8px] border-2 border-gray-400">
+                                            <th>已完</th><th>部分</th><th>未完</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {PILOT_ITEMS.map((item, idx) => {
                                             const row = (fData.rows && fData.rows[item.no]) || {};
                                             const rChg = (f, v) => chg(`form1.rows.${item.no}.${f}`, v);
+                                            const isFirstInPhase = idx === 0 || PILOT_ITEMS[idx-1].phase !== item.phase;
+                                            const phaseCount = PILOT_ITEMS.filter(i => i.phase === item.phase).length;
+                                            let phaseBg = item.no <= 4 ? 'bg-[#faebd7]' : item.no <= 8 ? 'bg-[#fffacd]' : item.no <= 11 ? 'bg-[#f0fff0]' : item.no <= 14 ? 'bg-[#e0ffff]' : 'bg-[#f0f8ff]';
+
                                             return (
                                                 <tr key={item.no}>
-                                                    <td className={`font-bold whitespace-pre-wrap bg-[#faebd7]`}>{item.phase}</td>
+                                                    {isFirstInPhase && (<td rowSpan={phaseCount} className={`font-bold whitespace-pre-wrap ${phaseBg}`}>{item.phase}</td>)}
                                                     <td className="font-bold flex items-center justify-center border-none h-full min-h-[30px]"><span className="w-3 inline-block">{item.no}</span><span className="text-left flex-1 pl-1">{item.item}</span></td>
                                                     <td className="text-left text-[8px] px-1 font-normal leading-tight">{item.desc}</td>
                                                     <td className="text-[8px] font-normal leading-tight">{item.std}</td>
+                                                    <td className="p-0 border-l border-r"><input type="checkbox" checked={row.status==='done'} onChange={()=>rChg('status', row.status==='done' ? '' : 'done')} className="scale-90"/></td>
+                                                    <td className="p-0 border-r"><input type="checkbox" checked={row.status==='part'} onChange={()=>rChg('status', row.status==='part' ? '' : 'part')} className="scale-90"/></td>
+                                                    <td className="p-0"><input type="checkbox" checked={row.status==='none'} onChange={()=>rChg('status', row.status==='none' ? '' : 'none')} className="scale-90"/></td>
                                                     <td className="p-0 relative"><input type="text" className="w-full h-full text-center border-none outline-none bg-transparent text-[8px]" placeholder="/  /" value={row.date||''} onChange={e=>rChg('date', e.target.value)}/></td>
                                                     <td className="p-0 h-full">{renderSignBox('', `form1.rows.${item.no}.sig1`, emp, "min-h-[25px] border-none")}</td>
                                                     <td className="p-0 text-center align-middle"><input type="checkbox" checked={row.mgrCheck||false} onChange={(e) => rChg('mgrCheck', e.target.checked)} className="scale-100" /></td>
                                                     <td className="p-0 text-center align-middle"><input type="checkbox" checked={row.dirCheck||false} onChange={(e) => rChg('dirCheck', e.target.checked)} className="scale-100" /></td>
-                                                    <td className="p-0"><input type="text" className="w-full border-none outline-none px-1 text-[8px] bg-transparent" value={row.note||''} onChange={e=>rChg('note', e.target.value)}/></td>
+                                                    <td className="p-0"><input type="text" className="w-full border-none outline-none px-1 text-[8px]" value={row.note||''} onChange={e=>rChg('note', e.target.value)}/></td>
                                                 </tr>
                                             )
                                         })}
+                                    </tbody>
+                                </table>
+
+                                <table className="w-full hr-table border-collapse border-2 border-gray-400 font-bold">
+                                    <tbody>
+                                        <tr className="bg-gray-100">
+                                            <td colSpan="2" className="w-1/4 py-1">本月新人培育總結</td>
+                                            <td colSpan="2" className="w-3/8 py-1">店長檢核</td>
+                                            <td colSpan="2" className="w-3/8 py-1">總監覆核意見</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="w-16">本月新增<br/>新人數</td>
+                                            <td className="w-12"><input type="number" className="w-6 border-b border-gray-400 outline-none text-center font-bold" value={(fData.summary && fData.summary.newNum) || ''} onChange={e=>chg('form1.summary.newNum',e.target.value)}/> 人</td>
+                                            <td colSpan="2" className="text-left align-top px-1 pb-1 font-normal">
+                                                <div className="flex items-center gap-2 border-b pb-0.5 mb-0.5 font-bold">
+                                                    <span>檢核結果:</span>
+                                                    <label className="checkbox-group"><input type="checkbox" checked={fData.summary?.mgrRes==='good'} onChange={()=>chg('form1.summary.mgrRes', fData.summary?.mgrRes === 'good' ? '' : 'good')}/> 良好</label>
+                                                    <label className="checkbox-group"><input type="checkbox" checked={fData.summary?.mgrRes==='bad'} onChange={()=>chg('form1.summary.mgrRes', fData.summary?.mgrRes === 'bad' ? '' : 'bad')}/> 需加強</label>
+                                                </div>
+                                                需加強項目:<br/><textarea className="w-full border-none bg-transparent outline-none text-[9px] resize-none h-8" value={(fData.summary && fData.summary.mgrNote) || ''} onChange={e=>chg('form1.summary.mgrNote',e.target.value)}></textarea>
+                                            </td>
+                                            <td colSpan="2" className="text-left align-top px-1 pb-1 font-normal">
+                                                <div className="flex items-center gap-2 border-b pb-0.5 mb-0.5 font-bold">
+                                                    <span>覆核結果:</span>
+                                                    <label className="checkbox-group"><input type="checkbox" checked={fData.summary?.dirRes==='good'} onChange={()=>chg('form1.summary.dirRes', fData.summary?.dirRes === 'good' ? '' : 'good')}/> 良好</label>
+                                                    <label className="checkbox-group"><input type="checkbox" checked={fData.summary?.dirRes==='bad'} onChange={()=>chg('form1.summary.dirRes', fData.summary?.dirRes === 'bad' ? '' : 'bad')}/> 需加強</label>
+                                                </div>
+                                                改善建議:<br/><textarea className="w-full border-none bg-transparent outline-none text-[9px] resize-none h-8" value={(fData.summary && fData.summary.dirNote) || ''} onChange={e=>chg('form1.summary.dirNote',e.target.value)}></textarea>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>30天留任</td><td><input type="number" className="w-6 border-b border-gray-400 outline-none text-center font-bold" value={(fData.summary && fData.summary.r30) || ''} onChange={e=>chg('form1.summary.r30',e.target.value)}/> 人</td>
+                                            <td rowSpan="3" colSpan="2" className="text-left align-top px-1 py-0.5 leading-tight font-normal">
+                                                1、<input type="text" className="border-b border-gray-400 bg-transparent w-[90%] outline-none mb-0.5" value={(fData.summary && fData.summary.mgrN1) || ''} onChange={e=>chg('form1.summary.mgrN1',e.target.value)}/><br/>
+                                                2、<input type="text" className="border-b border-gray-400 bg-transparent w-[90%] outline-none mb-0.5" value={(fData.summary && fData.summary.mgrN2) || ''} onChange={e=>chg('form1.summary.mgrN2',e.target.value)}/><br/>
+                                                3、<input type="text" className="border-b border-gray-400 bg-transparent w-[90%] outline-none" value={(fData.summary && fData.summary.mgrN3) || ''} onChange={e=>chg('form1.summary.mgrN3',e.target.value)}/>
+                                            </td>
+                                            <td rowSpan="3" colSpan="2" className="text-left align-top px-1 py-0.5 leading-tight font-normal">
+                                                1、<input type="text" className="border-b border-gray-400 bg-transparent w-[90%] outline-none mb-0.5" value={(fData.summary && fData.summary.dirN1) || ''} onChange={e=>chg('form1.summary.dirN1',e.target.value)}/><br/>
+                                                2、<input type="text" className="border-b border-gray-400 bg-transparent w-[90%] outline-none mb-0.5" value={(fData.summary && fData.summary.dirN2) || ''} onChange={e=>chg('form1.summary.dirN2',e.target.value)}/><br/>
+                                                3、<input type="text" className="border-b border-gray-400 bg-transparent w-[90%] outline-none" value={(fData.summary && fData.summary.dirN3) || ''} onChange={e=>chg('form1.summary.dirN3',e.target.value)}/>
+                                            </td>
+                                        </tr>
+                                        <tr><td>60天留任</td><td><input type="number" className="w-6 border-b border-gray-400 outline-none text-center font-bold" value={(fData.summary && fData.summary.r60) || ''} onChange={e=>chg('form1.summary.r60',e.target.value)}/> 人</td></tr>
+                                        <tr><td>90天留任</td><td><input type="number" className="w-6 border-b border-gray-400 outline-none text-center font-bold" value={(fData.summary && fData.summary.r90) || ''} onChange={e=>chg('form1.summary.r90',e.target.value)}/> 人</td></tr>
+                                        <tr>
+                                            <td>整體留任率</td><td><input type="number" className="w-6 border-b border-gray-400 outline-none text-center font-bold" value={(fData.summary && fData.summary.rate) || ''} onChange={e=>chg('form1.summary.rate',e.target.value)}/> %</td>
+                                            <td colSpan="2" className="text-left px-2 py-1 flex items-end gap-2 border-none">
+                                                <span className="shrink-0 flex items-center">店長簽核: <input type="checkbox" className="scale-125 ml-1" checked={fData.summary?.mgrSignDone || false} onChange={e=>chg('form1.summary.mgrSignDone', e.target.checked)}/></span>
+                                                <div className="flex-1"></div>
+                                                <span className="shrink-0">日期: <input type="date" className="border-b border-gray-400 outline-none text-center bg-transparent text-[8px]" value={(fData.summary && fData.summary.mgrDate) || ''} onChange={e=>chg('form1.summary.mgrDate', e.target.value)}/></span>
+                                            </td>
+                                            <td colSpan="2" className="text-left px-2 py-1 flex items-end gap-2 border-none">
+                                                <span className="shrink-0 flex items-center">總監簽核: <input type="checkbox" className="scale-125 ml-1" checked={fData.summary?.dirSignDone || false} onChange={e=>chg('form1.summary.dirSignDone', e.target.checked)}/></span>
+                                                <div className="flex-1"></div>
+                                                <span className="shrink-0">日期: <input type="date" className="border-b border-gray-400 outline-none text-center bg-transparent text-[8px]" value={(fData.summary && fData.summary.dirDate) || ''} onChange={e=>chg('form1.summary.dirDate', e.target.value)}/></span>
+                                            </td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -1226,9 +1308,11 @@
                     const fData = emp.form2 || { phase1:{}, phase2:{}, phase3:{}, phase4:{}, eval:{} };
                     const chg = (path, val) => handleHrFieldChange(emp.id, 'form2', path, val);
                     const renderCbx = (path, val, label) => {
-                        const keys = path.split('.'); const currentVal = fData[keys[0]] && fData[keys[0]][keys[1]];
+                        const keys = path.split('.');
+                        const currentVal = fData[keys[0]] && fData[keys[0]][keys[1]];
                         return <label className="checkbox-group mr-4 font-normal"><input type="checkbox" checked={currentVal===val} onChange={()=>chg(`form2.${path}`, currentVal === val ? '' : val)} className="scale-100"/>{label}</label>
                     };
+
                     return (
                         <div className="hr-form-container text-gray-800 font-bold p-4">
                             <div className="flex items-center justify-center py-2 border-b-4 border-blue-900 mb-2 gap-2 relative">
@@ -1237,31 +1321,111 @@
                             </div>
                             <div className="text-[10px]">
                                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4">
-                                    <div className="flex items-end">店別：<input type="text" className="border-b border-gray-400 outline-none flex-1 ml-1 font-bold text-center bg-transparent" value={fData.store || emp.storeName || ''} onChange={e=>chg('form2.store',e.target.value)}/></div>
+                                    <div className="flex items-end">店別：<input type="text" className="border-b border-gray-400 outline-none flex-1 ml-1 font-bold text-center" value={fData.store || emp.storeName || ''} onChange={e=>chg('form2.store',e.target.value)}/></div>
                                     <div className="flex items-end">新人姓名：<span className="border-b border-gray-400 flex-1 ml-1 font-bold text-blue-800 text-center">{emp.name}</span></div>
-                                    <div className="flex items-end">到職日期：<input type="date" className="border-b border-gray-400 outline-none flex-1 ml-1 text-center text-[9px] bg-transparent" value={fData.joinDate||''} onChange={e=>chg('form2.joinDate',e.target.value)}/></div>
+                                    <div className="flex items-end">到職日期：<input type="date" className="border-b border-gray-400 outline-none flex-1 ml-1 text-center text-[9px]" value={fData.joinDate||''} onChange={e=>chg('form2.joinDate',e.target.value)}/></div>
+                                    <div className="flex items-end">職務：<input type="text" className="border-b border-gray-400 outline-none flex-1 ml-1 font-bold text-center" value={fData.job||'領航員'} onChange={e=>chg('form2.job',e.target.value)}/></div>
+                                    <div className="flex items-end">領航員：<input type="text" className="border-b border-gray-400 outline-none flex-1 ml-1 font-bold text-center" value={fData.pilot||''} onChange={e=>chg('form2.pilot',e.target.value)}/></div>
+                                    <div className="flex items-end">店長：<input type="text" className="border-b border-gray-400 outline-none flex-1 ml-1 font-bold text-center" value={fData.manager||''} onChange={e=>chg('form2.manager',e.target.value)}/></div>
                                 </div>
+
                                 <div className="mb-3">
                                     <div className="flex justify-between items-center mb-1">
-                                        <div className="bg-[#1e40af] text-white px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center tracking-wider">第一階段 | 到職第1天關懷</div>
+                                        <div className="bg-[#1e40af] text-white px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center tracking-wider">
+                                            <span className="bg-white text-[#1e40af] rounded-full w-3 h-3 flex items-center justify-center mr-1">1</span> 
+                                            第一階段 | 到職第1天關懷
+                                        </div>
+                                        <div className="flex items-end">訪談日期: <input type="date" className="border-b border-gray-400 bg-transparent outline-none text-[9px] ml-1 text-center" value={(fData.phase1 && fData.phase1.date) || ''} onChange={e=>chg('form2.phase1.date',e.target.value)}/></div>
                                     </div>
                                     <div className="space-y-1.5 pl-2 border-l-2 border-blue-100 ml-1 py-1">
-                                        <div className="flex items-center"><i className="fa-solid fa-building text-blue-500 w-4 text-center"></i> <span className="w-32">是否了解公司環境？</span> <div className="flex">{renderCbx('phase1.env','A','非常了解')}{renderCbx('phase1.env','B','大致了解')}</div></div>
-                                        <div className="flex items-center"><i className="fa-solid fa-location-dot text-blue-500 w-4 text-center"></i> <span className="w-32">今天最不適應的地方？</span> <input type="text" className="border-b border-gray-300 outline-none flex-1 font-normal bg-transparent" value={(fData.phase1 && fData.phase1.q1) || ''} onChange={e=>chg('form2.phase1.q1',e.target.value)}/></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-building text-blue-500 w-4 text-center"></i> <span className="w-32">是否了解公司環境？</span> <div className="flex">{renderCbx('phase1.env','A','非常了解')}{renderCbx('phase1.env','B','大致了解')}{renderCbx('phase1.env','C','尚未了解')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-clipboard-list text-blue-500 w-4 text-center"></i> <span className="w-32">是否了解工作內容？</span> <div className="flex">{renderCbx('phase1.job','A','非常了解')}{renderCbx('phase1.job','B','大致了解')}{renderCbx('phase1.job','C','尚未了解')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-location-dot text-blue-500 w-4 text-center"></i> <span className="w-32">今天最不適應的地方？</span> <input type="text" className="border-b border-gray-300 outline-none flex-1 font-normal" value={(fData.phase1 && fData.phase1.q1) || ''} onChange={e=>chg('form2.phase1.q1',e.target.value)}/></div>
+                                        <div className="flex items-center"><i className="fa-regular fa-face-smile text-blue-500 w-4 text-center"></i> <span className="w-32">今天最開心的事情？</span> <input type="text" className="border-b border-gray-300 outline-none flex-1 font-normal" value={(fData.phase1 && fData.phase1.q2) || ''} onChange={e=>chg('form2.phase1.q2',e.target.value)}/></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-user text-blue-500 w-4 text-center"></i> <span className="w-32">需要主管協助事項？</span> <input type="text" className="border-b border-gray-300 outline-none flex-1 font-normal" value={(fData.phase1 && fData.phase1.q3) || ''} onChange={e=>chg('form2.phase1.q3',e.target.value)}/></div>
                                     </div>
                                 </div>
+
+                                <div className="mb-3">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <div className="bg-[#1e40af] text-white px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center tracking-wider">
+                                            <span className="bg-white text-[#1e40af] rounded-full w-3 h-3 flex items-center justify-center mr-1">2</span> 
+                                            第二階段 | 到職第7天關懷
+                                        </div>
+                                        <div className="flex items-end">訪談日期: <input type="date" className="border-b border-gray-400 bg-transparent outline-none text-[9px] ml-1 text-center" value={(fData.phase2 && fData.phase2.date) || ''} onChange={e=>chg('form2.phase2.date',e.target.value)}/></div>
+                                    </div>
+                                    <div className="space-y-1.5 pl-2 border-l-2 border-blue-100 ml-1 py-1">
+                                        <div className="flex items-center"><i className="fa-solid fa-user-group text-blue-500 w-4 text-center"></i> <span className="w-32">是否已認識同仁？</span> <div className="flex">{renderCbx('phase2.colleague','Y','是')}{renderCbx('phase2.colleague','N','否')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-users text-blue-500 w-4 text-center"></i> <span className="w-32">是否能融入團隊？</span> <div className="flex">{renderCbx('phase2.team','A','很好')}{renderCbx('phase2.team','B','普通')}{renderCbx('phase2.team','C','困難')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-chart-simple text-blue-500 w-4 text-center"></i> <span className="w-32">工作上最大的困難？</span> <input type="text" className="border-b border-gray-300 outline-none flex-1 font-normal" value={(fData.phase2 && fData.phase2.q1) || ''} onChange={e=>chg('form2.phase2.q1',e.target.value)}/></div>
+                                        <div className="flex items-center"><i className="fa-regular fa-comment text-blue-500 w-4 text-center"></i> <span className="w-32">是否有想放棄的念頭？</span> <div className="flex">{renderCbx('phase2.giveup','A','無')}{renderCbx('phase2.giveup','B','偶爾')}{renderCbx('phase2.giveup','C','經常')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-hands-holding text-blue-500 w-4 text-center"></i> <span className="w-32">如果有困難,希望如何協助？</span> <input type="text" className="border-b border-gray-300 outline-none flex-1 font-normal" value={(fData.phase2 && fData.phase2.q2) || ''} onChange={e=>chg('form2.phase2.q2',e.target.value)}/></div>
+                                    </div>
+                                </div>
+
+                                <div className="mb-3">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <div className="bg-[#1e40af] text-white px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center tracking-wider">
+                                            <span className="bg-white text-[#1e40af] rounded-full w-3 h-3 flex items-center justify-center mr-1">3</span> 
+                                            第三階段 | 到職第15天關懷
+                                        </div>
+                                        <div className="flex items-end">訪談日期: <input type="date" className="border-b border-gray-400 bg-transparent outline-none text-[9px] ml-1 text-center" value={(fData.phase3 && fData.phase3.date) || ''} onChange={e=>chg('form2.phase3.date',e.target.value)}/></div>
+                                    </div>
+                                    <div className="space-y-1.5 pl-2 border-l-2 border-blue-100 ml-1 py-1">
+                                        <div className="flex items-center"><i className="fa-solid fa-thumbs-up text-blue-500 w-4 text-center"></i> <span className="w-32">對目前工作是否有信心？</span> <div className="flex">{renderCbx('phase3.conf','A','非常有信心')}{renderCbx('phase3.conf','B','普通')}{renderCbx('phase3.conf','C','沒信心')}</div></div>
+                                        <div className="flex items-center"><i className="fa-regular fa-heart text-blue-500 w-4 text-center"></i> <span className="w-32">對主管關懷是否滿意？</span> <div className="flex">{renderCbx('phase3.mgr','A','滿意')}{renderCbx('phase3.mgr','B','普通')}{renderCbx('phase3.mgr','C','不滿意')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-handshake-angle text-blue-500 w-4 text-center"></i> <span className="w-32">對同事相處是否滿意？</span> <div className="flex">{renderCbx('phase3.col','A','滿意')}{renderCbx('phase3.col','B','普通')}{renderCbx('phase3.col','C','不滿意')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-briefcase text-blue-500 w-4 text-center"></i> <span className="w-32">是否會考慮離職？</span> <div className="flex">{renderCbx('phase3.quit','A','沒有')}{renderCbx('phase3.quit','B','偶爾')}{renderCbx('phase3.quit','C','有')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-triangle-exclamation text-blue-500 w-4 text-center"></i> <span className="w-32">若有離職念頭，主要原因？</span> <input type="text" className="border-b border-gray-300 outline-none flex-1 font-normal" value={(fData.phase3 && fData.phase3.q1) || ''} onChange={e=>chg('form2.phase3.q1',e.target.value)}/></div>
+                                    </div>
+                                </div>
+
+                                <div className="mb-4">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <div className="bg-[#1e40af] text-white px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center tracking-wider">
+                                            <span className="bg-white text-[#1e40af] rounded-full w-3 h-3 flex items-center justify-center mr-1">4</span> 
+                                            第四階段 | 到職第30天關懷
+                                        </div>
+                                        <div className="flex items-end">訪談日期: <input type="date" className="border-b border-gray-400 bg-transparent outline-none text-[9px] ml-1 text-center" value={(fData.phase4 && fData.phase4.date) || ''} onChange={e=>chg('form2.phase4.date',e.target.value)}/></div>
+                                    </div>
+                                    <div className="space-y-1.5 pl-2 border-l-2 border-blue-100 ml-1 py-1">
+                                        <div className="flex items-center"><i className="fa-solid fa-bullseye text-blue-500 w-4 text-center"></i> <span className="w-32">工作適應程度</span> <div className="flex">{renderCbx('phase4.adapt','A','非常適應')}{renderCbx('phase4.adapt','B','普通')}{renderCbx('phase4.adapt','C','不適應')}</div></div>
+                                        <div className="flex items-center"><i className="fa-regular fa-face-smile-beam text-blue-500 w-4 text-center"></i> <span className="w-32">對公司滿意度</span> <div className="flex">{renderCbx('phase4.satis','A','非常滿意')}{renderCbx('phase4.satis','B','滿意')}{renderCbx('phase4.satis','C','普通')}{renderCbx('phase4.satis','D','不滿意')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-plant-wilt text-blue-500 w-4 text-center"></i> <span className="w-32">未來是否願意持續留任？</span> <div className="flex">{renderCbx('phase4.stay','A','願意')}{renderCbx('phase4.stay','B','觀察中')}{renderCbx('phase4.stay','C','不願意')}</div></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-calendar-check text-blue-500 w-4 text-center"></i> <span className="w-32">未來三個月最需要協助事項？</span> <input type="text" className="border-b border-gray-300 outline-none flex-1 font-normal" value={(fData.phase4 && fData.phase4.q1) || ''} onChange={e=>chg('form2.phase4.q1',e.target.value)}/></div>
+                                        <div className="flex items-center"><i className="fa-solid fa-bullhorn text-blue-500 w-4 text-center"></i> <span className="w-32">對公司建議事項？</span> <input type="text" className="border-b border-gray-300 outline-none flex-1 font-normal" value={(fData.phase4 && fData.phase4.q2) || ''} onChange={e=>chg('form2.phase4.q2',e.target.value)}/></div>
+                                    </div>
+                                </div>
+
                                 <div className="flex flex-col md:flex-row gap-4 mb-2 items-stretch">
+                                    <div className="flex-1 bg-[#eef2ff] border border-blue-200 rounded p-2">
+                                        <div className="text-center font-bold text-[#1e3a8a] mb-1 bg-white rounded border py-0.5 shadow-sm">店長綜合評語</div>
+                                        <table className="w-full text-center hr-table bg-white">
+                                            <thead><tr className="bg-blue-50 text-blue-900"><th></th><th className="py-1">上班<br/>精神</th><th className="py-1">學習<br/>意願</th><th className="py-1">團隊<br/>互動</th><th className="py-1">出勤<br/>狀況</th><th className="py-1">情緒<br/>穩定</th><th className="py-1">抱怨<br/>頻率</th></tr></thead>
+                                            <tbody>
+                                                {['正常', '注意', '危險'].map((level) => (
+                                                    <tr key={level}>
+                                                        <td className="font-bold py-0.5 bg-gray-50">{level}</td>
+                                                        {['s1','s2','s3','s4','s5','s6'].map((col) => (
+                                                            <td key={col}><input type="checkbox" checked={fData.eval && fData.eval[col]===level} onChange={()=>chg(`form2.eval.${col}`, fData.eval?.[col] === level ? '' : level)} className="scale-90" /></td>
+                                                        ))}
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                     <div className="w-full md:w-64 border rounded p-2 flex flex-col justify-around bg-white shadow-sm gap-2">
                                         <div className="flex items-end justify-between">
                                             <div className="font-bold text-gray-700 w-20 flex items-center"><i className="fa-solid fa-pen text-[#1e40af] mr-1"></i>新人簽名:</div>
-                                            <div className="flex-1 border-b border-gray-400 h-8 relative">{renderSignBox('', 'form2.empSign', emp, "border-none !min-h-[25px] bg-transparent")}</div>
+                                            <div className="flex-1 border-b border-gray-400 h-8">{renderSignBox('', 'form2.empSign', emp, "border-none !min-h-[25px]")}</div>
                                         </div>
                                         <div className="flex items-end justify-between">
                                             <div className="font-bold text-gray-700 w-20 flex items-center"><i className="fa-solid fa-user-tie text-[#1e40af] mr-1"></i>店長簽名:</div>
-                                            <div className="flex-1 border-b border-gray-400 h-8 relative">{renderSignBox('', 'form2.mgrSign', emp, "border-none !min-h-[25px] bg-transparent")}</div>
+                                            <div className="flex-1 border-b border-gray-400 h-8">{renderSignBox('', 'form2.mgrSign', emp, "border-none !min-h-[25px]")}</div>
                                         </div>
                                     </div>
                                 </div>
+                                <div className="text-[9px] text-gray-600 font-bold text-center bg-[#eef2ff] p-1 rounded">★ 備註：本表作為新人關懷追蹤紀錄，請妥善保存並持續追蹤，協助新人順利適應與成長。</div>
                             </div>
                         </div>
                     );
@@ -1270,14 +1434,20 @@
                 const renderHrForm3 = (emp) => {
                     const fData = emp.form3 || { basic:{}, interview:{}, fact:'', emp:'', guide:{}, improve:[{},{},{}], track:{}, concl:{} };
                     const chg = (path, val) => handleHrFieldChange(emp.id, 'form3', path, val);
+
                     const ckbx = (path, val) => {
-                        const keys = path.split('.'); const obj = fData[keys[0]] || {}; const isChecked = !!obj[val];
+                        const keys = path.split('.');
+                        const obj = fData[keys[0]] || {};
+                        const isChecked = !!obj[val];
                         return <input type="checkbox" checked={isChecked} onChange={(e)=>chg(`form3.${path}.${val}`, e.target.checked)} className="mr-1"/>;
                     };
+
                     return (
                         <div className="hr-form-container text-gray-800 relative p-4">
                             <div className="flex items-center justify-center py-2 mb-2">
+                                <span className="text-emerald-700 opacity-50 tracking-[0.2em] font-black italic">--</span>
                                 <h2 className="text-xl font-black text-slate-800 tracking-[0.1em] mx-2">員工關懷暨績效改善面談紀錄表</h2>
+                                <span className="text-emerald-700 opacity-50 tracking-[0.2em] font-black italic">--</span>
                             </div>
                             <div className="text-[10px] space-y-2">
                                 <div>
@@ -1287,21 +1457,165 @@
                                             <tr>
                                                 <th className="w-20 bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-user mr-1"></i> 姓名</th>
                                                 <td className="w-32 font-bold text-blue-700 px-2 border-emerald-700">{emp.name}</td>
-                                                <th className="w-20 bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-building mr-1"></i> 門店</th>
+                                                <th className="w-20 bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-id-card mr-1"></i> 員工編號</th>
+                                                <td className="w-32 font-bold text-center border-emerald-700">{emp.id}</td>
+                                                <th className="w-20 bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-building mr-1"></i> 部門/店別</th>
                                                 <td className="border-emerald-700"><input type="text" className="w-full bg-transparent px-1 outline-none text-left" value={(fData.basic && fData.basic.dept) || emp.storeName || ''} onChange={e=>chg('form3.basic.dept',e.target.value)}/></td>
+                                            </tr>
+                                            <tr>
+                                                <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-briefcase mr-1"></i> 職務</th>
+                                                <td className="border-emerald-700"><input type="text" className="w-full bg-transparent px-1 outline-none text-left" value={(fData.basic && fData.basic.job) || ''} onChange={e=>chg('form3.basic.job',e.target.value)}/></td>
+                                                <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-calendar-day mr-1"></i> 到職日</th>
+                                                <td className="border-emerald-700"><input type="date" className="w-full bg-transparent px-1 outline-none text-center text-[9px]" value={(fData.basic && fData.basic.joinDate) || ''} onChange={e=>chg('form3.basic.joinDate',e.target.value)}/></td>
+                                                <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-user-tie mr-1"></i> 直屬主管</th>
+                                                <td className="border-emerald-700"><input type="text" className="w-full bg-transparent px-1 outline-none text-left" value={(fData.basic && fData.basic.mgr) || ''} onChange={e=>chg('form3.basic.mgr',e.target.value)}/></td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
+
                                 <div>
-                                    <div className="form-section-title bg-emerald-700">二、具體事實說明</div>
+                                    <div className="form-section-title bg-emerald-700">二、面談內容</div>
+                                    <table className="w-full hr-table text-left border-2 border-emerald-700">
+                                        <tbody>
+                                            <tr>
+                                                <th className="w-[15%] bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-calendar-days mr-1"></i> 面談日期</th><td className="w-[35%] border-emerald-700"><input type="date" className="w-full outline-none px-2 text-left bg-transparent text-[9px]" value={(fData.interview && fData.interview.date) || ''} onChange={e=>chg('form3.interview.date',e.target.value)}/></td>
+                                                <th className="w-[15%] bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-location-dot mr-1"></i> 面談地點</th><td className="w-[35%] border-emerald-700"><input type="text" className="w-full outline-none px-2 bg-transparent" value={(fData.interview && fData.interview.loc) || ''} onChange={e=>chg('form3.interview.loc',e.target.value)}/></td>
+                                            </tr>
+                                            <tr>
+                                                <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-comments mr-1"></i> 面談類型<br/><span className="text-[8px] font-normal text-gray-500">(可複選)</span></th>
+                                                <td colSpan="3" className="text-left p-1.5 border-emerald-700">
+                                                    <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                                                        <label className="checkbox-group">{ckbx('interview', 'type1')} 關懷面談</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'type2')} 績效改善</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'type3')} 客訴事件</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'type4')} 出勤異常</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'type5')} 工作態度</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'type6')} 其他 <input type="text" className="border-b border-gray-400 w-24 outline-none ml-1 bg-transparent font-normal" value={(fData.interview && fData.interview.typeOther) || ''} onChange={e=>chg('form3.interview.typeOther',e.target.value)}/></label>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-clipboard-list mr-1"></i> 面談原因<br/><span className="text-[8px] font-normal text-gray-500">(可複選)</span></th>
+                                                <td colSpan="3" className="text-left p-1.5 border-emerald-700">
+                                                    <div className="grid grid-cols-2 gap-y-1.5 pl-1">
+                                                        <label className="checkbox-group">{ckbx('interview', 'r1')} 工作績效未達標準</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'r2')} 團隊合作問題</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'r3')} 顧客反應或客訴事件</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'r4')} 情緒管理問題</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'r5')} 出勤異常 (遲到、請假)</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'r6')} 違反公司規範</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'r7')} 工作態度需改善</label>
+                                                        <label className="checkbox-group">{ckbx('interview', 'r8')} 主動關懷面談</label>
+                                                        <label className="checkbox-group col-span-2">{ckbx('interview', 'r9')} 其他：<input type="text" className="border-b border-gray-400 flex-1 outline-none ml-1 font-normal bg-transparent" value={(fData.interview && fData.interview.rOther) || ''} onChange={e=>chg('form3.interview.rOther',e.target.value)}/></label>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-pen-to-square mr-1"></i> 具體事實說明</th>
+                                                <td colSpan="3" className="border-emerald-700 p-0"><textarea className="w-full h-12 outline-none p-1.5 resize-none text-left align-top bg-transparent" value={fData.fact||''} onChange={e=>chg('form3.fact',e.target.value)}></textarea></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div>
+                                    <div className="form-section-title bg-emerald-700">三、員工說明</div>
                                     <div className="border-2 border-emerald-700 rounded-sm">
-                                        <textarea className="w-full h-16 outline-none p-1.5 resize-none text-left align-top bg-transparent auto-expand" value={fData.fact||''} onChange={e=>chg('form3.fact',e.target.value)}></textarea>
+                                        <div className="text-[9px] text-gray-700 bg-emerald-50 px-2 py-0.5 font-bold border-b border-emerald-700">請員工說明事件經過及個人想法：</div>
+                                        <textarea className="w-full h-12 outline-none p-1.5 resize-none text-left bg-transparent" value={fData.emp||''} onChange={e=>chg('form3.emp',e.target.value)}></textarea>
                                     </div>
                                 </div>
+
                                 <div>
-                                    <div className="form-section-title bg-emerald-700 mb-0.5">三、雙方確認</div>
+                                    <div className="form-section-title bg-emerald-700">四、主管輔導內容</div>
+                                    <table className="w-full hr-table text-left border-2 border-emerald-700">
+                                        <tbody>
+                                            <tr>
+                                                <th className="w-1/5 bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-list-check mr-1"></i> 面談溝通重點<br/><span className="text-[8px] font-normal text-gray-500">(可複選)</span></th>
+                                                <td className="w-4/5 text-left p-1.5 border-emerald-700">
+                                                    <div className="grid grid-cols-2 gap-y-1.5 pl-1">
+                                                        <label className="checkbox-group">{ckbx('guide', 'g1')} 工作標準說明</label>
+                                                        <label className="checkbox-group">{ckbx('guide', 'g2')} 情緒管理建議</label>
+                                                        <label className="checkbox-group">{ckbx('guide', 'g3')} 顧客服務要求</label>
+                                                        <label className="checkbox-group">{ckbx('guide', 'g4')} 教育訓練安排</label>
+                                                        <label className="checkbox-group">{ckbx('guide', 'g5')} 團隊合作要求</label>
+                                                        <label className="checkbox-group">{ckbx('guide', 'g6')} 公司制度說明</label>
+                                                        <label className="checkbox-group">{ckbx('guide', 'g7')} 出勤管理提醒</label>
+                                                        <label className="checkbox-group">{ckbx('guide', 'g8')} 其他：<input type="text" className="border-b border-gray-400 w-32 outline-none ml-1 font-normal bg-transparent" value={(fData.guide && fData.guide.gOther) || ''} onChange={e=>chg('form3.guide.gOther',e.target.value)}/></label>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th className="bg-emerald-50 text-emerald-800 border-emerald-700"><i className="fa-solid fa-comment-dots mr-1"></i> 主管輔導內容</th>
+                                                <td className="border-emerald-700 p-0"><textarea className="w-full h-12 outline-none p-1.5 resize-none text-left bg-transparent" value={(fData.guide && fData.guide.content) || ''} onChange={e=>chg('form3.guide.content',e.target.value)}></textarea></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div>
+                                    <div className="form-section-title bg-emerald-700">五、改善計畫</div>
+                                    <table className="w-full hr-table border-2 border-emerald-700">
+                                        <thead><tr className="bg-emerald-50 text-emerald-800 border-emerald-700">
+                                            <th className="border-emerald-700 w-[10%] font-bold py-1">No</th>
+                                            <th className="border-emerald-700 w-[30%] font-bold py-1">改善項目</th>
+                                            <th className="border-emerald-700 w-[40%] font-bold py-1">改善目標</th>
+                                            <th className="border-emerald-700 w-[20%] font-bold py-1">完成期限</th>
+                                        </tr></thead>
+                                        <tbody>
+                                            {[0,1,2].map(idx => (
+                                                <tr key={`imp_${idx}`}>
+                                                    <td className="border-emerald-700 font-bold bg-gray-50">{idx+1}</td>
+                                                    <td className="border-emerald-700 p-0 h-6"><input type="text" className="w-full h-full outline-none px-1.5 text-left bg-transparent" value={(fData.improve && fData.improve[idx] && fData.improve[idx].item) || ''} onChange={e=>chg(`form3.improve.${idx}.item`,e.target.value)}/></td>
+                                                    <td className="border-emerald-700 p-0"><input type="text" className="w-full h-full outline-none px-1.5 text-left bg-transparent" value={(fData.improve && fData.improve[idx] && fData.improve[idx].goal) || ''} onChange={e=>chg(`form3.improve.${idx}.goal`,e.target.value)}/></td>
+                                                    <td className="border-emerald-700 p-0"><input type="date" className="w-full h-full outline-none px-1.5 text-center bg-transparent text-[8px]" value={(fData.improve && fData.improve[idx] && fData.improve[idx].deadline) || ''} onChange={e=>chg(`form3.improve.${idx}.deadline`,e.target.value)}/></td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div>
+                                    <div className="form-section-title bg-emerald-700">六、追蹤評估</div>
+                                    <table className="w-full hr-table text-left border-2 border-emerald-700">
+                                        <tbody>
+                                            <tr>
+                                                <th className="w-1/6 bg-emerald-50 text-emerald-800 text-center border-emerald-700">改善期間</th>
+                                                <td className="w-5/6 flex items-center justify-center gap-4 px-2 py-1 font-bold border-none">
+                                                    自 <input type="date" className="border-b border-gray-400 outline-none text-[9px] text-center font-normal bg-transparent" value={(fData.track && fData.track.start) || ''} onChange={e=>chg('form3.track.start',e.target.value)}/>
+                                                    至 <input type="date" className="border-b border-gray-400 outline-none text-[9px] text-center font-normal bg-transparent" value={(fData.track && fData.track.end) || ''} onChange={e=>chg('form3.track.end',e.target.value)}/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th className="bg-emerald-50 text-emerald-800 text-center border-emerald-700">追蹤方式 <br/><span className="text-[8px] font-normal text-gray-500">(可複選)</span></th>
+                                                <td className="flex justify-around p-2 border-emerald-700">
+                                                    <label className="checkbox-group">{ckbx('track', 't1')} 主任追蹤</label>
+                                                    <label className="checkbox-group">{ckbx('track', 't2')} 店長追蹤</label>
+                                                    <label className="checkbox-group">{ckbx('track', 't3')} 總監追蹤</label>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div>
+                                    <div className="form-section-title bg-emerald-700">七、面談結論</div>
+                                    <div className="border-2 border-emerald-700 p-2 grid grid-cols-3 gap-y-2">
+                                        <label className="checkbox-group">{ckbx('concl', 'c1')} 已了解並願意改善</label>
+                                        <label className="checkbox-group">{ckbx('concl', 'c2')} 持續觀察追蹤</label>
+                                        <label className="checkbox-group">{ckbx('concl', 'c3')} 安排教育訓練</label>
+                                        <label className="checkbox-group">{ckbx('concl', 'c4')} 調整工作內容</label>
+                                        <label className="checkbox-group">{ckbx('concl', 'c5')} 調整排班</label>
+                                        <label className="checkbox-group">{ckbx('concl', 'c6')} 再次面談</label>
+                                        <label className="checkbox-group col-span-3">{ckbx('concl', 'c7')} 其他處理方式：<input type="text" className="border-b border-gray-400 flex-1 outline-none ml-1 font-normal bg-transparent" value={(fData.concl && fData.concl.cOther) || ''} onChange={e=>chg('form3.concl.cOther',e.target.value)}/></label>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div className="form-section-title bg-emerald-700 mb-0.5">八、雙方確認</div>
                                     <div className="border-2 border-emerald-700 p-1.5 bg-emerald-50/30">
+                                        <div className="text-[9px] text-gray-700 mb-3 font-bold px-2">本人已了解本次面談內容及改善方向，並願意配合後續改善計畫。</div>
                                         <div className="flex justify-between items-end gap-4 px-4 font-bold text-gray-700">
                                             <div className="flex-1 flex flex-col items-center">
                                                 <div className="border-b border-gray-400 w-full mb-1 h-10 relative">
@@ -1315,7 +1629,14 @@
                                                 </div>
                                                 <span>主管簽名</span>
                                             </div>
+                                            <div className="flex-1 flex flex-col items-center">
+                                                <div className="border-b border-gray-400 w-full mb-1 h-10 relative">
+                                                    <div className="absolute inset-0 flex items-end justify-center">{renderSignBox('', 'form3.sign.storeMgr', emp, "border-none !min-h-0")}</div>
+                                                </div>
+                                                <span>店長簽名</span>
+                                            </div>
                                         </div>
+                                        <div className="text-left text-[10px] font-bold text-gray-700 pl-4 mt-2">日期: <input type="date" className="border-b border-gray-400 bg-transparent outline-none font-normal" value={(fData.sign && fData.sign.date) || ''} onChange={e=>chg('form3.sign.date',e.target.value)}/></div>
                                     </div>
                                 </div>
                             </div>
@@ -1333,54 +1654,83 @@
 
                     const chg = (path, val) => handleHrFieldChange(emp.id, 'form4', `${periodKey}.${path}`, val);
 
-                    // 自動帶入營運數據 & 計算邏輯 (批量更新)
+                    // 12生肖戰報固定標準文字
+                    const EXEC_STANDARDS = {
+                        1: "每日追蹤、檢討並提出改善方案\n月目標達成率100%以上",
+                        2: "主推商品銷售達成率100%以上\n每100位客人銷售數量達標",
+                        3: "介紹率達80%以上\n成交率達標且持續提升",
+                        4: "套餐銷售達成率100%以上\n每100位客人套餐銷售達標",
+                        5: "離職率低於5%\n高風險員工主動關懷與追蹤",
+                        6: "每週發文3篇以上\n互動回應與粉絲增加\n短影音/活動分享",
+                        7: "每週至少完成1次訪談\n訪談記錄完整且有效追蹤",
+                        8: "負評24小時內回覆率100%\n五星評論月增數達標",
+                        9: "本月新增會員數達標\n會員成長率持續提升",
+                        10: "客訴處理24小時內完成\n改善措施落實且追蹤",
+                        11: "票券、商品與銷售一致無誤差",
+                        12: "每月盤點無誤差\n效期與庫存管理完整"
+                    };
+
                     const autoSyncData = () => {
-                        let sumRev = 0, sumCust = 0, sumProducts = 0, sumFascia = 0, sumSet = 0, sumReview = 0, sumApp = 0;
+                        let totalRev = 0, totalCust = 0;
+                        let itemActuals = { 1: 0, 2: 0, 3: 0, 4: 0, 8: 0, 9: 0 };
+
                         dates.forEach(d => {
                             if(database[d]) {
                                 ['morning', 'evening', 'night'].forEach(shift => {
                                     if(database[d][shift]) {
                                         const s = database[d][shift];
-                                        sumRev += Number(s.revenue)||0;
-                                        sumCust += Number(s.customers)||0;
-                                        sumProducts += (Number(s.chickenSoup)||0) + (Number(s.essence)||0) + (Number(s.setMeal)||0);
-                                        sumFascia += Number(s.fascia)||0;
-                                        sumSet += Number(s.setMeal)||0;
-                                        sumReview += Number(s.review)||0;
-                                        sumApp += Number(s.app)||0;
+                                        totalRev += Number(s.revenue) || 0;
+                                        totalCust += Number(s.customers) || 0;
+                                        itemActuals[1] += Number(s.revenue) || 0;
+                                        itemActuals[2] += (Number(s.chickenSoup) || 0) + (Number(s.essence) || 0) + (Number(s.setMeal) || 0);
+                                        itemActuals[3] += Number(s.fascia) || 0;
+                                        itemActuals[4] += Number(s.setMeal) || 0;
+                                        itemActuals[8] += Number(s.review) || 0;
+                                        itemActuals[9] += Number(s.app) || 0;
                                     }
                                 });
                             }
                         });
-                        
+
+                        const summaryDataForTarget = { revenue: totalRev, customers: totalCust };
+                        const getTarget = (dbItemId) => calculateTarget(summaryDataForTarget, dbItemId);
+
                         const updatesArray = [];
-                        const addToUpdate = (itemId, text, valueForRate) => {
-                            const rate = valueForRate > 0 ? 100 : 0;
+                        const addToUpdate = (itemId, actualVal, targetVal) => {
+                            const achieveRate = targetVal > 0 ? Math.round((actualVal / targetVal) * 100) : (actualVal > 0 ? 100 : 0);
                             const weight = ZODIAC_ITEMS.find(i => i.id === itemId).weight;
-                            const score = rate === 100 ? weight : 0;
-                            updatesArray.push({ path: `form4.${periodKey}.items.${itemId}.actualText`, value: text });
-                            updatesArray.push({ path: `form4.${periodKey}.items.${itemId}.rate`, value: rate });
+                            let score = Number(((achieveRate / 100) * weight).toFixed(2));
+                            if (score > weight) score = weight; // 最高不超過配分
+
+                            // 改版：將數據以文字形式放在建議改善事項
+                            const textNote = `目標：${targetVal.toLocaleString()}\n實績：${actualVal.toLocaleString()}\n達成率：${achieveRate}%\n`;
+
                             updatesArray.push({ path: `form4.${periodKey}.items.${itemId}.score`, value: score });
+                            updatesArray.push({ path: `form4.${periodKey}.items.${itemId}.note`, value: textNote });
                         };
 
-                        addToUpdate(1, `實際業績: $${sumRev.toLocaleString()}`, sumRev);
-                        addToUpdate(2, `實際商品銷售: ${sumProducts}`, sumProducts);
-                        addToUpdate(3, `筋膜實績: ${sumFascia}`, sumFascia);
-                        addToUpdate(4, `套餐實績: ${sumSet}`, sumSet);
-                        addToUpdate(8, `Google評論實績: ${sumReview}`, sumReview);
-                        addToUpdate(9, `APP會員實績: ${sumApp}`, sumApp);
+                        addToUpdate(1, itemActuals[1], totalRev); 
+                        addToUpdate(2, itemActuals[2], getTarget('chickenSoup') + getTarget('essence'));
+                        addToUpdate(3, itemActuals[3], getTarget('fascia'));
+                        addToUpdate(4, itemActuals[4], getTarget('setMeal'));
+                        addToUpdate(8, itemActuals[8], getTarget('review'));
+                        addToUpdate(9, itemActuals[9], getTarget('app'));
 
                         handleHrMultipleFieldsChange(emp.id, updatesArray);
-                        setSyncSuccessModal(true); // 觸發精美對話框
+                        setSyncSuccessModal(true); // 顯示精美對話框
                     };
 
-                    const updateRateAndScore = (itemId, newRate) => {
-                        const rateNum = Number(newRate) || 0;
-                        const weight = ZODIAC_ITEMS.find(i => i.id === Number(itemId)).weight;
-                        const score = Number(((rateNum / 100) * weight).toFixed(2));
-                        const maxScore = Math.min(score, weight); // 最高不超過配分
-                        chg(`items.${itemId}.rate`, rateNum);
-                        chg(`items.${itemId}.score`, maxScore);
+                    const handleNoteChange = (itemId, val) => {
+                        chg(`items.${itemId}.note`, val);
+                        // 自動解析手動輸入的「達成率：X%」並同步計算分數
+                        const match = val.match(/達成率[：:]\s*(\d+(\.\d+)?)%/);
+                        if (match) {
+                            const rateNum = Number(match[1]);
+                            const weight = ZODIAC_ITEMS.find(i => i.id === Number(itemId)).weight;
+                            let score = Number(((rateNum / 100) * weight).toFixed(2));
+                            if (score > weight) score = weight;
+                            chg(`items.${itemId}.score`, score);
+                        }
                     };
 
                     let totalScore = 0;
@@ -1392,7 +1742,7 @@
                     const level = totalScore >= 90 ? '優秀' : totalScore >= 80 ? '良好' : totalScore >= 60 ? '合格' : '待改善';
 
                     return (
-                        <div className="hr-form-container text-gray-800 bg-white">
+                        <div className="hr-form-container text-gray-800 bg-white relative">
                             <div className="text-center py-4 border-b-2 border-red-600 mb-2">
                                 <h1 className="text-3xl font-bold text-blue-900 tracking-[0.2em]">12生肖績效檢討表</h1>
                                 <p className="text-red-600 font-bold mt-2 tracking-widest text-sm">落實執行 ． 追蹤管理 ． 持續改善 ． 提升營運績效</p>
@@ -1415,13 +1765,10 @@
                                             <input type="month" value={zodiacPeriodValue} onChange={e=>setZodiacPeriodValue(e.target.value)} className="border p-0.5 text-xs outline-none rounded bg-white"/>
                                         }
                                     </div>
-                                    <span className="text-xs text-blue-800 bg-blue-50 px-2 py-1 rounded border border-blue-200">
-                                        期間：{dStart} ~ {dEnd}
-                                    </span>
+                                    <span className="text-xs text-blue-800 bg-blue-50 px-2 py-1 rounded border border-blue-200">期間：{dStart} ~ {dEnd}</span>
                                 </div>
                             </div>
                             
-                            {/* 列印專用 Header */}
                             <div className="hidden print:flex justify-between items-end px-4 mb-2 text-sm font-bold border-b-2 border-red-600 pb-2">
                                 <div className="flex gap-8">
                                     <span>店名： <span className="text-blue-900 border-b border-gray-400 inline-block w-24 text-center">{emp.storeName}</span></span>
@@ -1437,14 +1784,14 @@
                                 <table className="w-full text-center border-collapse border-2 border-blue-900 text-xs shadow-sm">
                                     <thead>
                                         <tr className="bg-blue-900 text-white font-bold tracking-widest">
-                                            <th className="p-2 border border-blue-800 w-[5%]">項次</th>
-                                            <th className="p-2 border border-blue-800 w-[12%]">檢核項目</th>
-                                            <th className="p-2 border border-blue-800 w-[20%] text-left pl-4">檢核重點內容</th>
-                                            <th className="p-2 border border-blue-800 w-[23%] text-left pl-4">執行標準<br/><span className="text-[10px] font-normal opacity-80">(達成實績)</span></th>
+                                            <th className="p-2 border border-blue-800 w-[4%]">項次</th>
+                                            <th className="p-2 border border-blue-800 w-[11%]">檢核項目</th>
+                                            <th className="p-2 border border-blue-800 w-[18%] text-left pl-4">檢核重點內容</th>
+                                            <th className="p-2 border border-blue-800 w-[24%] text-left pl-4">執行標準</th>
                                             <th className="p-2 border border-blue-800 w-[5%]">配分</th>
                                             <th className="p-2 border border-blue-800 w-[6%] leading-tight">店長<br/>自評</th>
                                             <th className="p-2 border border-blue-800 w-[6%] leading-tight">總監<br/>覆評</th>
-                                            <th className="p-2 border border-blue-800 w-[23%]">建議改善事項</th>
+                                            <th className="p-2 border border-blue-800 w-[26%]">建議改善事項</th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white">
@@ -1459,25 +1806,23 @@
                                                             <span className="text-sm tracking-widest">{item.name}</span>
                                                         </div>
                                                     </td>
-                                                    <td className="p-3 border-r border-gray-300 text-left text-[11px] font-semibold text-gray-700 whitespace-pre-wrap leading-relaxed tracking-wide align-middle">
+                                                    <td className="p-2 border-r border-gray-300 text-left text-[11px] font-semibold text-gray-700 whitespace-pre-wrap leading-relaxed align-middle">
                                                         {item.points}
                                                     </td>
-                                                    <td className="p-1 border-r border-gray-300 relative align-top h-[75px]">
-                                                        <textarea className="auto-expand" placeholder="填寫實績或文字說明..." value={iData.actualText||''} onChange={e=>chg(`items.${item.id}.actualText`, e.target.value)}></textarea>
-                                                        <div className="absolute bottom-1 right-1 flex items-center text-[10px] bg-white/90 px-1 py-0.5 rounded border border-gray-200 shadow-sm opacity-50 group-hover:opacity-100 transition-opacity">
-                                                            <span className="font-bold text-blue-800 mr-1">達成率:</span>
-                                                            <input type="number" className="w-10 text-center font-bold text-blue-600 bg-transparent outline-none border-b border-blue-300 mr-0.5" value={iData.rate!==undefined?iData.rate:''} onChange={e=>updateRateAndScore(item.id, e.target.value)} placeholder="0"/>%
+                                                    <td className="p-2 border-r border-gray-300 text-left relative align-top">
+                                                        <div className="whitespace-pre-wrap text-[11px] text-gray-800 mb-2 leading-relaxed">
+                                                            {EXEC_STANDARDS[item.id]}
                                                         </div>
                                                     </td>
                                                     <td className="p-2 border-r border-gray-300 font-bold text-gray-800 text-sm">{item.weight}</td>
                                                     <td className="p-1 border-r border-gray-300 align-middle">
-                                                        <input type="number" className="w-full text-center font-black text-blue-700 bg-transparent outline-none text-sm" value={iData.score!==undefined?iData.score:''} onChange={e=>chg(`items.${item.id}.score`, e.target.value)} placeholder="0"/>
+                                                        <input type="number" className="w-full text-center font-black text-blue-700 bg-transparent outline-none text-sm" value={iData.score!==undefined?iData.score:''} onChange={e=>chg(`items.${item.id}.score`, e.target.value)} placeholder="-"/>
                                                     </td>
                                                     <td className="p-1 border-r border-gray-300 align-middle">
-                                                        <input type="number" className="w-full text-center font-bold text-gray-700 bg-transparent outline-none text-sm" value={iData.dirScore!==undefined?iData.dirScore:''} onChange={e=>chg(`items.${item.id}.dirScore`, e.target.value)}/>
+                                                        <input type="number" className="w-full text-center font-bold text-gray-700 bg-transparent outline-none text-sm" value={iData.dirScore!==undefined?iData.dirScore:''} onChange={e=>chg(`items.${item.id}.dirScore`, e.target.value)} placeholder="-"/>
                                                     </td>
-                                                    <td className="p-1 border-gray-300 align-top h-[75px]">
-                                                        <textarea className="auto-expand" placeholder="輸入建議改善事項..." value={iData.note||''} onChange={e=>chg(`items.${item.id}.note`, e.target.value)}></textarea>
+                                                    <td className="p-1 border-gray-300 align-top h-[95px]">
+                                                        <textarea className="auto-expand" placeholder="目標：&#10;實績：&#10;達成率：&#10;其他..." value={iData.note||''} onChange={e=>handleNoteChange(item.id, e.target.value)}></textarea>
                                                     </td>
                                                 </tr>
                                             );
@@ -1526,7 +1871,7 @@
                                     </tbody>
                                 </table>
 
-                                {/* 簽名區塊優化：使用 Flex 排版確保置底不跑版 */}
+                                {/* 簽名區塊優化排版 */}
                                 <div className="mt-4 flex flex-wrap justify-between items-end pb-4 font-bold text-gray-800 text-sm px-4 gap-4">
                                     <div className="flex items-end w-full md:w-[30%]">
                                         <span className="shrink-0 tracking-widest">店長簽名:</span>
@@ -1643,8 +1988,8 @@
                                         <span><i className="fa-solid fa-pen-nib mr-2"></i>電子簽名板</span>
                                         <button onClick={() => setSigModal({ isOpen: false, fieldPath: '' })} className="text-white/80 hover:text-white"><i className="fa-solid fa-xmark text-xl"></i></button>
                                     </div>
-                                    <div className="flex-1 bg-white relative m-4 border-2 border-dashed border-blue-300 rounded-lg overflow-hidden cursor-crosshair">
-                                        <canvas ref={canvasRef} onMouseDown={startDrawing} onMouseMove={draw} onMouseUp={stopDrawing} onMouseOut={stopDrawing} onTouchStart={startDrawing} onTouchMove={draw} onTouchEnd={stopDrawing} style={{ touchAction: 'none' }} className="w-full h-full bg-white"/>
+                                    <div className="flex-1 bg-gray-50 relative m-4 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden cursor-crosshair">
+                                        <canvas ref={canvasRef} onMouseDown={startDrawing} onMouseMove={draw} onMouseUp={stopDrawing} onMouseOut={stopDrawing} onTouchStart={startDrawing} onTouchMove={draw} onTouchEnd={stopDrawing} style={{ touchAction: 'none' }} className="w-full h-full"/>
                                     </div>
                                     <div className="p-4 border-t bg-gray-50 flex justify-between gap-3">
                                         <button onClick={clearCanvas} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded font-bold transition border border-gray-300">清除重簽</button>
@@ -1667,7 +2012,7 @@
                                         </div>
                                         <h3 className="text-lg font-black text-gray-800 mb-2">同步成功</h3>
                                         <p className="text-sm text-gray-600 font-semibold mb-6">
-                                            已成功將該區間的營業數據自動帶入對應欄位！請確認並微調各項目的「達成率」，以完成分數計算。
+                                            已成功將該區間的營運數據自動帶入，並依據達成率算好分數囉！
                                         </p>
                                         <button onClick={() => setSyncSuccessModal(false)} className="w-full bg-green-600 text-white py-3 rounded-lg font-bold shadow-md hover:bg-green-700 transition">
                                             我知道了
