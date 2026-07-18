@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>中清店12生肖戰報 - 智能管理系統</title>
+    <title>中清店12生肖戰報</title>
 
     <!-- Firebase SDK Setup -->
     <script type="module">
@@ -50,6 +50,8 @@
         input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type="number"] { -moz-appearance: textfield; }
 
+        .screenshot-area { background: white; }
+
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -61,7 +63,7 @@
         .hr-form-container { width: 100%; max-width: 1000px; margin: 0 auto; background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         .hr-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; text-align: center; } 
         .hr-table th, .hr-table td { border: 1px solid #94a3b8; padding: 4px; }
-        .checkbox-group { display: flex; align-items: center; gap: 0.25rem; cursor: pointer; text-align: left; }
+        .checkbox-group { display: flex; align-items: center; justify-content: flex-start; gap: 0.25rem; cursor: pointer; text-align: left; }
         
         /* 簽名版樣式優化 */
         .sign-box { border: 1px dashed #94a3b8; border-radius: 4px; min-height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; background-color: #f8fafc; color: #94a3b8; overflow: hidden; width: 100%; position: relative; }
@@ -134,6 +136,7 @@
             const [activeTab, setActiveTab] = useState('night');
             const getTodayStr = () => { const today = new Date(); return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`; };
             const todayStr = getTodayStr();
+            const [selectedDate, setSelectedDate] = useState(todayStr); 
             const [inputDate, setInputDate] = useState(todayStr);       
             const [database, setDatabase] = useState({});
             const safeInputDate = inputDate || todayStr;
@@ -149,7 +152,7 @@
                 return `${d.getFullYear()}-W${String(weekNo).padStart(2, '0')}`;
             });
             const [trendFilter, setTrendFilter] = useState('all');
-            const [trendPeriodType, setTrendPeriodType] = useState('month'); // 新增: 趨勢圖表週/月切換
+            const [trendPeriodType, setTrendPeriodType] = useState('month');
             const [visibleChart, setVisibleChart] = useState(ITEM_CONFIG[0].id);
             const chartRef = useRef(null);
 
@@ -265,6 +268,60 @@
                 }
             };
 
+            const getCurrentShiftData = (date, shift) => {
+                if (database[date] && database[date][shift]) return database[date][shift];
+                const emptyData = { customers: '', revenue: '' };
+                ITEM_CONFIG.forEach(item => emptyData[item.id] = '');
+                if (shift === 'manager') emptyData.slots = {}; 
+                return emptyData;
+            };
+
+            const handleShiftChange = (shift, field, value) => {
+                const parsedValue = value === '' ? '' : Number(value);
+                setDatabase(prev => {
+                    const newDb = { ...prev };
+                    if (!newDb[safeInputDate]) newDb[safeInputDate] = { morning: getCurrentShiftData(safeInputDate, 'morning'), evening: getCurrentShiftData(safeInputDate, 'evening'), night: getCurrentShiftData(safeInputDate, 'night'), manager: getCurrentShiftData(safeInputDate, 'manager') };
+                    if (!newDb[safeInputDate].manager) newDb[safeInputDate].manager = getCurrentShiftData(safeInputDate, 'manager');
+                    newDb[safeInputDate][shift] = { ...newDb[safeInputDate][shift], [field]: parsedValue };
+                    saveToFirebase('records', safeInputDate, newDb[safeInputDate]);
+                    return newDb;
+                });
+            };
+
+            const handleSlotChange = (slotId, field, value) => {
+                const parsedValue = value === '' ? '' : Number(value);
+                setDatabase(prev => {
+                    const newDb = { ...prev };
+                    if (!newDb[safeInputDate]) newDb[safeInputDate] = { manager: getCurrentShiftData(safeInputDate, 'manager') };
+                    if (!newDb[safeInputDate].manager) newDb[safeInputDate].manager = getCurrentShiftData(safeInputDate, 'manager');
+                    if (!newDb[safeInputDate].manager.slots) newDb[safeInputDate].manager.slots = {};
+                    if (!newDb[safeInputDate].manager.slots[slotId]) newDb[safeInputDate].manager.slots[slotId] = {};
+                    newDb[safeInputDate].manager.slots[slotId][field] = parsedValue;
+                    saveToFirebase('records', safeInputDate, newDb[safeInputDate]);
+                    return newDb;
+                });
+            };
+
+            const handleSettingChange = (itemId, field, value) => {
+                const parsedValue = value === '' ? '' : Number(value);
+                setSettings(prev => {
+                    const newSettings = { ...prev, [itemId]: { ...prev[itemId], [field]: parsedValue } };
+                    saveToFirebase('settings', 'global', { rates: newSettings });
+                    return newSettings;
+                });
+            };
+
+            const handleAddSlot = () => {
+                if (!newSlotName.trim()) return;
+                const newSlots = [...timeSlots, { id: 'ts_' + Date.now(), label: newSlotName.trim() }];
+                setTimeSlots(newSlots); saveToFirebase('settings', 'global', { timeSlots: newSlots }); setNewSlotName('');
+            };
+
+            const handleDeleteSlot = (idToRemove) => {
+                const newSlots = timeSlots.filter(s => s.id !== idToRemove);
+                setTimeSlots(newSlots); saveToFirebase('settings', 'global', { timeSlots: newSlots });
+            };
+
             // === 日期與輔助邏輯 ===
             const getDatesFromPeriod = (type, value) => {
                 if (!value) return [];
@@ -307,6 +364,56 @@
                 return { gap, achieveRate, gapRate };
             };
 
+            // === 員工操作邏輯 ===
+            const handleAddHrEmployee = () => {
+                if (!selectedStore) { alert("請先從左方選擇店別！或點擊「完整新增」建立新店別與員工。"); return; }
+                if (!newEmpId.trim() || !newEmpName.trim()) { alert("請輸入完整的員工編號與姓名！"); return; }
+                if (hrEmployees[newEmpId]) { alert("此員工編號已存在！"); return; }
+                
+                const newEmp = {
+                    id: newEmpId,
+                    name: newEmpName,
+                    storeName: selectedStore,
+                    form4: {}
+                };
+                saveToFirebase('hr_employees', newEmpId, newEmp);
+                setNewEmpId(''); setNewEmpName('');
+                setSelectedEmpId(newEmpId);
+            };
+
+            const handleSaveHrEmployee = (e) => {
+                e.preventDefault();
+                if (!editEmpData.storeName.trim() || !editEmpData.id.trim() || !editEmpData.name.trim()) {
+                    alert("請填寫完整的店別、員工編號與姓名！"); return;
+                }
+                
+                if (isEditMode) {
+                    const currentEmp = hrEmployees[editEmpData.id];
+                    if (currentEmp) {
+                        const updatedEmp = { ...currentEmp, name: editEmpData.name, storeName: editEmpData.storeName };
+                        saveToFirebase('hr_employees', editEmpData.id, updatedEmp);
+                        setSelectedStore(editEmpData.storeName);
+                    }
+                } else {
+                    if (hrEmployees[editEmpData.id]) { alert("此員工編號已存在！"); return; }
+                    const newEmp = { id: editEmpData.id, name: editEmpData.name, storeName: editEmpData.storeName, form4: {} };
+                    saveToFirebase('hr_employees', editEmpData.id, newEmp);
+                    setSelectedStore(editEmpData.storeName);
+                    setSelectedEmpId(editEmpData.id);
+                }
+                setShowEmpModal(false);
+                setEditEmpData({ id: '', name: '', storeName: '' });
+            };
+
+            const handleDeleteHrEmployee = () => {
+                const currentEmp = hrEmployees[selectedEmpId] || null;
+                if(!currentEmp) return;
+                if(confirm(`確定要永久刪除員工 ${currentEmp.name} 及其所有表單紀錄嗎？這無法復原！`)) {
+                    saveToFirebase('hr_employees', currentEmp.id, { isDeleted: true }, false);
+                    setSelectedEmpId('');
+                }
+            };
+
             const handleHrFieldChange = (empId, formType, fieldPath, value) => {
                 setHrEmployees(prev => {
                     const empData = prev[empId];
@@ -346,7 +453,6 @@
             const saveSignature = () => {
                 if (canvasRef.current && sigModal.fieldPath && selectedEmpId) {
                     const dataUrl = canvasRef.current.toDataURL('image/png');
-                    // 修正簽名路徑，不傳 null，直接利用動態 keys 賦值
                     handleHrFieldChange(selectedEmpId, null, sigModal.fieldPath, dataUrl);
                     setSigModal({ isOpen: false, fieldPath: '' });
                 }
@@ -377,7 +483,657 @@
                 );
             };
 
-            // === 渲染函式 ===
+            // === 各分頁渲染函式 ===
+            const renderShiftTab = (shiftKey, shiftName, icon, colorClass, bgColorClass) => {
+                const data = getCurrentShiftData(safeInputDate, shiftKey);
+                const customersNum = Number(data.customers) || 0;
+                const revenueNum = Number(data.revenue) || 0;
+                const atv = customersNum > 0 ? Math.round(revenueNum / customersNum) : 0;
+
+                return (
+                    <div className="flex flex-col md:flex-row h-full gap-2 overflow-hidden text-sm">
+                        <div className="w-full md:w-1/2 flex flex-col gap-1.5">
+                            <div className="bg-white p-1.5 rounded shadow-sm border border-gray-200 flex justify-between items-center shrink-0">
+                                <h2 className={`text-base font-bold ${colorClass}`}><i className={`fa-solid ${icon} mr-1`}></i>{shiftName} 數據輸入</h2>
+                                <div className="flex items-center">
+                                    <label className="text-gray-600 mr-1 font-semibold text-xs">日期:</label>
+                                    <input type="date" value={safeInputDate} onChange={(e) => setInputDate(e.target.value)} className="p-0.5 border rounded shadow-sm outline-none text-xs" />
+                                </div>
+                            </div>
+                            <div className="bg-white p-2 rounded shadow-sm border border-gray-200 flex-1 overflow-y-auto hide-scroll">
+                                <div className="grid grid-cols-2 gap-2 mb-2 bg-gray-50 p-1.5 rounded">
+                                    <div><label className="block text-xs text-gray-600 mb-0.5">來客數</label><input type="number" className="w-full p-1 border rounded outline-none font-bold text-gray-800" value={data.customers !== undefined ? data.customers : ''} onChange={(e) => handleShiftChange(shiftKey, 'customers', e.target.value)} placeholder="0" /></div>
+                                    <div><label className="block text-xs text-gray-600 mb-0.5">總業績 (金額)</label><input type="number" className="w-full p-1 border rounded outline-none font-bold text-blue-700" value={data.revenue !== undefined ? data.revenue : ''} onChange={(e) => handleShiftChange(shiftKey, 'revenue', e.target.value)} placeholder="0" /></div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    {ITEM_CONFIG.map(item => (
+                                        <div key={`input-${item.id}`} className="flex items-center justify-between border-b pb-0.5">
+                                            <span className="font-semibold text-gray-700 w-20 text-xs">{item.name}</span>
+                                            <div className="flex items-center w-2/3">
+                                                <span className="text-[10px] text-gray-400 w-12 text-right mr-1">實際:</span>
+                                                <input type="number" className="w-full p-1 border border-blue-200 bg-blue-50/30 rounded outline-none text-blue-900 font-bold" value={data[item.id] !== undefined ? data[item.id] : ''} onChange={(e) => handleShiftChange(shiftKey, item.id, e.target.value)} placeholder="0" />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="w-full md:w-1/2 screenshot-area bg-white p-2 rounded shadow-md border border-gray-300 flex flex-col overflow-y-auto hide-scroll">
+                            <div className="text-center mb-1.5 shrink-0">
+                                <h2 className="text-lg font-black text-gray-800 tracking-wider"><span className={`px-2 py-0.5 rounded text-white ${bgColorClass} mr-2 text-sm`}>{shiftName}</span>當班績效戰報</h2>
+                                <div className="text-gray-500 mt-0.5 font-mono text-[10px]">{safeInputDate}</div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 mb-2 shrink-0">
+                                <div className="bg-gray-100 p-1.5 rounded text-center border"><div className="text-gray-500 text-[10px]">來客數</div><div className="text-base font-bold text-gray-800">{customersNum}</div></div>
+                                <div className="bg-blue-50 p-1.5 rounded text-center border border-blue-100"><div className="text-blue-600 text-[10px]">客單價</div><div className="text-base font-bold text-blue-800">${atv.toLocaleString()}</div></div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 flex-1 content-start">
+                                {ITEM_CONFIG.map(item => {
+                                    const target = calculateTarget(data, item.id);
+                                    const actual = Number(data[item.id]) || 0;
+                                    const { gap, achieveRate, gapRate } = calcMetrics(target, actual);
+                                    const isGood = gap >= 0;
+                                    return (
+                                        <div key={`view-${item.id}`} className="bg-white border rounded p-1.5 shadow-sm relative overflow-hidden flex flex-col justify-center">
+                                            <div className={`absolute left-0 top-0 bottom-0 w-1 ${isGood ? 'bg-green-500' : 'bg-red-400'}`}></div>
+                                            <div className="flex justify-between items-center mb-1 pl-2">
+                                                <span className="font-bold text-gray-700 text-[10px]">{item.name} <span className="text-gray-400 font-normal">({item.unit})</span></span>
+                                                <div className="text-right text-[9px] leading-tight">
+                                                    <div className={`font-bold ${isGood ? 'text-green-600' : 'text-red-500'}`}>達成: {achieveRate}%</div>
+                                                    <div className={`font-bold ${isGood ? 'text-green-600' : 'text-red-500'}`}>差異: {gapRate}%</div>
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-0.5 text-center text-[10px] pl-1.5">
+                                                <div className="bg-gray-50 rounded p-0.5"><div className="text-gray-400 scale-90">目標</div><div className="font-semibold text-gray-700">{target}</div></div>
+                                                <div className="bg-blue-50 rounded p-0.5"><div className="text-blue-500 scale-90">實際</div><div className="font-bold text-blue-700">{actual}</div></div>
+                                                <div className={`${isGood ? 'bg-green-50' : 'bg-red-50'} rounded p-0.5`}><div className={`${isGood ? 'text-green-600' : 'text-red-500'} scale-90`}>差異</div><div className={`font-bold ${isGood ? 'text-green-700' : 'text-red-600'}`}>{gap > 0 ? `+${gap}` : gap}</div></div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderSummary = () => {
+                const summaryData = { customers: 0, revenue: 0, atv: 0, totalManpower: 0 };
+                ITEM_CONFIG.forEach(i => summaryData[i.id] = 0);
+                let displayTitle = "三班數據累加結算";
+                let calcKeys = [];
+                const fmtDateSafe = (d) => { if (!d || isNaN(d.getTime())) return ''; return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+
+                if (summaryRange === 'single') { displayTitle = `${selectedDate} 單日查詢`; calcKeys = [selectedDate]; }
+                else if (summaryRange === 'customRange') { displayTitle = `${summaryRangeStart} 至 ${summaryRangeEnd} 累加`; calcKeys = Object.keys(database).filter(k => k >= summaryRangeStart && k <= summaryRangeEnd); }
+                else if (summaryRange === 'currentMonth' || summaryRange === 'lastMonth') {
+                    const today = new Date(); let targetMonth = summaryRange === 'currentMonth' ? today.getMonth() + 1 : today.getMonth(); let targetYear = today.getFullYear();
+                    if (targetMonth === 0) { targetMonth = 12; targetYear -= 1; }
+                    displayTitle = `${targetMonth}月 累計總和`;
+                    const prefix = `${targetYear}-${String(targetMonth).padStart(2, '0')}`;
+                    calcKeys = Object.keys(database).filter(k => k.startsWith(prefix));
+                } else if (['currentWeek', 'lastWeek', 'customWeek'].includes(summaryRange)) {
+                    let mon, sun;
+                    if (summaryRange === 'currentWeek' || summaryRange === 'lastWeek') {
+                        const d = new Date(); if (summaryRange === 'lastWeek') d.setDate(d.getDate() - 7);
+                        const day = d.getDay() || 7; mon = new Date(d); mon.setDate(d.getDate() - day + 1); sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+                        displayTitle = summaryRange === 'currentWeek' ? `本週 (${fmtDateSafe(mon).substring(5)}~${fmtDateSafe(sun).substring(5)})` : `上週 (${fmtDateSafe(mon).substring(5)}~${fmtDateSafe(sun).substring(5)})`;
+                    } else {
+                        if (summaryWeek) {
+                            const parts = summaryWeek.split('-W');
+                            if (parts.length === 2) {
+                                const year = parseInt(parts[0], 10); const week = parseInt(parts[1], 10); const jan4 = new Date(year, 0, 4); const dayOffset = jan4.getDay() || 7;
+                                mon = new Date(year, 0, 4 - dayOffset + 1 + (week - 1) * 7); sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+                                displayTitle = `指定週 (${fmtDateSafe(mon).substring(5)}~${fmtDateSafe(sun).substring(5)})`;
+                            }
+                        }
+                    }
+                    if (mon && sun) { const sStart = fmtDateSafe(mon); const sEnd = fmtDateSafe(sun); calcKeys = Object.keys(database).filter(k => k >= sStart && k <= sEnd); }
+                }
+
+                calcKeys.forEach(dateKey => {
+                    if (database[dateKey]) {
+                        ['morning', 'evening', 'night'].forEach(shift => {
+                            if (database[dateKey][shift]) {
+                                const sData = database[dateKey][shift];
+                                summaryData.customers += Number(sData.customers) || 0;
+                                summaryData.revenue += Number(sData.revenue) || 0;
+                                ITEM_CONFIG.forEach(i => summaryData[i.id] += Number(sData[i.id]) || 0);
+                            }
+                        });
+                        if (database[dateKey].manager && database[dateKey].manager.slots) {
+                            Object.values(database[dateKey].manager.slots).forEach(slotData => {
+                                summaryData.totalManpower += Number(slotData.hc) || 0;
+                            });
+                        }
+                    }
+                });
+                summaryData.atv = summaryData.customers > 0 ? Math.round(summaryData.revenue / summaryData.customers) : 0;
+                const avgEfficiency = summaryData.totalManpower > 0 ? Math.round(summaryData.revenue / summaryData.totalManpower) : 0;
+
+                let maxDateStr = safeInputDate;
+                if (calcKeys.length > 0) maxDateStr = calcKeys.reduce((a, b) => a > b ? a : b);
+                const targetYear = parseInt(maxDateStr.substring(0, 4)) || new Date().getFullYear();
+                const targetMonth = parseInt(maxDateStr.substring(5, 7)) || (new Date().getMonth() + 1);
+                const daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
+                let pastWeekdayRev = 0, pastWeekdayCount = 0, pastWeekendRev = 0, pastWeekendCount = 0, futureWeekdayCount = 0, futureWeekendCount = 0;
+                const boundaryDateStr = maxDateStr > todayStr ? todayStr : maxDateStr;
+
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const dStr = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                    const dObj = new Date(targetYear, targetMonth - 1, i);
+                    const isWeekend = dObj.getDay() === 0 || dObj.getDay() === 6;
+                    if (dStr <= boundaryDateStr) {
+                        let dayRev = 0;
+                        if (database[dStr]) {
+                            ['morning', 'evening', 'night'].forEach(shift => {
+                                if (database[dStr][shift] && database[dStr][shift].revenue) dayRev += Number(database[dStr][shift].revenue);
+                            });
+                        }
+                        if (isWeekend) { pastWeekendRev += dayRev; pastWeekendCount++; } else { pastWeekdayRev += dayRev; pastWeekdayCount++; }
+                    } else {
+                        if (isWeekend) futureWeekendCount++; else futureWeekdayCount++;
+                    }
+                }
+                
+                let avgWeekday = pastWeekdayCount > 0 ? pastWeekdayRev / pastWeekdayCount : 0;
+                let avgWeekend = pastWeekendCount > 0 ? pastWeekendRev / pastWeekendCount : 0;
+                if (avgWeekend === 0 && pastWeekendCount === 0) avgWeekend = avgWeekday;
+                if (avgWeekday === 0 && pastWeekdayCount === 0) avgWeekday = avgWeekend;
+                const predictedMonthEndRev = pastWeekdayRev + pastWeekendRev + (futureWeekdayCount * avgWeekday) + (futureWeekendCount * avgWeekend);
+
+                return (
+                    <div className="bg-white p-4 rounded shadow border border-gray-200 h-full overflow-y-auto text-sm">
+                        <div className="flex flex-col md:flex-row justify-between items-center mb-4 border-b pb-2 gap-2">
+                            <h2 className="text-lg font-bold text-green-700"><i className="fa-solid fa-layer-group mr-2"></i>{displayTitle}</h2>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <div className="flex bg-gray-100 rounded overflow-hidden text-xs border border-gray-200 flex-wrap">
+                                    <button onClick={() => setSummaryRange('single')} className={`px-2 py-1.5 ${summaryRange === 'single' ? 'bg-green-500 text-white font-bold' : 'text-gray-600 hover:bg-gray-200'}`}>單日</button>
+                                    <button onClick={() => setSummaryRange('currentWeek')} className={`px-2 py-1.5 border-l border-gray-200 ${summaryRange === 'currentWeek' ? 'bg-green-500 text-white font-bold' : 'text-gray-600 hover:bg-gray-200'}`}>本週</button>
+                                    <button onClick={() => setSummaryRange('lastWeek')} className={`px-2 py-1.5 border-l border-gray-200 ${summaryRange === 'lastWeek' ? 'bg-green-500 text-white font-bold' : 'text-gray-600 hover:bg-gray-200'}`}>上週</button>
+                                    <button onClick={() => setSummaryRange('customWeek')} className={`px-2 py-1.5 border-l border-gray-200 ${summaryRange === 'customWeek' ? 'bg-green-500 text-white font-bold' : 'text-gray-600 hover:bg-gray-200'}`}>指定週</button>
+                                    <button onClick={() => setSummaryRange('currentMonth')} className={`px-2 py-1.5 border-l border-gray-200 ${summaryRange === 'currentMonth' ? 'bg-green-500 text-white font-bold' : 'text-gray-600 hover:bg-gray-200'}`}>本月</button>
+                                    <button onClick={() => setSummaryRange('lastMonth')} className={`px-2 py-1.5 border-l border-gray-200 ${summaryRange === 'lastMonth' ? 'bg-green-500 text-white font-bold' : 'text-gray-600 hover:bg-gray-200'}`}>上月</button>
+                                    <button onClick={() => setSummaryRange('customRange')} className={`px-2 py-1.5 border-l border-gray-200 ${summaryRange === 'customRange' ? 'bg-green-500 text-white font-bold' : 'text-gray-600 hover:bg-gray-200'}`}>自訂</button>
+                                </div>
+                                {summaryRange === 'single' && <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="p-1 border rounded bg-green-50 outline-none text-xs text-green-800" />}
+                                {summaryRange === 'customWeek' && <input type="week" value={summaryWeek} onChange={(e) => setSummaryWeek(e.target.value)} className="p-1 border rounded bg-green-50 outline-none text-xs text-green-800" />}
+                                {summaryRange === 'customRange' && (
+                                    <div className="flex items-center bg-green-50 p-1 rounded border border-green-200 gap-1">
+                                        <input type="date" value={summaryRangeStart} onChange={(e) => setSummaryRangeStart(e.target.value)} className="p-1 border-none bg-transparent outline-none text-xs text-green-800" />
+                                        <span className="text-gray-500 text-[10px]">至</span>
+                                        <input type="date" value={summaryRangeEnd} onChange={(e) => setSummaryRangeEnd(e.target.value)} className="p-1 border-none bg-transparent outline-none text-xs text-green-800" />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                            <div className="bg-gray-100 p-3 rounded border text-center">
+                                <div className="text-gray-600 text-xs mb-1">期間累加來客</div>
+                                <div className="text-2xl font-black text-gray-800">{summaryData.customers}</div>
+                            </div>
+                            <div className="bg-gray-100 p-3 rounded border text-center">
+                                <div className="text-gray-600 text-xs mb-1">期間累加業績</div>
+                                <div className="text-2xl font-black text-gray-800">${summaryData.revenue.toLocaleString()}</div>
+                            </div>
+                            <div className="bg-blue-50 p-3 rounded border border-blue-200 text-center">
+                                <div className="text-blue-700 text-xs mb-1">平均客單價</div>
+                                <div className="text-2xl font-black text-blue-600">${summaryData.atv.toLocaleString()}</div>
+                            </div>
+                            <div className="bg-emerald-50 p-3 rounded border border-emerald-200 text-center">
+                                <div className="text-emerald-700 text-xs mb-1">期間平均人效</div>
+                                <div className="text-2xl font-black text-emerald-600">${avgEfficiency.toLocaleString()}</div>
+                            </div>
+                            <div className="bg-amber-50 p-3 rounded border border-amber-200 text-center relative group">
+                                <div className="text-amber-700 text-xs mb-1">預估月底業績 <i className="fa-solid fa-circle-info cursor-help"></i></div>
+                                <div className="text-2xl font-black text-amber-600">${Math.round(predictedMonthEndRev).toLocaleString()}</div>
+                                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-48 p-2 bg-gray-800 text-white text-[10px] rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity text-left">
+                                    依本月平/假日均值推算未來：<br/>平日均值: ${Math.round(avgWeekday).toLocaleString()} ({futureWeekdayCount}天)<br/>假日均值: ${Math.round(avgWeekend).toLocaleString()} ({futureWeekendCount}天)
+                                </div>
+                            </div>
+                        </div>
+
+                        <table className="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr className="bg-gray-800 text-white">
+                                    <th className="p-2 rounded-tl">評估項目</th><th className="p-2 text-right">目標</th><th className="p-2 text-right">實際總和</th><th className="p-2 text-right">差異數</th><th className="p-2 text-right">達成率</th><th className="p-2 text-right rounded-tr">差異率</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {ITEM_CONFIG.map((item, index) => {
+                                    const target = calculateTarget(summaryData, item.id);
+                                    const actual = summaryData[item.id];
+                                    const { gap, achieveRate, gapRate } = calcMetrics(target, actual);
+                                    const isGood = gap >= 0;
+                                    return (
+                                        <tr key={`sum-${item.id}`} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                                            <td className="p-2 border-b font-semibold border-l">{item.name}</td>
+                                            <td className="p-2 border-b text-right text-gray-600">{target}</td>
+                                            <td className="p-2 border-b text-right font-bold text-blue-600">{actual}</td>
+                                            <td className={`p-2 border-b text-right font-bold ${isGood ? 'text-green-600' : 'text-red-500'}`}>{gap > 0 ? `+${gap}` : gap}</td>
+                                            <td className="p-2 border-b text-right"><span className={`px-1 rounded text-xs font-bold ${isGood ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{achieveRate}%</span></td>
+                                            <td className={`p-2 border-b text-right font-bold text-xs border-r ${isGood ? 'text-green-600' : 'text-red-500'}`}>{gapRate > 0 ? `+${gapRate}%` : `${gapRate}%`}</td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                );
+            };
+
+            const renderAudit = () => {
+                const auditItems = [
+                    { id: 'customers', name: '總來客數', isAmount: false },
+                    { id: 'revenue', name: '總業績', isAmount: true },
+                    ...ITEM_CONFIG.map(i => ({ id: i.id, name: i.name, isAmount: i.type === 'amount' }))
+                ];
+
+                const dayData = database[safeInputDate] || {};
+                const managerData = dayData.manager || { slots: {} };
+                const slotsData = managerData.slots || {};
+
+                const getSystemSum = (fieldId) => {
+                    return ['morning', 'evening', 'night'].reduce((acc, shift) => {
+                        return acc + (dayData[shift] && dayData[shift][fieldId] ? Number(dayData[shift][fieldId]) : 0);
+                    }, 0);
+                };
+
+                let totalHc = 0, sumSlotRevenue = 0;
+                timeSlots.forEach(slot => {
+                    totalHc += slotsData[slot.id] && slotsData[slot.id].hc ? Number(slotsData[slot.id].hc) : 0;
+                    sumSlotRevenue += slotsData[slot.id] && slotsData[slot.id].rev ? Number(slotsData[slot.id].rev) : 0;
+                });
+                const managerRev = Number(managerData.revenue) || 0;
+                const dailyEfficiency = totalHc > 0 ? Math.round(managerRev / totalHc) : 0;
+
+                let totalEarnedScore = 0, maxPossibleScore = 0;
+                const performanceScores = ITEM_CONFIG.map(item => {
+                    const target = calculateTarget(managerData, item.id);
+                    const actual = Number(managerData[item.id]) || 0;
+                    const maxScore = settings[item.id] && settings[item.id].score ? Number(settings[item.id].score) : 0;
+                    let earned = target > 0 ? Math.min(maxScore, (actual / target) * maxScore) : (actual > 0 ? maxScore : 0);
+                    totalEarnedScore += earned; maxPossibleScore += maxScore;
+                    return { ...item, target, actual, earned, maxScore };
+                });
+
+                return (
+                    <div className="bg-white p-4 rounded shadow border border-gray-200 h-full overflow-y-auto text-sm hide-scroll">
+                        <div className="flex justify-between items-center mb-3 border-b pb-2">
+                            <h2 className="text-lg font-bold text-red-700"><i className="fa-solid fa-clipboard-check mr-2"></i>店長日結稽核</h2>
+                            <div className="flex items-center">
+                                <label className="text-gray-600 mr-1 font-semibold text-xs">稽核日期:</label>
+                                <input type="date" value={safeInputDate} onChange={(e) => setInputDate(e.target.value)} className="p-0.5 border rounded shadow-sm outline-none text-xs text-red-800 font-bold" />
+                            </div>
+                        </div>
+
+                        <div className="bg-blue-50/50 border border-blue-200 rounded p-3 mb-4">
+                            <div className="flex justify-between items-end border-b border-blue-200 pb-2 mb-3">
+                                <h3 className="font-bold text-blue-800 text-sm"><i className="fa-solid fa-users-gear mr-1"></i>各時段產值與人效獨立分析</h3>
+                                <div className="text-[10px] text-gray-500 bg-white px-2 py-0.5 rounded border">時段業績加總: <span className="font-bold text-gray-700">${sumSlotRevenue.toLocaleString()}</span></div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+                                {timeSlots.map(slot => {
+                                    const hc = slotsData[slot.id] && slotsData[slot.id].hc ? Number(slotsData[slot.id].hc) : 0;
+                                    const rev = slotsData[slot.id] && slotsData[slot.id].rev ? Number(slotsData[slot.id].rev) : 0;
+                                    const eff = hc > 0 ? Math.round(rev / hc) : rev; 
+                                    return (
+                                        <div key={slot.id} className="bg-white p-2 rounded border border-blue-100 shadow-sm flex flex-col relative overflow-hidden">
+                                            <div className="absolute top-0 left-0 w-1 h-full bg-blue-400"></div>
+                                            <div className="text-xs text-blue-800 font-bold mb-2 pl-2">{slot.label}</div>
+                                            <div className="grid grid-cols-2 gap-2 mb-2 pl-2">
+                                                <div>
+                                                    <div className="text-[10px] text-gray-400 mb-0.5">人數 (HC)</div>
+                                                    <input type="number" step="0.5" min="0" placeholder="0" className="w-full text-center border rounded p-1 outline-none font-bold text-gray-700 bg-gray-50 focus:bg-white" value={(slotsData[slot.id] && slotsData[slot.id].hc !== undefined) ? slotsData[slot.id].hc : ''} onChange={(e) => handleSlotChange(slot.id, 'hc', e.target.value)} />
+                                                </div>
+                                                <div>
+                                                    <div className="text-[10px] text-gray-400 mb-0.5">時段產值 ($)</div>
+                                                    <input type="number" min="0" placeholder="0" className="w-full text-center border rounded p-1 outline-none font-bold text-blue-700 bg-blue-50 focus:bg-white" value={(slotsData[slot.id] && slotsData[slot.id].rev !== undefined) ? slotsData[slot.id].rev : ''} onChange={(e) => handleSlotChange(slot.id, 'rev', e.target.value)} />
+                                                </div>
+                                            </div>
+                                            <div className="bg-emerald-50 rounded p-1.5 flex justify-between items-center pl-2 ml-2 border border-emerald-100">
+                                                <span className="text-[10px] text-emerald-700">時段人效</span><span className="font-black text-emerald-600 text-sm">${eff.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                            <div className="flex items-center justify-between bg-blue-600 text-white p-2 rounded shadow-sm">
+                                <div><span className="text-xs opacity-80 block">單日總出勤人力</span><span className="text-xl font-black">{totalHc} <span className="text-sm font-normal">人</span></span></div>
+                                <div className="text-right border-l border-blue-400 pl-4"><span className="text-xs opacity-80 block">單日平均人效 (以日結總業績計)</span><span className="text-xl font-black">${dailyEfficiency.toLocaleString()}</span></div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 items-start">
+                            <div className="bg-purple-50/50 border border-purple-200 rounded p-3 flex flex-col h-full">
+                                <h3 className="font-bold text-purple-800 mb-2 text-sm border-b border-purple-200 pb-1"><i className="fa-solid fa-ranking-star mr-1"></i>今日綜合績效指標</h3>
+                                <div className="flex-1 overflow-y-auto hide-scroll text-xs">
+                                    {performanceScores.map(score => (
+                                        <div key={`score-${score.id}`} className="flex justify-between items-center border-b border-purple-100 py-1">
+                                            <span className="text-gray-700 w-1/3">{score.name}</span><span className="text-gray-400 w-1/3 text-center text-[10px]">達標: {score.actual}/{score.target}</span><span className="font-bold text-purple-700 w-1/3 text-right">{score.earned.toFixed(1)} <span className="text-gray-400 font-normal text-[10px]">/ {score.maxScore}</span></span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-2 pt-2 border-t border-purple-300 flex justify-between items-end"><span className="font-bold text-purple-900">總項得分</span><span className="text-2xl font-black text-purple-700">{totalEarnedScore.toFixed(1)} <span className="text-sm font-normal text-gray-500">/ {maxPossibleScore} 分</span></span></div>
+                            </div>
+                            <div className="bg-white border rounded shadow-sm p-2 flex flex-col h-full">
+                                <p className="text-[10px] text-gray-500 mb-2 bg-red-50 p-1.5 rounded border border-red-100"><i className="fa-solid fa-circle-info mr-1"></i>系統自動比對三班輸入總和，紅字代表異常或漏KEY。</p>
+                                <div className="overflow-x-auto hide-scroll flex-1">
+                                    <table className="w-full text-xs border-collapse">
+                                        <thead><tr className="bg-gray-100 text-gray-700"><th className="p-1.5 border text-left">項目</th><th className="p-1.5 border text-right">系統加總</th><th className="p-1.5 border text-center bg-red-50 text-red-700">日結輸入</th><th className="p-1.5 border text-right">差異</th></tr></thead>
+                                        <tbody>
+                                            {auditItems.map(item => {
+                                                const sysSum = getSystemSum(item.id);
+                                                const managerVal = managerData[item.id];
+                                                const hasInput = managerVal !== undefined && managerVal !== '';
+                                                const diff = hasInput ? (Number(managerVal) || 0) - sysSum : null;
+                                                let diffDisplay = '-'; let diffColor = 'text-gray-300';
+                                                if (hasInput) { if (diff === 0) { diffDisplay = '相符'; diffColor = 'text-green-600 bg-green-50'; } else { diffDisplay = diff > 0 ? `+${diff}` : diff; diffColor = 'text-red-600 bg-red-50 font-bold'; } }
+                                                return (
+                                                    <tr key={item.id} className="border-b hover:bg-gray-50">
+                                                        <td className="p-1.5 font-bold text-gray-700">{item.name}</td>
+                                                        <td className="p-1.5 text-right text-gray-500">{item.isAmount ? '$' : ''}{sysSum.toLocaleString()}</td>
+                                                        <td className="p-1 text-center bg-red-50/30 w-[80px]"><input type="number" className="w-full p-1 border border-red-300 rounded text-right text-xs text-red-800 font-bold outline-none" value={managerVal !== undefined ? managerVal : ''} onChange={(e) => handleShiftChange('manager', item.id, e.target.value)} /></td>
+                                                        <td className={`p-1.5 text-right ${diffColor}`}>{diffDisplay}</td>
+                                                    </tr>
+                                                )
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const getMonthlyTrendData = () => {
+                const dates = getDatesFromPeriod(trendPeriodType, trendPeriodType === 'month' ? safeInputDate.substring(0,7) : summaryWeek);
+                const trendData = { dates: dates, dailyTotals: {}, cumulative: {}, shiftBreakdown: {}, chartDatasets: [] };
+                const currentCumulative = { customers: 0, revenue: 0 };
+                const currentShiftBreakdown = { morning: { customers: 0, revenue: 0 }, evening: { customers: 0, revenue: 0 }, night: { customers: 0, revenue: 0 } };
+                
+                ITEM_CONFIG.forEach(i => { currentCumulative[i.id] = 0; currentShiftBreakdown.morning[i.id] = 0; currentShiftBreakdown.evening[i.id] = 0; currentShiftBreakdown.night[i.id] = 0; });
+
+                dates.forEach(date => {
+                    let hasData = false;
+                    const dayData = { customers: 0, revenue: 0 };
+                    ITEM_CONFIG.forEach(i => dayData[i.id] = 0);
+                    
+                    const shiftsToProcess = trendFilter === 'all' ? ['morning', 'evening', 'night'] : [trendFilter];
+                    if (database[date]) {
+                        shiftsToProcess.forEach(shift => {
+                            if (database[date][shift]) {
+                                const sData = database[date][shift];
+                                const values = [sData.customers, sData.revenue, ...ITEM_CONFIG.map(i => sData[i.id])];
+                                if (values.some(v => v !== '' && v !== undefined && v !== null)) hasData = true;
+                                dayData.customers += Number(sData.customers) || 0;
+                                dayData.revenue += Number(sData.revenue) || 0;
+                                ITEM_CONFIG.forEach(i => dayData[i.id] += Number(sData[i.id]) || 0);
+                            }
+                        });
+                        ['morning', 'evening', 'night'].forEach(shift => {
+                            if (database[date][shift]) {
+                                const sData = database[date][shift];
+                                currentShiftBreakdown[shift].customers += Number(sData.customers) || 0;
+                                currentShiftBreakdown[shift].revenue += Number(sData.revenue) || 0;
+                                ITEM_CONFIG.forEach(i => currentShiftBreakdown[shift][i.id] += Number(sData[i.id]) || 0);
+                            }
+                        });
+                    }
+
+                    trendData.dailyTotals[date] = hasData ? dayData : null;
+                    if (hasData) {
+                        currentCumulative.customers += dayData.customers;
+                        currentCumulative.revenue += dayData.revenue;
+                        ITEM_CONFIG.forEach(i => currentCumulative[i.id] += dayData[i.id]);
+                    }
+                    trendData.cumulative[date] = JSON.parse(JSON.stringify(currentCumulative));
+                    trendData.shiftBreakdown[date] = JSON.parse(JSON.stringify(currentShiftBreakdown));
+                });
+
+                ITEM_CONFIG.forEach(item => {
+                    if(item.id === visibleChart) {
+                        const dataPoints = dates.map(date => trendData.dailyTotals[date] ? trendData.dailyTotals[date][item.id] : null);
+                        trendData.chartDatasets.push({ label: item.name, data: dataPoints, borderColor: item.color, backgroundColor: item.color, tension: 0.3, fill: false, borderWidth: 2, pointRadius: 2, spanGaps: true });
+                    }
+                });
+                return trendData;
+            };
+
+            useEffect(() => {
+                if (activeTab !== 'trend' || typeof Chart === 'undefined') return;
+                const trendData = getMonthlyTrendData();
+                const ctx = document.getElementById('trendChart');
+                if (ctx) {
+                    if (chartRef.current) chartRef.current.destroy();
+                    chartRef.current = new Chart(ctx, {
+                        type: 'line',
+                        data: { labels: trendData.dates.map(d => trendPeriodType === 'week' ? d.substring(5).replace('-','/') : parseInt(d.substring(8)).toString()), datasets: trendData.chartDatasets },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            plugins: { legend: { position: 'top', labels: { boxWidth: 8, font: { size: 9 } } } },
+                            scales: { 
+                                y: { beginAtZero: true, ticks: { font: { size: 9 } } }, 
+                                x: { ticks: { font: { size: 9 }, color: (ctx) => {
+                                    if (ctx.tick && ctx.tick.label) {
+                                        const dateStr = trendPeriodType === 'week' ? `${safeInputDate.substring(0,4)}/${ctx.tick.label}` : `${safeInputDate.substring(0, 7)}-${ctx.tick.label.toString().padStart(2, '0')}`.replace(/-/g, '/');
+                                        const d = new Date(dateStr);
+                                        if (d.getDay() === 0 || d.getDay() === 6) return '#ef4444';
+                                    }
+                                    return '#64748b';
+                                }}} 
+                            }
+                        }
+                    });
+                }
+                return () => { if (chartRef.current) { chartRef.current.destroy(); chartRef.current = null; } };
+            }, [activeTab, database, trendFilter, trendPeriodType, summaryWeek, settings, visibleChart, safeInputDate]);
+
+            const renderTrendTab = () => {
+                const trendData = getMonthlyTrendData();
+                const dates = trendData.dates;
+                const lastDateWithData = [...dates].reverse().find(d => trendData.cumulative[d] && trendData.cumulative[d].customers > 0) || dates[dates.length - 1];
+                const latestCumulative = lastDateWithData ? trendData.cumulative[lastDateWithData] : null;
+                const latestBreakdown = lastDateWithData ? trendData.shiftBreakdown[lastDateWithData] : null;
+
+                const renderRankings = (itemId) => {
+                    if (!latestBreakdown || trendFilter !== 'all') return null; 
+                    const getShiftMetrics = (shiftKey) => {
+                        const actual = latestBreakdown[shiftKey][itemId] || 0;
+                        const target = calculateTarget(latestBreakdown[shiftKey], itemId);
+                        return target > 0 ? Math.round((actual / target) * 100) : (actual > 0 ? 100 : 0);
+                    };
+                    const rankings = [
+                        { shift: '早', rate: getShiftMetrics('morning'), actual: latestBreakdown.morning[itemId] || 0, color: 'text-orange-500' },
+                        { shift: '晚', rate: getShiftMetrics('evening'), actual: latestBreakdown.evening[itemId] || 0, color: 'text-blue-500' },
+                        { shift: '夜', rate: getShiftMetrics('night'), actual: latestBreakdown.night[itemId] || 0, color: 'text-gray-800' }
+                    ];
+                    rankings.sort((a, b) => b.rate - a.rate);
+                    let currentRank = 1;
+                    for (let i = 0; i < rankings.length; i++) {
+                        if (i > 0 && rankings[i].rate < rankings[i-1].rate) currentRank = i + 1;
+                        rankings[i].rank = rankings[i].rate === 0 && rankings[i].actual === 0 ? '-' : currentRank;
+                    }
+                    return (
+                        <div className="mt-1 pt-1 border-t border-purple-200 flex flex-col gap-[2px]">
+                            {rankings.map((d, i) => (
+                                <div key={i} className="flex justify-between items-center text-[10px] leading-none">
+                                    <span className={`${d.color} font-bold`}>{d.shift}</span>
+                                    <div className="flex items-center gap-0.5">
+                                        {d.rank === 1 ? <i className="fa-solid fa-crown text-yellow-500 text-[9px]"></i> : d.rank === 2 ? <i className="fa-solid fa-medal text-gray-400 text-[9px]"></i> : d.rank === 3 ? <i className="fa-solid fa-award text-amber-700 text-[9px]"></i> : <span className="w-[9px]"></span>}
+                                        <span className="font-bold text-gray-700">{d.rate}% <span className="text-[8px] font-normal text-gray-400">({d.actual})</span></span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    );
+                };
+
+                return (
+                    <div className="flex flex-col h-full gap-1.5 text-sm overflow-y-auto hide-scroll pb-2">
+                        <div className="bg-white p-1.5 rounded shadow border border-purple-200 shrink-0">
+                            <div className="flex justify-between items-center mb-1 border-b pb-1">
+                                <h2 className="text-sm font-bold text-purple-800 flex items-center">
+                                    <i className="fa-solid fa-calendar-check mr-1"></i>
+                                    區間累計戰報 
+                                    <span className="text-gray-500 text-xs ml-2 font-normal">
+                                        ({trendPeriodType === 'month' ? safeInputDate.substring(0,7) : summaryWeek} 累計至 {lastDateWithData})
+                                    </span>
+                                </h2>
+                                <div className="flex items-center gap-2">
+                                    <select value={trendPeriodType} onChange={(e) => setTrendPeriodType(e.target.value)} className="border rounded text-xs p-0.5 bg-gray-50 font-bold outline-none">
+                                        <option value="month">看整月</option>
+                                        <option value="week">看單週</option>
+                                    </select>
+                                    {trendPeriodType === 'month' ? 
+                                        <input type="month" value={safeInputDate.substring(0,7)} onChange={(e) => setInputDate(`${e.target.value}-01`)} className="p-0.5 border rounded text-xs bg-gray-50 outline-none" /> :
+                                        <input type="week" value={summaryWeek} onChange={(e) => setSummaryWeek(e.target.value)} className="p-0.5 border rounded text-xs bg-gray-50 outline-none" />
+                                    }
+                                    <div className="flex bg-gray-100 rounded overflow-hidden text-[10px]">
+                                        {['all', 'morning', 'evening', 'night'].map(f => (
+                                            <button key={f} onClick={() => setTrendFilter(f)} className={`px-2 py-0.5 ${trendFilter === f ? 'bg-purple-500 text-white font-bold' : 'text-gray-600 hover:bg-gray-200'}`}>
+                                                {f === 'all' ? '全部累計' : f === 'morning' ? '早班' : f === 'evening' ? '晚班' : '夜班'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                            {latestCumulative && (
+                                <div className="grid grid-cols-3 md:grid-cols-6 gap-1 mt-2">
+                                    {ITEM_CONFIG.map(item => {
+                                        const totalTarget = calculateTarget(latestCumulative, item.id);
+                                        const totalActual = latestCumulative[item.id];
+                                        const { gap, achieveRate, gapRate } = calcMetrics(totalTarget, totalActual);
+                                        const isGood = gap >= 0;
+                                        return (
+                                            <div key={`cumul-${item.id}`} className="bg-purple-50 p-1 rounded border border-purple-100 text-center flex flex-col justify-between">
+                                                <div className="font-bold text-gray-700 text-[10px]">{item.name}</div>
+                                                <div className="text-[9px] text-gray-500">目標: {totalTarget}</div>
+                                                <div className="text-sm font-black text-purple-700">{totalActual}</div>
+                                                <div className={`text-[9px] font-bold ${isGood ? 'text-green-600' : 'text-red-500'} leading-tight scale-90`}>達:{achieveRate}% / 差:{gapRate > 0 ? `+${gapRate}%` : `${gapRate}%`}</div>
+                                                {renderRankings(item.id)}
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                        <div className="bg-white rounded shadow border border-gray-200 overflow-hidden flex flex-col shrink-0">
+                            <h3 className="font-bold text-gray-700 p-1 bg-gray-50 border-b text-xs"><i className="fa-solid fa-table mr-1"></i>期間明細</h3>
+                            <div className="overflow-x-auto hide-scroll p-1 w-full">
+                                <table className="w-full text-center border-collapse text-[10px]">
+                                    <thead>
+                                        <tr>
+                                            <th className="p-0.5 px-1 bg-gray-800 text-white border sticky left-0 z-10 min-w-[50px]">項目 \ 日期</th>
+                                            {dates.map(date => {
+                                                const d = new Date(date.replace(/-/g, '/'));
+                                                const displayDate = trendPeriodType === 'week' ? date.substring(5).replace('-','/') : parseInt(date.substring(8));
+                                                return <th key={date} className={`p-0.5 border min-w-[22px] ${d.getDay() === 0 || d.getDay() === 6 ? 'text-red-500 bg-red-50' : 'bg-gray-100'}`}>{displayDate}</th>
+                                            })}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td className="p-0.5 bg-gray-50 font-bold border sticky left-0 z-10 text-left pl-1">來客數</td>
+                                            {dates.map(date => <td key={`cust-${date}`} className="p-0.5 border text-gray-700">{trendData.dailyTotals[date] ? trendData.dailyTotals[date].customers : ''}</td>)}
+                                        </tr>
+                                        {ITEM_CONFIG.map(item => (
+                                            <tr key={`row-${item.id}`}>
+                                                <td className="p-0.5 bg-white font-semibold border sticky left-0 z-10 text-left pl-1" style={{color: item.color}}>{item.name}</td>
+                                                {dates.map(date => <td key={`${item.id}-${date}`} className="p-0.5 border text-gray-700">{trendData.dailyTotals[date] ? trendData.dailyTotals[date][item.id] : ''}</td>)}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div className="bg-white p-1 rounded shadow border border-gray-200 flex flex-col min-h-[250px] shrink-0">
+                            <div className="flex flex-wrap gap-2 mb-1 px-1 justify-center border-b pb-1">
+                                {ITEM_CONFIG.map(item => (
+                                    <label key={`rad-${item.id}`} className="flex items-center text-[10px] cursor-pointer">
+                                        <input type="radio" checked={visibleChart === item.id} onChange={() => setVisibleChart(item.id)} className="mr-0.5" />
+                                        <span style={{color: item.color}} className="font-bold">{item.name}</span>
+                                    </label>
+                                ))}
+                            </div>
+                            <div className="relative flex-1 w-full"><canvas id="trendChart"></canvas></div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderSettings = () => {
+                const totalScore = ITEM_CONFIG.reduce((sum, item) => sum + (Number(settings[item.id]?.score) || 0), 0);
+
+                return (
+                    <div className="flex flex-col md:flex-row h-full gap-4 text-sm overflow-hidden">
+                        <div className="w-full md:w-1/2 bg-white p-4 rounded shadow border border-gray-200 overflow-y-auto hide-scroll">
+                            <h2 className="text-lg font-bold text-gray-800 mb-2"><i className="fa-solid fa-gear mr-2 text-gray-500"></i>各項指標設定</h2>
+                            <p className="text-xs text-gray-500 mb-4">設定各項目的目標轉換率(%)與配分。設定後連動全系統計算。</p>
+                            <table className="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr className="bg-gray-100">
+                                        <th className="p-2 border">指標項目</th>
+                                        <th className="p-2 border">佔比 (%)</th>
+                                        <th className="p-2 border">得分</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {ITEM_CONFIG.map(item => (
+                                        <tr key={item.id} className="hover:bg-gray-50">
+                                            <td className="p-2 border font-semibold">{item.name} <div className="text-[10px] text-gray-400">{item.type === 'amount' ? '當班業績' : '當班來客'}</div></td>
+                                            <td className="p-2 border">
+                                                <input type="number" className="p-1 border rounded w-16 text-center outline-none" 
+                                                    value={(settings[item.id] && settings[item.id].rate !== undefined) ? settings[item.id].rate : ''} 
+                                                    onChange={(e) => handleSettingChange(item.id, 'rate', e.target.value)} /> %
+                                            </td>
+                                            <td className="p-2 border">
+                                                <input type="number" className="p-1 border rounded w-16 text-center outline-none" 
+                                                    value={(settings[item.id] && settings[item.id].score !== undefined) ? settings[item.id].score : ''} 
+                                                    onChange={(e) => handleSettingChange(item.id, 'score', e.target.value)} /> 分
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                                <tfoot>
+                                    <tr className="bg-blue-50 font-bold">
+                                        <td colSpan="2" className="p-2 border text-right">總分累計：</td>
+                                        <td className="p-2 border text-center text-blue-700">{totalScore} 分</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <div className="w-full md:w-1/2 bg-blue-50/30 p-4 rounded shadow border border-blue-200 overflow-y-auto hide-scroll">
+                            <h2 className="text-lg font-bold text-blue-800 mb-2"><i className="fa-solid fa-clock mr-2"></i>排班時段管理</h2>
+                            <p className="text-xs text-gray-500 mb-4">在此新增或刪除稽核用的排班時段。這些時段將顯示於「店長稽核」分頁，供輸入各時段產值與人數。</p>
+                            
+                            <div className="flex gap-2 mb-4">
+                                <input type="text" placeholder="輸入新時段名稱 (例: 10-14 時段)" 
+                                    className="flex-1 p-2 border border-blue-300 rounded outline-none focus:ring-1 focus:ring-blue-500 text-sm"
+                                    value={newSlotName} onChange={(e) => setNewSlotName(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleAddSlot()} />
+                                <button onClick={handleAddSlot} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"><i className="fa-solid fa-plus mr-1"></i>新增</button>
+                            </div>
+
+                            <div className="space-y-2">
+                                {timeSlots.map((slot, idx) => (
+                                    <div key={slot.id} className="flex justify-between items-center bg-white p-2.5 rounded border shadow-sm">
+                                        <div className="font-bold text-gray-700"><span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs mr-2">{idx + 1}</span>{slot.label}</div>
+                                        <button onClick={() => handleDeleteSlot(slot.id)} className="text-red-500 hover:text-red-700 bg-red-50 px-2 py-1 rounded transition text-xs">
+                                            <i className="fa-solid fa-trash-can mr-1"></i>刪除
+                                        </button>
+                                    </div>
+                                ))}
+                                {timeSlots.length === 0 && <div className="text-center text-gray-400 py-4">目前沒有設定任何時段</div>}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
             const renderHrTab = () => {
                 if (!hrAuthUnlocked) return <div className="p-4 text-center text-red-500 mt-10 font-bold">拒絕存取：請由導覽列重新驗證密碼。</div>;
                 const availableStores = [...new Set(Object.values(hrEmployees).map(emp => emp.storeName).filter(Boolean))];
@@ -450,7 +1206,7 @@
 
                     return (
                         <div className="hr-form-container text-gray-800 bg-white">
-                            <div className="text-center py-4 border-b-2 border-red-600 mb-2">
+                            <div className="text-center py-4 border-b-2 border-red-600 mb-2 relative">
                                 <h1 className="text-3xl font-bold text-blue-900 tracking-[0.2em]">12生肖績效檢討表</h1>
                                 <p className="text-red-600 font-bold mt-2 tracking-widest text-sm">落實執行 ． 追蹤管理 ． 持續改善 ． 提升營運績效</p>
                             </div>
@@ -479,7 +1235,7 @@
                             </div>
                             
                             {/* 列印專用 Header */}
-                            <div className="hidden print:flex justify-between items-end px-4 mb-2 text-sm font-bold border-b-2 border-red-600 pb-2">
+                            <div className="hidden print:flex justify-between items-end px-4 mb-2 text-sm font-bold border-b-2 border-red-600 pb-2 mt-4">
                                 <div className="flex gap-8">
                                     <span>店名： <span className="text-blue-900 border-b border-gray-400 inline-block w-24 text-center">{emp.storeName}</span></span>
                                     <span>店長： <span className="text-blue-900 border-b border-gray-400 inline-block w-24 text-center">{emp.name}</span></span>
@@ -526,7 +1282,7 @@
                                                             value={iData.actualText||''} 
                                                             onChange={e=>chg(`items.${item.id}.actualText`, e.target.value)}
                                                         ></textarea>
-                                                        <div className="absolute bottom-1 right-1 flex items-center text-[10px] bg-white/90 px-1 py-0.5 rounded border border-gray-200 shadow-sm opacity-50 group-hover:opacity-100 transition-opacity">
+                                                        <div className="absolute bottom-1 right-1 flex items-center text-[10px] bg-white/90 px-1 py-0.5 rounded border border-gray-200 shadow-sm opacity-50 group-hover:opacity-100 transition-opacity print:opacity-100">
                                                             <span className="font-bold text-blue-800 mr-1">達成率:</span>
                                                             <input type="number" className="w-10 text-center font-bold text-blue-600 bg-transparent outline-none border-b border-blue-300 mr-0.5" value={iData.rate!==undefined?iData.rate:''} onChange={e=>updateRateAndScore(item.id, e.target.value)} placeholder="0"/>%
                                                         </div>
@@ -545,7 +1301,6 @@
                                             );
                                         })}
                                         
-                                        {/* 總結區塊 */}
                                         <tr className="bg-[#eef2ff] border-t-2 border-blue-900">
                                             <td colSpan="4" className="text-right p-2 font-bold text-gray-700 border-r border-gray-300">
                                                 <div className="mb-2">平均分數：</div>
@@ -588,7 +1343,6 @@
                                     </tbody>
                                 </table>
 
-                                {/* 簽名區塊 */}
                                 <div className="mt-4 flex justify-between items-end pb-4 font-bold text-gray-800 text-sm">
                                     <div className="flex-1 flex items-end">
                                         <span className="w-20 tracking-widest shrink-0">店長簽名:</span>
@@ -630,6 +1384,18 @@
                                         {empsInStore.map(emp => <option key={emp.id} value={emp.id}>{emp.id} - {emp.name}</option>)}
                                     </select>
                                 </div>
+                            </div>
+                            <div className="flex gap-2 items-center">
+                                {currentEmp && (
+                                    <>
+                                        <button onClick={() => { setEditEmpData({ id: currentEmp.id, name: currentEmp.name, storeName: currentEmp.storeName }); setIsEditMode(true); setShowEmpModal(true); }} className="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 transition"><i className="fa-solid fa-pen mr-1"></i>編輯</button>
+                                        <button onClick={handleDeleteHrEmployee} className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition"><i className="fa-solid fa-trash-can mr-1"></i>刪除</button>
+                                    </>
+                                )}
+                                <input type="text" placeholder="編號" className="border rounded px-2 py-1 text-sm w-16" value={newEmpId} onChange={e => setNewEmpId(e.target.value)} />
+                                <input type="text" placeholder="姓名" className="border rounded px-2 py-1 text-sm w-24" value={newEmpName} onChange={e => setNewEmpName(e.target.value)} />
+                                <button onClick={handleAddHrEmployee} className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition whitespace-nowrap"><i className="fa-solid fa-plus mr-1"></i>快速新增</button>
+                                <button onClick={() => { setEditEmpData({ id: '', name: '', storeName: selectedStore }); setIsEditMode(false); setShowEmpModal(true); }} className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition whitespace-nowrap"><i className="fa-solid fa-user-plus mr-1"></i>完整新增</button>
                             </div>
                         </div>
 
@@ -679,19 +1445,194 @@
                                 </div>
                             </div>
                         )}
+
+                        {showEmpModal && (
+                            <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4">
+                                <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
+                                    <div className="bg-blue-600 text-white p-4 font-bold flex justify-between">
+                                        <span>{isEditMode ? '編輯員工資料' : '新增系統員工'}</span>
+                                        <button onClick={() => setShowEmpModal(false)}><i className="fa-solid fa-xmark text-xl"></i></button>
+                                    </div>
+                                    <form onSubmit={handleSaveHrEmployee} className="p-6 space-y-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 mb-1">所屬店別</label>
+                                            <input required value={editEmpData.storeName} onChange={e => setEditEmpData({...editEmpData, storeName: e.target.value})} className="w-full border p-2 rounded outline-none focus:border-blue-500" placeholder="例: 中清店" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 mb-1">員工編號</label>
+                                            <input required value={editEmpData.id} onChange={e => setEditEmpData({...editEmpData, id: e.target.value})} disabled={isEditMode} className="w-full border p-2 rounded outline-none focus:border-blue-500 disabled:bg-gray-100" placeholder="例: E001" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 mb-1">員工姓名</label>
+                                            <input required value={editEmpData.name} onChange={e => setEditEmpData({...editEmpData, name: e.target.value})} className="w-full border p-2 rounded outline-none focus:border-blue-500" placeholder="例: 王小明" />
+                                        </div>
+                                        <div className="pt-4 flex justify-end gap-3 border-t">
+                                            <button type="button" onClick={() => setShowEmpModal(false)} className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded font-bold transition">取消</button>
+                                            <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded font-bold shadow hover:bg-blue-700 transition">確認儲存</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+            const renderAdminTab = () => {
+                if (!isSuperAdmin) return <div className="p-4 text-center text-red-500 font-bold">拒絕存取：請重新驗證最高權限。</div>;
+                
+                const handleUpdateUserStatus = (id, newStatus) => {
+                    const user = systemUsers.find(u => u.id === id);
+                    if(user) saveToFirebase('system_users', id, { ...user, status: newStatus });
+                };
+
+                const handleDeleteUser = (id) => {
+                    if(confirm('確定要永久刪除此帳號嗎？')) {
+                        saveToFirebase('system_users', id, { status: 'deleted' });
+                    }
+                };
+
+                const saveUserForm = (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    const userData = {
+                        username: formData.get('username'),
+                        name: formData.get('name'),
+                        role: formData.get('role'),
+                        group: formData.get('group'),
+                        permissions: formData.getAll('permissions'),
+                        status: 'active',
+                        updatedAt: new Date().toISOString()
+                    };
+                    const targetId = editUser ? editUser.id : `user_${Date.now()}`;
+                    saveToFirebase('system_users', targetId, userData);
+                    setManageUserModal(false);
+                    setEditUser(null);
+                };
+
+                const activeUsers = systemUsers.filter(u => u.status !== 'deleted');
+
+                return (
+                    <div className="flex flex-col h-full gap-4 text-sm overflow-hidden p-4 bg-gray-50">
+                        <div className="bg-white p-4 rounded shadow border border-gray-200 flex justify-between items-center">
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-800"><i className="fa-solid fa-crown text-yellow-500 mr-2"></i>總部最高權限管理控制台</h2>
+                                <p className="text-xs text-gray-500 mt-1">目前登入身分：<span className="font-bold text-red-600">信吉 (Super Admin)</span></p>
+                            </div>
+                            <button onClick={() => { setEditUser(null); setManageUserModal(true); }} className="bg-red-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-red-700 transition">
+                                <i className="fa-solid fa-user-plus mr-2"></i>新增系統人員
+                            </button>
+                        </div>
+
+                        <div className="flex-1 bg-white rounded shadow border border-gray-200 overflow-y-auto">
+                            <table className="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr className="bg-gray-100 text-gray-700 border-b-2">
+                                        <th className="p-3">姓名 / 帳號</th>
+                                        <th className="p-3">層級身份</th>
+                                        <th className="p-3">所屬群組 (門店/區域)</th>
+                                        <th className="p-3">資料檢視權限</th>
+                                        <th className="p-3 text-center">狀態</th>
+                                        <th className="p-3 text-right">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {activeUsers.map(user => (
+                                        <tr key={user.id} className="border-b hover:bg-gray-50">
+                                            <td className="p-3">
+                                                <div className="font-bold text-gray-800">{user.name}</div>
+                                                <div className="text-[10px] text-gray-500">{user.username}</div>
+                                            </td>
+                                            <td className="p-3"><span className={`px-2 py-0.5 rounded text-xs font-bold ${user.role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>{user.role === 'admin' ? '區主管' : '店長/店員'}</span></td>
+                                            <td className="p-3 font-bold text-gray-700">{user.group || '未指定'}</td>
+                                            <td className="p-3 text-xs text-gray-600">
+                                                {user.permissions && user.permissions.includes('view_all') ? <span className="text-red-600 font-bold"><i className="fa-solid fa-eye mr-1"></i>跨區/全區資料</span> : <span className="text-blue-600 font-bold"><i className="fa-solid fa-store mr-1"></i>僅限本店資料</span>}
+                                            </td>
+                                            <td className="p-3 text-center">
+                                                {user.status === 'active' ? <span className="text-green-600 font-bold bg-green-50 px-2 py-1 rounded text-xs"><i className="fa-solid fa-check-circle mr-1"></i>啟用中</span> : <span className="text-gray-500 font-bold bg-gray-100 px-2 py-1 rounded text-xs"><i className="fa-solid fa-ban mr-1"></i>已停權</span>}
+                                            </td>
+                                            <td className="p-3 text-right space-x-2">
+                                                <button onClick={() => { setEditUser(user); setManageUserModal(true); }} className="px-2 py-1 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded transition text-xs font-bold"><i className="fa-solid fa-pen"></i></button>
+                                                {user.status === 'active' ? (
+                                                    <button onClick={() => handleUpdateUserStatus(user.id, 'suspended')} className="px-2 py-1 bg-amber-100 text-amber-700 hover:bg-amber-200 rounded transition text-xs font-bold" title="停權"><i className="fa-solid fa-lock"></i></button>
+                                                ) : (
+                                                    <button onClick={() => handleUpdateUserStatus(user.id, 'active')} className="px-2 py-1 bg-green-100 text-green-700 hover:bg-green-200 rounded transition text-xs font-bold" title="啟用"><i className="fa-solid fa-unlock"></i></button>
+                                                )}
+                                                <button onClick={() => handleDeleteUser(user.id)} className="px-2 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded transition text-xs font-bold" title="刪除"><i className="fa-solid fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {activeUsers.length === 0 && <tr><td colSpan="6" className="p-8 text-center text-gray-400">尚無任何人員資料</td></tr>}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {manageUserModal && (
+                            <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4">
+                                <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+                                    <div className="bg-red-600 text-white p-4 font-bold flex justify-between">
+                                        <span>{editUser ? '編輯人員資料' : '新增系統人員'}</span>
+                                        <button onClick={() => {setManageUserModal(false); setEditUser(null);}}><i className="fa-solid fa-xmark text-xl"></i></button>
+                                    </div>
+                                    <form onSubmit={saveUserForm} className="p-6 space-y-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div><label className="block text-xs text-gray-500 mb-1">登入帳號</label><input required name="username" defaultValue={editUser?.username} className="w-full border p-2 rounded outline-none focus:border-red-500" placeholder="例: A001" /></div>
+                                            <div><label className="block text-xs text-gray-500 mb-1">人員姓名</label><input required name="name" defaultValue={editUser?.name} className="w-full border p-2 rounded outline-none focus:border-red-500" placeholder="例: 王小明" /></div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-gray-500 mb-1">層級身分</label>
+                                                <select name="role" defaultValue={editUser?.role || 'staff'} className="w-full border p-2 rounded outline-none">
+                                                    <option value="staff">店長/店員</option><option value="admin">區主管</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-gray-500 mb-1">群組分類 (門店/區域)</label>
+                                                <input name="group" defaultValue={editUser?.group} className="w-full border p-2 rounded outline-none focus:border-red-500" placeholder="例: 中清店" />
+                                            </div>
+                                        </div>
+                                        <div className="bg-gray-50 p-3 rounded border">
+                                            <label className="block text-xs font-bold text-gray-700 mb-2"><i className="fa-solid fa-shield mr-1"></i>資料檢視權限配置</label>
+                                            <label className="flex items-center gap-2 mb-2 cursor-pointer">
+                                                <input type="checkbox" name="permissions" value="view_self" defaultChecked={editUser ? editUser.permissions?.includes('view_self') : true} className="scale-125" />
+                                                <span className="text-sm font-bold text-gray-800">僅限檢視本店/所屬群組資料</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input type="checkbox" name="permissions" value="view_all" defaultChecked={editUser ? editUser.permissions?.includes('view_all') : false} className="scale-125" />
+                                                <span className="text-sm font-bold text-red-600">開放檢視所有跨區資料 (主管級)</span>
+                                            </label>
+                                        </div>
+                                        <div className="pt-4 flex justify-end gap-3 border-t">
+                                            <button type="button" onClick={() => {setManageUserModal(false); setEditUser(null);}} className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded font-bold transition">取消</button>
+                                            <button type="submit" className="px-6 py-2 bg-red-600 text-white rounded font-bold shadow hover:bg-red-700 transition">儲存設定</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 );
             };
 
             return (
                 <div className={`flex flex-col max-w-[1400px] mx-auto bg-gray-100 relative ${fullScreenMode ? 'pdf-mode' : 'h-full'}`}>
+                    
                     {showPwdModal && (
                         <div className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4">
                             <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100">
-                                <div className="bg-blue-800 text-white p-4 font-bold text-lg flex items-center gap-2"><i className="fa-solid fa-lock"></i> 系統安全驗證</div>
+                                <div className="bg-blue-800 text-white p-4 font-bold text-lg flex items-center gap-2">
+                                    <i className="fa-solid fa-lock"></i> 系統安全驗證
+                                </div>
                                 <div className="p-6">
                                     <p className="text-gray-600 text-sm mb-4 font-bold">請輸入授權密碼以解鎖畫面。</p>
-                                    <input type="password" value={pwdInput} onChange={(e) => setPwdInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handlePwdSubmit()} className="w-full border-2 border-gray-300 rounded-lg p-3 text-center text-2xl tracking-[0.5em] focus:border-blue-500 outline-none font-sans" placeholder="輸入密碼" autoFocus/>
+                                    <input type="password" 
+                                        className="w-full border-2 border-gray-300 rounded-lg p-3 text-center text-2xl tracking-[0.5em] focus:border-blue-500 outline-none transition-colors font-sans" 
+                                        value={pwdInput} 
+                                        onChange={(e) => setPwdInput(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handlePwdSubmit()}
+                                        placeholder="輸入密碼"
+                                        autoFocus
+                                    />
                                 </div>
                                 <div className="bg-gray-50 p-4 flex justify-end gap-3 border-t">
                                     <button onClick={() => {setShowPwdModal(false); setPwdInput('');}} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded font-bold transition">取消</button>
@@ -700,19 +1641,103 @@
                             </div>
                         </div>
                     )}
+
+                    {showSuperAuthModal && (
+                        <div className="fixed inset-0 bg-black/80 z-[120] flex items-center justify-center p-4">
+                            <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border-2 border-yellow-500">
+                                <div className="bg-gray-900 text-yellow-500 p-4 font-bold text-lg flex items-center gap-2">
+                                    <i className="fa-solid fa-crown"></i> 總部最高權限登入
+                                </div>
+                                <div className="p-6 space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 mb-1">管理員帳號</label>
+                                        <input type="text" className="w-full border-2 border-gray-300 rounded-lg p-2 text-center text-lg font-bold focus:border-yellow-500 outline-none" value={superAccInput} onChange={e => setSuperAccInput(e.target.value)} placeholder="輸入帳號" autoFocus />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 mb-1">管理員密碼</label>
+                                        <input type="password" className="w-full border-2 border-gray-300 rounded-lg p-2 text-center text-xl tracking-[0.2em] font-sans focus:border-yellow-500 outline-none" value={superPwdInput} onChange={e => setSuperPwdInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSuperAuthSubmit()} placeholder="輸入密碼" />
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 p-4 flex justify-end gap-3 border-t">
+                                    <button onClick={() => {setShowSuperAuthModal(false); setSuperAccInput(''); setSuperPwdInput('');}} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded font-bold transition">取消</button>
+                                    <button onClick={handleSuperAuthSubmit} className="px-6 py-2 bg-yellow-500 text-gray-900 rounded font-bold shadow hover:bg-yellow-400 transition">驗證登入</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {pwdErrorModal && (
+                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[110] p-4">
+                            <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full transform transition-all border-l-4 border-red-500">
+                                <div className="flex items-center text-red-500 mb-4">
+                                    <i className="fa-solid fa-triangle-exclamation text-3xl mr-2"></i>
+                                    <h3 className="font-bold text-lg">存取失敗</h3>
+                                </div>
+                                <p className="text-gray-600 mb-6 font-bold">密碼錯誤，請重新輸入以驗證您的身份。</p>
+                                <button onClick={() => setPwdErrorModal(false)} className="w-full bg-gray-900 text-white py-2 rounded-lg font-bold hover:bg-gray-700 transition">
+                                    我知道了
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {superAuthErrorModal && (
+                        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[130] p-4">
+                            <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full transform transition-all border-l-4 border-red-600 border-t-2 border-r-2 border-b-2">
+                                <div className="flex items-center text-red-600 mb-4">
+                                    <i className="fa-solid fa-ban text-3xl mr-3"></i>
+                                    <h3 className="font-black text-xl tracking-wider">權限驗證失敗</h3>
+                                </div>
+                                <p className="text-gray-700 mb-6 font-bold leading-relaxed">
+                                    您輸入的最高權限帳號或密碼不正確。<br/>
+                                    <span className="text-sm text-gray-500 font-normal mt-1 block">請重新確認後再試一次。</span>
+                                </p>
+                                <button onClick={() => setSuperAuthErrorModal(false)} className="w-full bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700 transition shadow-md">
+                                    返回重新輸入
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     {fullScreenMode && (
                         <button onClick={() => setFullScreenMode(false)} className="fixed bottom-6 right-6 bg-red-600 text-white px-5 py-3 rounded-full shadow-2xl font-bold z-[100] hover:bg-red-700 border-2 border-white flex items-center no-print">
                             <i className="fa-solid fa-compress mr-2"></i>結束預覽模式
                         </button>
                     )}
+
                     <header className="px-4 py-2 border-b bg-white flex justify-between items-center shrink-0 shadow-sm relative z-10 hide-in-fullscreen">
-                        <h1 className="text-xl font-black text-gray-800 tracking-tight"><span className="text-blue-600 mr-1">{loggedInGroup}</span>12生肖戰報</h1>
+                        <h1 className="text-xl font-black text-gray-800 tracking-tight">
+                            <span className="text-blue-600 mr-1">{loggedInGroup}</span>12生肖戰報
+                        </h1>
+                        <button onClick={() => setShowSuperAuthModal(true)} className="bg-gray-900 text-yellow-500 px-3 py-1 rounded text-xs font-bold shadow hover:bg-gray-800 transition">
+                            <i className="fa-solid fa-key mr-1"></i>權限登入
+                        </button>
                     </header>
+
                     <nav className="flex overflow-x-auto border-b bg-white shrink-0 hide-scroll text-sm relative z-10 hide-in-fullscreen">
-                        <button onClick={() => setShowPwdModal(true)} className={`flex-1 py-2 px-3 whitespace-nowrap border-l-2 border-blue-200 tab-active !border-b-blue-600 !text-blue-800`}><i className="fa-solid fa-user-shield mr-1"></i>人事績效管理</button>
+                        <button onClick={() => switchTab('night')} className={`flex-1 py-2 px-3 whitespace-nowrap ${activeTab === 'night' ? 'tab-active' : 'tab-inactive'}`}><i className="fa-solid fa-moon mr-1 text-gray-700"></i>夜班</button>
+                        <button onClick={() => switchTab('morning')} className={`flex-1 py-2 px-3 whitespace-nowrap ${activeTab === 'morning' ? 'tab-active' : 'tab-inactive'}`}><i className="fa-solid fa-sun mr-1 text-orange-500"></i>早班</button>
+                        <button onClick={() => switchTab('evening')} className={`flex-1 py-2 px-3 whitespace-nowrap ${activeTab === 'evening' ? 'tab-active' : 'tab-inactive'}`}><i className="fa-solid fa-cloud-sun mr-1 text-indigo-500"></i>晚班</button>
+                        <button onClick={() => switchTab('summary')} className={`flex-1 py-2 px-3 whitespace-nowrap ${activeTab === 'summary' ? 'tab-active' : 'tab-inactive'}`}><i className="fa-solid fa-layer-group mr-1 text-green-600"></i>三班累加</button>
+                        <button onClick={() => switchTab('audit')} className={`flex-1 py-2 px-3 whitespace-nowrap ${activeTab === 'audit' ? 'tab-active' : 'tab-inactive'}`}><i className="fa-solid fa-clipboard-check mr-1 text-red-600"></i>稽核</button>
+                        <button onClick={() => switchTab('trend')} className={`flex-1 py-2 px-3 whitespace-nowrap ${activeTab === 'trend' ? 'tab-active' : 'tab-inactive'}`}><i className="fa-solid fa-chart-line mr-1 text-purple-600"></i>趨勢圖表</button>
+                        <button onClick={() => switchTab('settings')} className={`flex-1 py-2 px-3 whitespace-nowrap ${activeTab === 'settings' ? 'tab-active' : 'tab-inactive'}`}><i className="fa-solid fa-gear mr-1 text-gray-500"></i>店長設定</button>
+                        <button onClick={() => setShowPwdModal(true)} className={`flex-1 py-2 px-3 whitespace-nowrap border-l-2 border-blue-200 ${activeTab === 'hr' ? 'tab-active !border-b-blue-600 !text-blue-800' : 'text-blue-600 hover:bg-blue-50'}`}><i className="fa-solid fa-user-shield mr-1"></i>人事績效管理</button>
+                        {isSuperAdmin && (
+                            <button onClick={() => switchTab('admin')} className={`flex-1 py-2 px-3 whitespace-nowrap border-l-2 border-red-200 ${activeTab === 'admin' ? 'tab-active !border-b-red-600 !text-red-700 bg-red-50' : 'text-red-500 hover:bg-red-50'}`}><i className="fa-solid fa-crown mr-1"></i>權限管理</button>
+                        )}
                     </nav>
+
                     <main className={`flex-1 ${fullScreenMode ? 'print-mode' : 'overflow-hidden'}`}>
-                        {renderHrTab()}
+                        {activeTab === 'night' && <div className="p-2 h-full overflow-hidden">{renderShiftTab('night', '夜班', 'fa-moon', 'text-gray-800', 'bg-gray-800')}</div>}
+                        {activeTab === 'morning' && <div className="p-2 h-full overflow-hidden">{renderShiftTab('morning', '早班', 'fa-sun', 'text-orange-600', 'bg-orange-500')}</div>}
+                        {activeTab === 'evening' && <div className="p-2 h-full overflow-hidden">{renderShiftTab('evening', '晚班', 'fa-cloud-sun', 'text-indigo-600', 'bg-indigo-500')}</div>}
+                        {activeTab === 'summary' && <div className="p-2 h-full overflow-hidden">{renderSummary()}</div>}
+                        {activeTab === 'audit' && <div className="p-2 h-full overflow-hidden">{renderAudit()}</div>}
+                        {activeTab === 'trend' && <div className="p-2 h-full overflow-hidden">{renderTrendTab()}</div>}
+                        {activeTab === 'settings' && <div className="p-2 h-full overflow-hidden">{renderSettings()}</div>}
+                        {activeTab === 'hr' && renderHrTab()}
+                        {activeTab === 'admin' && renderAdminTab()}
                     </main>
                 </div>
             );
