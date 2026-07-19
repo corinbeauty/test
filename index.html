@@ -127,19 +127,20 @@
             { phase: '留任與發展', no: 17, item: '學習成長紀錄', desc: '新人學習歷程與成長紀錄完整保存', std: '持續更新' },
         ];
 
+        // ADDED COLORS AND FIXED ICON
         const ZODIAC_ITEMS = [
-            { no: 1, name: '業績管理', desc: '• 每日業績目標設定與追蹤\n• 業績達成檢討與改善行動\n• 業績報表準確與回報', std: '每日追蹤、檢討並提出改善方案\n月目標達成率100%以上', max: 10, icon: 'fa-chart-line' },
-            { no: 2, name: '商品銷售', desc: '• 主推商品積極銷售\n• 滴雞精/湯品銷售推廣\n• 商品庫存與銷售分析', std: '主推商品銷售達成率100%以上\n每100位客人銷售數達標', max: 15, icon: 'fa-shopping-bag' },
-            { no: 3, name: '筋膜推薦', desc: '• 筋膜主動介紹\n• 成交率提升與追蹤\n• 師傅話術落實與考核', std: '介紹率達80%以上\n成交率持續加強提升', max: 10, icon: 'fa-child' },
-            { no: 4, name: '套餐銷售', desc: '• 套餐話術推廣\n• 套餐銷售數量提升\n• 顧客回購與滿意度', std: '套餐銷售達成率100%以上\n每100位客人套餐銷售數達標', max: 10, icon: 'fa-box' },
-            { no: 5, name: '人力管理', desc: '• 新人關懷與輔導\n• 員工出勤與排班管理\n• 離職預防與留才措施', std: '離職率低於5%\n高風險員工主動關懷與追蹤', max: 10, icon: 'fa-users-config' },
-            { no: 6, name: '粉專/社群經營', desc: '• 每週發文3篇以上\n• 互動與回覆粉絲增加\n• 短影音/活動分享', std: '每週發文3篇以上\n粉專至少30個按讚或互動', max: 5, icon: 'fa-thumbs-up' },
-            { no: 7, name: '訪談與輔導', desc: '• 同仁定期例行訪談\n• 新人/績效考核紀錄\n• 訪談表完整填寫', std: '每週至少完成1次訪談\n訪談紀錄完整且有效追蹤', max: 5, icon: 'fa-comments' },
-            { no: 8, name: 'Google評論管理', desc: '• 五星評論增加\n• 負評即時回覆與處理\n• 評論內容改善追蹤', std: '負評24小時內回覆率100%\n五星評論片數達指標', max: 10, icon: 'fa-google' },
-            { no: 9, name: 'APP會員經營', desc: '• 新會員招募\n• 會員回訪與互動\n• 會員成長數據追蹤', std: '本月新增會員數達標\n會員成長率持續提升', max: 5, icon: 'fa-mobile-screen' },
-            { no: 10, name: '客訴管理', desc: '• 客訴即時處理\n• 處理流程符合SOP\n• 改善措施與追蹤', std: '客訴處理24小時內完成\n改善措施落實且追蹤', max: 10, icon: 'fa-headset' },
-            { no: 11, name: '銷貨管理', desc: '• 銷貨成本管控\n• 銷貨與使用差異管控\n• 現金/刷卡帳款一致', std: '票券、商品與銷售一致無誤差', max: 5, icon: 'fa-file-invoice-dollar' },
-            { no: 12, name: '庫存管理', desc: '• 定期盤點執行\n• 庫存數量管控\n• 效期商品管理', std: '每月盤點無誤差\n效期與庫存管理完整', max: 5, icon: 'fa-cubes' }
+            { no: 1, name: '業績管理', desc: '• 每日業績目標設定與追蹤\n• 業績達成檢討與改善行動\n• 業績報表準確與回報', std: '每日追蹤、檢討並提出改善方案\n月目標達成率100%以上', max: 10, icon: 'fa-chart-line', color: 'text-blue-500' },
+            { no: 2, name: '商品銷售', desc: '• 主推商品積極銷售\n• 滴雞精/湯品銷售推廣\n• 商品庫存與銷售分析', std: '主推商品銷售達成率100%以上\n每100位客人銷售數達標', max: 15, icon: 'fa-shopping-bag', color: 'text-orange-500' },
+            { no: 3, name: '筋膜推薦', desc: '• 筋膜主動介紹\n• 成交率提升與追蹤\n• 師傅話術落實與考核', std: '介紹率達80%以上\n成交率持續加強提升', max: 10, icon: 'fa-child', color: 'text-pink-500' },
+            { no: 4, name: '套餐銷售', desc: '• 套餐話術推廣\n• 套餐銷售數量提升\n• 顧客回購與滿意度', std: '套餐銷售達成率100%以上\n每100位客人套餐銷售數達標', max: 10, icon: 'fa-box', color: 'text-green-500' },
+            { no: 5, name: '人力管理', desc: '• 新人關懷與輔導\n• 員工出勤與排班管理\n• 離職預防與留才措施', std: '離職率低於5%\n高風險員工主動關懷與追蹤', max: 10, icon: 'fa-users-gear', color: 'text-purple-500' }, // FIXED ICON
+            { no: 6, name: '粉專/社群經營', desc: '• 每週發文3篇以上\n• 互動與回覆粉絲增加\n• 短影音/活動分享', std: '每週發文3篇以上\n粉專至少30個按讚或互動', max: 5, icon: 'fa-thumbs-up', color: 'text-sky-500' },
+            { no: 7, name: '訪談與輔導', desc: '• 同仁定期例行訪談\n• 新人/績效考核紀錄\n• 訪談表完整填寫', std: '每週至少完成1次訪談\n訪談紀錄完整且有效追蹤', max: 5, icon: 'fa-comments', color: 'text-teal-500' },
+            { no: 8, name: 'Google評論管理', desc: '• 五星評論增加\n• 負評即時回覆與處理\n• 評論內容改善追蹤', std: '負評24小時內回覆率100%\n五星評論片數達指標', max: 10, icon: 'google', color: '' }, // Custom SVG
+            { no: 9, name: 'APP會員經營', desc: '• 新會員招募\n• 會員回訪與互動\n• 會員成長數據追蹤', std: '本月新增會員數達標\n會員成長率持續提升', max: 5, icon: 'fa-mobile-screen', color: 'text-indigo-500' },
+            { no: 10, name: '客訴管理', desc: '• 客訴即時處理\n• 處理流程符合SOP\n• 改善措施與追蹤', std: '客訴處理24小時內完成\n改善措施落實且追蹤', max: 10, icon: 'fa-headset', color: 'text-red-500' },
+            { no: 11, name: '銷貨管理', desc: '• 銷貨成本管控\n• 銷貨與使用差異管控\n• 現金/刷卡帳款一致', std: '票券、商品與銷售一致無誤差', max: 5, icon: 'fa-file-invoice-dollar', color: 'text-yellow-600' },
+            { no: 12, name: '庫存管理', desc: '• 定期盤點執行\n• 庫存數量管控\n• 效期商品管理', std: '每月盤點無誤差\n效期與庫存管理完整', max: 5, icon: 'fa-cubes', color: 'text-gray-600' }
         ];
 
         const getTodayStr = () => {
@@ -1220,19 +1221,35 @@
         };
 
         const HrForm4Component = ({ emp, handleHrFieldChange, renderSignBox }) => {
-            const fData = emp.form4 || { basic: {}, scores: {}, result: {} };
-            const chg = (path, val) => handleHrFieldChange(emp.id, 'form4', path, val);
+            const [selectedRecordId, setSelectedRecordId] = useState('');
+            const [newRecordType, setNewRecordType] = useState('month'); 
+            const [newRecordDate, setNewRecordDate] = useState('');
 
-            let totalScore = 0;
-            ZODIAC_ITEMS.forEach(item => { totalScore += (Number(fData.scores?.[item.no]?.self) || 0); });
-            const avgScore = (totalScore / 12).toFixed(2);
-            const achieveRate = ((totalScore / 100) * 100).toFixed(2);
+            // Access form4Records or fallback to empty
+            const records = emp.form4Records || {};
+            const recordKeys = Object.keys(records).sort().reverse();
 
-            let grade = '';
-            if (totalScore >= 90) grade = 'excellent';
-            else if (totalScore >= 80) grade = 'good';
-            else if (totalScore >= 60) grade = 'pass';
-            else if (totalScore > 0) grade = 'fail';
+            // Set initial selected record
+            useEffect(() => {
+                if (!selectedRecordId && recordKeys.length > 0) {
+                    setSelectedRecordId(recordKeys[0]);
+                }
+            }, [emp.id, recordKeys, selectedRecordId]);
+
+            const handleCreateRecord = () => {
+                if (!newRecordDate) { alert("請選擇日期"); return; }
+                const recordId = `${newRecordType}-${newRecordDate}`;
+                
+                if (records[recordId]) {
+                    setSelectedRecordId(recordId);
+                    return;
+                }
+
+                // Initialize new empty record based on standard template
+                const newRecord = { basic: { periodType: newRecordType, store: emp.storeName, manager: emp.name }, scores: {}, result: {} };
+                handleHrFieldChange(emp.id, 'form4Records', recordId, newRecord);
+                setSelectedRecordId(recordId);
+            };
 
             const renderIcon = (item) => {
                 if (item.icon === 'google') {
@@ -1249,36 +1266,112 @@
             };
 
             return (
-                <div className="hr-form-container text-gray-800 p-4">
-                    <div className="text-center pb-2 mb-2">
+                <div className="hr-form-container text-gray-800 p-4 relative">
+                    
+                    {/* Record Selector UI (Top Bar) */}
+                    <div className="bg-blue-50 border border-blue-200 p-2 rounded mb-4 flex flex-wrap gap-4 items-end hide-in-fullscreen shadow-sm">
+                        <div className="flex-1 min-w-[200px]">
+                            <label className="block text-xs font-bold text-blue-800 mb-1"><i className="fa-solid fa-folder-open mr-1"></i>選擇歷史戰報</label>
+                            <select 
+                                className="w-full border border-blue-300 rounded p-1.5 text-sm outline-none font-bold bg-white focus:ring-2 focus:ring-blue-500"
+                                value={selectedRecordId}
+                                onChange={e => setSelectedRecordId(e.target.value)}
+                            >
+                                <option value="">-- 請選擇戰報紀錄 --</option>
+                                {recordKeys.map(key => {
+                                    const display = key.startsWith('month') ? `月度戰報 : ${key.replace('month-', '')}` : `週度戰報 : ${key.replace('week-', '').replace('-', '年 第')}週`;
+                                    return <option key={key} value={key}>{display}</option>;
+                                })}
+                            </select>
+                        </div>
+                        <div className="border-l border-blue-300 pl-4 flex-1 min-w-[300px] flex gap-2 items-end">
+                            <div>
+                                <label className="block text-xs font-bold text-blue-800 mb-1"><i className="fa-solid fa-file-circle-plus mr-1"></i>新增戰報</label>
+                                <select className="border border-blue-300 rounded p-1.5 text-sm outline-none bg-white" value={newRecordType} onChange={e => setNewRecordType(e.target.value)}>
+                                    <option value="month">月度戰報</option>
+                                    <option value="week">週度戰報</option>
+                                </select>
+                            </div>
+                            <div>
+                                {newRecordType === 'month' ? (
+                                    <input type="month" className="border border-blue-300 rounded p-1.5 text-sm outline-none bg-white font-bold text-gray-700" value={newRecordDate} onChange={e => setNewRecordDate(e.target.value)} />
+                                ) : (
+                                    <input type="week" className="border border-blue-300 rounded p-1.5 text-sm outline-none bg-white font-bold text-gray-700" value={newRecordDate} onChange={e => setNewRecordDate(e.target.value)} />
+                                )}
+                            </div>
+                            <button onClick={handleCreateRecord} className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-bold shadow hover:bg-blue-700 transition">建立/載入</button>
+                        </div>
+                    </div>
+
+                    {!selectedRecordId ? (
+                        <div className="text-center py-16 text-gray-400 font-bold border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center">
+                            <i className="fa-solid fa-folder-open text-4xl mb-3 opacity-30"></i>
+                            <p>目前沒有選取任何戰報。</p>
+                            <p className="text-xs font-normal mt-1">請從上方選單選擇歷史紀錄，或建立一份全新的戰報。</p>
+                        </div>
+                    ) : (
+                        <Form4Content 
+                            emp={emp} 
+                            recordId={selectedRecordId} 
+                            fData={records[selectedRecordId]} 
+                            handleHrFieldChange={handleHrFieldChange}
+                            renderSignBox={renderSignBox}
+                            renderIcon={renderIcon}
+                        />
+                    )}
+                </div>
+            );
+        };
+
+        // Form 4 Inner Content Component (Extracted for cleaner state handling with multi-records)
+        const Form4Content = ({ emp, recordId, fData = {}, handleHrFieldChange, renderSignBox, renderIcon }) => {
+            const chg = (path, val) => handleHrFieldChange(emp.id, 'form4Records', `${recordId}.${path}`, val);
+
+            let totalScore = 0;
+            ZODIAC_ITEMS.forEach(item => { totalScore += (Number(fData.scores?.[item.no]?.self) || 0); });
+            const avgScore = (totalScore / 12).toFixed(2);
+            const achieveRate = ((totalScore / 100) * 100).toFixed(2);
+
+            let grade = '';
+            if (totalScore >= 90) grade = 'excellent';
+            else if (totalScore >= 80) grade = 'good';
+            else if (totalScore >= 60) grade = 'pass';
+            else if (totalScore > 0) grade = 'fail';
+
+            return (
+                <div className="relative animate-fadeIn">
+                    <div className="text-center pb-2 mb-2 relative">
                         <h2 className="text-2xl font-black text-[#1d3557] tracking-wider mb-1">12生肖績效檢討表</h2>
                         <p className="text-xs text-red-500 font-bold tracking-widest">落實執行 ． 追蹤管理 ． 持續改善 ． 提升營運績效</p>
+                        <div className="absolute right-0 top-0 text-[10px] font-bold text-gray-400 border px-2 py-1 rounded bg-gray-50 hide-in-fullscreen">
+                            目前檢視: {recordId.startsWith('month') ? '月度' : '週度'} ({recordId.split('-').slice(1).join('-')})
+                        </div>
                     </div>
 
                     <div className="border-t-2 border-b-2 border-red-500 py-1.5 px-2 mb-2 text-xs font-bold flex flex-wrap justify-between items-center gap-y-2 bg-gray-50">
                         <div className="flex gap-4">
-                            <div>店名：<input type="text" className="border-b border-gray-400 bg-transparent outline-none w-24 text-center text-blue-800 font-black" value={fData.basic?.store || emp.storeName || ''} onChange={e=>chg('form4.basic.store', e.target.value)}/></div>
-                            <div>店長：<input type="text" className="border-b border-gray-400 bg-transparent outline-none w-20 text-center text-blue-800 font-black" value={fData.basic?.manager || emp.name || ''} onChange={e=>chg('form4.basic.manager', e.target.value)}/></div>
+                            <div>店名：<input type="text" className="border-b border-gray-400 bg-transparent outline-none w-24 text-center text-blue-800 font-black" value={fData.basic?.store || emp.storeName || ''} onChange={e=>chg('basic.store', e.target.value)}/></div>
+                            <div>店長：<input type="text" className="border-b border-gray-400 bg-transparent outline-none w-20 text-center text-blue-800 font-black" value={fData.basic?.manager || emp.name || ''} onChange={e=>chg('basic.manager', e.target.value)}/></div>
                         </div>
                         <div className="flex items-center gap-2">
                             <span>檢討期間：</span>
-                            <label className="flex items-center gap-0.5 cursor-pointer"><input type="checkbox" checked={fData.basic?.periodType==='week'} onChange={()=>chg('form4.basic.periodType', 'week')} /> 週</label>
+                            <label className="flex items-center gap-0.5 cursor-pointer"><input type="checkbox" checked={fData.basic?.periodType==='week'} onChange={()=>chg('basic.periodType', 'week')} /> 週</label>
                             <div className="flex items-center gap-1">
                                 <span className="text-gray-400">(</span>
-                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.wS_M||''} onChange={e=>chg('form4.basic.wS_M', e.target.value)}/><span className="text-gray-400">/</span>
-                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.wS_D||''} onChange={e=>chg('form4.basic.wS_D', e.target.value)}/><span className="text-gray-400">~</span>
-                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.wE_M||''} onChange={e=>chg('form4.basic.wE_M', e.target.value)}/><span className="text-gray-400">/</span>
-                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.wE_D||''} onChange={e=>chg('form4.basic.wE_D', e.target.value)}/>
+                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.wS_M||''} onChange={e=>chg('basic.wS_M', e.target.value)}/><span className="text-gray-400">/</span>
+                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.wS_D||''} onChange={e=>chg('basic.wS_D', e.target.value)}/><span className="text-gray-400">~</span>
+                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.wE_M||''} onChange={e=>chg('basic.wE_M', e.target.value)}/><span className="text-gray-400">/</span>
+                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.wE_D||''} onChange={e=>chg('basic.wE_D', e.target.value)}/>
                                 <span className="text-gray-400">)</span>
                             </div>
                             
-                            <label className="flex items-center gap-0.5 cursor-pointer ml-3"><input type="checkbox" checked={fData.basic?.periodType==='month'} onChange={()=>chg('form4.basic.periodType', 'month')} /> 月</label>
+                            <label className="flex items-center gap-0.5 cursor-pointer ml-3"><input type="checkbox" checked={fData.basic?.periodType==='month'} onChange={()=>chg('basic.periodType', 'month')} /> 月</label>
                             <div className="flex items-center gap-1">
                                 <span className="text-gray-400">(</span>
-                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.mS_M||''} onChange={e=>chg('form4.basic.mS_M', e.target.value)}/><span className="text-gray-400">/</span>
-                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.mS_D||''} onChange={e=>chg('form4.basic.mS_D', e.target.value)}/><span className="text-gray-400">~</span>
-                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.mE_M||''} onChange={e=>chg('form4.basic.mE_M', e.target.value)}/><span className="text-gray-400">/</span>
-                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.mE_D||''} onChange={e=>chg('form4.basic.mE_D', e.target.value)}/>
+                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.mS_M||''} onChange={e=>chg('basic.mS_M', e.target.value)}/><span className="text-gray-400">/</span>
+                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.mS_D||''} onChange={e=>chg('basic.mS_D', e.target.value)}/><span className="text-gray-400">~</span>
+                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.mE_M||''} onChange={e=>chg('basic.mE_M', e.target.value)}/><span className="text-gray-400">/</span>
+                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.mE_D||''} onChange={e=>chg('basic.mE_D', e.target.value)}/>
                                 <span className="text-gray-400">)</span>
                             </div>
                         </div>
@@ -1309,10 +1402,10 @@
                                     <td className="text-left font-semibold text-[9px] text-gray-600 leading-tight whitespace-pre-wrap p-1 border-gray-400">{item.std}</td>
                                     <td className="font-bold bg-gray-50 border-gray-400 text-gray-700">{item.max}</td>
                                     <td className="p-0 border-gray-400 bg-white">
-                                        <input type="number" step="0.01" min="0" max={item.max} className="w-full h-full text-center p-1 font-black text-blue-700 bg-transparent outline-none focus:bg-gray-100" placeholder="0" value={fData.scores?.[item.no]?.self !== undefined ? fData.scores[item.no].self : ''} onChange={e=>chg(`form4.scores.${item.no}.self`, e.target.value)} />
+                                        <input type="number" step="0.01" min="0" max={item.max} className="w-full h-full text-center p-1 font-black text-blue-700 bg-transparent outline-none focus:bg-gray-100" placeholder="0" value={fData.scores?.[item.no]?.self !== undefined ? fData.scores[item.no].self : ''} onChange={e=>chg(`scores.${item.no}.self`, e.target.value)} />
                                     </td>
                                     <td className="p-0 border-gray-400 bg-white">
-                                        <input type="number" step="0.01" min="0" max={item.max} className="w-full h-full text-center p-1 font-black text-indigo-700 bg-transparent outline-none focus:bg-gray-100" placeholder="0" value={fData.scores?.[item.no]?.audit !== undefined ? fData.scores[item.no].audit : ''} onChange={e=>chg(`form4.scores.${item.no}.audit`, e.target.value)} />
+                                        <input type="number" step="0.01" min="0" max={item.max} className="w-full h-full text-center p-1 font-black text-indigo-700 bg-transparent outline-none focus:bg-gray-100" placeholder="0" value={fData.scores?.[item.no]?.audit !== undefined ? fData.scores[item.no].audit : ''} onChange={e=>chg(`scores.${item.no}.audit`, e.target.value)} />
                                     </td>
                                     <td className="p-0 border-gray-400">
                                         <textarea 
@@ -1320,7 +1413,7 @@
                                             placeholder="輸入改善建議..." 
                                             value={fData.scores?.[item.no]?.note || ''} 
                                             onChange={(e) => {
-                                                chg(`form4.scores.${item.no}.note`, e.target.value);
+                                                chg(`scores.${item.no}.note`, e.target.value);
                                                 e.target.style.height = 'auto';
                                                 e.target.style.height = (e.target.scrollHeight) + 'px';
                                             }}
@@ -1332,28 +1425,34 @@
                         </tbody>
                     </table>
 
-                    <div className="border-2 border-blue-200 grid grid-cols-1 md:grid-cols-3 text-xs mb-3 font-bold">
-                        <div className="border-b md:border-b-0 md:border-r border-blue-200 flex flex-col justify-center bg-gray-50/50 p-2">
+                    {/* REDESIGNED LAYOUT: 12-column grid for maximizing textareas */}
+                    <div className="border-2 border-blue-200 grid grid-cols-1 md:grid-cols-12 text-xs mb-3 font-bold">
+                        {/* Column 1: Scores (Span 2) */}
+                        <div className="col-span-1 md:col-span-2 border-b md:border-b-0 md:border-r border-blue-200 flex flex-col justify-center bg-gray-50/50 p-2">
                             <div className="flex justify-between py-1 border-b border-dashed"><span>平均分數：</span><span className="text-blue-700 font-black">{avgScore} <span className="text-[10px] font-normal text-gray-500">/ 100 分</span></span></div>
                             <div className="flex justify-between py-1"><span>達成率：</span><span className="text-blue-700 font-black">{achieveRate} <span className="text-[10px] font-normal text-gray-500">%</span></span></div>
                         </div>
-                        <div className="border-b md:border-b-0 md:border-r border-blue-200 p-2 flex flex-col gap-1 justify-center">
+                        
+                        {/* Column 2: Grades (Span 3) */}
+                        <div className="col-span-1 md:col-span-3 border-b md:border-b-0 md:border-r border-blue-200 p-2 flex flex-col gap-1 justify-center">
                             <div className="text-[10px] text-gray-500 mb-0.5">等級評估 (自動連動)：</div>
-                            <div className="grid grid-cols-2 gap-1 text-[10px]">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-1 text-[10px]">
                                 <label className="flex items-center gap-1"><input type="checkbox" disabled checked={grade==='excellent'} className="scale-110"/> 優秀(90分以上)</label>
                                 <label className="flex items-center gap-1"><input type="checkbox" disabled checked={grade==='good'} className="scale-110"/> 良好(80-89分以上)</label>
                                 <label className="flex items-center gap-1"><input type="checkbox" disabled checked={grade==='pass'} className="scale-110"/> 合格(60-79分以上)</label>
                                 <label className="flex items-center gap-1"><input type="checkbox" disabled checked={grade==='fail'} className="scale-110"/> 待改善(未達60分)</label>
                             </div>
                         </div>
-                        <div className="p-2 flex flex-col justify-between text-[10px]">
-                            <div className="bg-blue-50/50 p-1 rounded border mb-1">
-                                <span className="font-bold block text-blue-900">本月亮點：</span>
-                                <textarea className="w-full bg-transparent border-none outline-none resize-none font-normal h-8" placeholder="輸入亮點總結..." value={fData.result?.highlights || ''} onChange={e=>chg('form4.result.highlights', e.target.value)}></textarea>
+
+                        {/* Column 3: Textareas (Span 7) - Maximized */}
+                        <div className="col-span-1 md:col-span-7 p-2 flex flex-col justify-between text-[10px] gap-1.5">
+                            <div className="bg-blue-50/50 p-1.5 rounded border">
+                                <span className="font-bold block text-blue-900 mb-0.5">本月亮點：</span>
+                                <textarea className="w-full bg-transparent border-none outline-none resize-none font-normal h-16 leading-relaxed" placeholder="輸入亮點總結..." value={fData.result?.highlights || ''} onChange={e=>chg('result.highlights', e.target.value)}></textarea>
                             </div>
-                            <div className="bg-red-50/50 p-1 rounded border">
-                                <span className="font-bold block text-red-900">改善重點：</span>
-                                <textarea className="w-full bg-transparent border-none outline-none resize-none font-normal h-8" placeholder="輸入重點改善方向..." value={fData.result?.improvements || ''} onChange={e=>chg('form4.result.improvements', e.target.value)}></textarea>
+                            <div className="bg-red-50/50 p-1.5 rounded border">
+                                <span className="font-bold block text-red-900 mb-0.5">改善重點：</span>
+                                <textarea className="w-full bg-transparent border-none outline-none resize-none font-normal h-16 leading-relaxed" placeholder="輸入重點改善方向..." value={fData.result?.improvements || ''} onChange={e=>chg('result.improvements', e.target.value)}></textarea>
                             </div>
                         </div>
                     </div>
@@ -1361,17 +1460,17 @@
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mt-4 px-2 font-bold text-xs">
                         <div className="flex items-center gap-2">
                             <span className="shrink-0">店長簽名：</span>
-                            <div className="flex-1 border-b border-gray-400 h-10">{renderSignBox('', 'form4.signs.manager', emp, "border-none !min-h-0")}</div>
+                            <div className="flex-1 border-b border-gray-400 h-10">{renderSignBox('', `form4Records.${recordId}.signs.manager`, emp, "border-none !min-h-0")}</div>
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="shrink-0">總監簽名：</span>
-                            <div className="flex-1 border-b border-gray-400 h-10">{renderSignBox('', 'form4.signs.director', emp, "border-none !min-h-0")}</div>
+                            <div className="flex-1 border-b border-gray-400 h-10">{renderSignBox('', `form4Records.${recordId}.signs.director`, emp, "border-none !min-h-0")}</div>
                         </div>
                         <div className="flex items-center justify-end gap-1 mb-1">
                             <span>評核日期：</span>
-                            <input type="text" className="w-12 border-b border-gray-400 bg-transparent outline-none text-center font-normal" value={fData.result?.auditYear || ''} onChange={e=>chg('form4.result.auditYear', e.target.value)}/> 年
-                            <input type="text" className="w-8 border-b border-gray-400 bg-transparent outline-none text-center font-normal" value={fData.result?.auditMonth || ''} onChange={e=>chg('form4.result.auditMonth', e.target.value)}/> 月
-                            <input type="text" className="w-8 border-b border-gray-400 bg-transparent outline-none text-center font-normal" value={fData.result?.auditDay || ''} onChange={e=>chg('form4.result.auditDay', e.target.value)}/> 日
+                            <input type="text" className="w-12 border-b border-gray-400 bg-transparent outline-none text-center font-normal" value={fData.result?.auditYear || ''} onChange={e=>chg('result.auditYear', e.target.value)}/> 年
+                            <input type="text" className="w-8 border-b border-gray-400 bg-transparent outline-none text-center font-normal" value={fData.result?.auditMonth || ''} onChange={e=>chg('result.auditMonth', e.target.value)}/> 月
+                            <input type="text" className="w-8 border-b border-gray-400 bg-transparent outline-none text-center font-normal" value={fData.result?.auditDay || ''} onChange={e=>chg('result.auditDay', e.target.value)}/> 日
                         </div>
                     </div>
 
@@ -1730,7 +1829,7 @@
                 if (!selectedStore) { alert("請先從左方選擇店別！或點擊「完整新增」建立新店別與員工。"); return; }
                 if (!newEmpId.trim() || !newEmpName.trim()) { alert("請輸入完整的員工編號與姓名！"); return; }
                 if (hrEmployees[newEmpId]) { alert("此員工編號已存在！"); return; }
-                const newEmp = { id: newEmpId, name: newEmpName, storeName: selectedStore, form1: { rows: {}, summary: {} }, form2: { phase1: {}, phase2: {}, phase3: {}, phase4: {}, eval: {} }, form3: { basic: {}, interview: {}, fact: '', emp: '', guide: {}, improve: [{},{},{}], track: {}, concl: {} }, form4: { basic: {}, scores: {}, result: {} } };
+                const newEmp = { id: newEmpId, name: newEmpName, storeName: selectedStore, form1: { rows: {}, summary: {} }, form2: { phase1: {}, phase2: {}, phase3: {}, phase4: {}, eval: {} }, form3: { basic: {}, interview: {}, fact: '', emp: '', guide: {}, improve: [{},{},{}], track: {}, concl: {} }, form4Records: {} };
                 saveToFirebase('hr_employees', newEmpId, newEmp); setNewEmpId(''); setNewEmpName(''); setSelectedEmpId(newEmpId);
             };
 
@@ -1744,7 +1843,7 @@
                     }
                 } else {
                     if (hrEmployees[editEmpData.id]) { alert("此員工編號已存在！"); return; }
-                    const newEmp = { id: editEmpData.id, name: editEmpData.name, storeName: editEmpData.storeName, form1: { rows: {}, summary: {} }, form2: { phase1: {}, phase2: {}, phase3: {}, phase4: {}, eval: {} }, form3: { basic: {}, interview: {}, fact: '', emp: '', guide: {}, improve: [{},{},{}], track: {}, concl: {} }, form4: { basic: {}, scores: {}, result: {} } };
+                    const newEmp = { id: editEmpData.id, name: editEmpData.name, storeName: editEmpData.storeName, form1: { rows: {}, summary: {} }, form2: { phase1: {}, phase2: {}, phase3: {}, phase4: {}, eval: {} }, form3: { basic: {}, interview: {}, fact: '', emp: '', guide: {}, improve: [{},{},{}], track: {}, concl: {} }, form4Records: {} };
                     saveToFirebase('hr_employees', editEmpData.id, newEmp); setSelectedStore(editEmpData.storeName); setSelectedEmpId(editEmpData.id);
                 }
                 setShowEmpModal(false); setEditEmpData({ id: '', name: '', storeName: '' });
@@ -1765,6 +1864,13 @@
                     const updatedEmp = JSON.parse(JSON.stringify(empData));
                     const keys = fieldPath.split('.');
                     let current = updatedEmp;
+                    
+                    // Allow saving to the specific formType key if needed (for Form 4 multi-records)
+                    if (formType === 'form4Records' && keys[0] !== 'form4Records') {
+                       if (!current.form4Records) current.form4Records = {};
+                       current = current.form4Records;
+                    }
+
                     for (let i = 0; i < keys.length - 1; i++) { if (!current[keys[i]]) current[keys[i]] = {}; current = current[keys[i]]; }
                     current[keys[keys.length - 1]] = value;
                     saveToFirebase('hr_employees', empId, updatedEmp);
@@ -1791,7 +1897,15 @@
             const saveSignature = () => {
                 if (canvasRef.current && sigModal.fieldPath && selectedEmpId) {
                     const dataUrl = canvasRef.current.toDataURL('image/png');
-                    handleHrFieldChange(selectedEmpId, null, sigModal.fieldPath, dataUrl);
+                    // We parse the first part of the path to know if it's form4Records or standard form
+                    let formType = null;
+                    if (sigModal.fieldPath.startsWith('form4Records.')) {
+                        formType = 'form4Records';
+                        // strip form4Records from path for the handler logic above if we want, or just pass as is.
+                        // Actually our handler is flexible enough to handle full paths from root
+                    }
+                    
+                    handleHrFieldChange(selectedEmpId, formType, sigModal.fieldPath, dataUrl);
                     setSigModal({ isOpen: false, fieldPath: '' });
                 }
             };
