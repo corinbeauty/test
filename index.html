@@ -1252,31 +1252,56 @@
                         </div>
                     </div>
 
+                    {/* 調整寬度比例，把空間讓給「建議改善事項」 */}
                     <table className="w-full hr-table mb-2 border-2 border-[#1d3557]">
                         <thead>
-                            <tr className="bg-[#1d3557] text-white text-[11px]">
-                                <th className="w-[5%] py-1">項次</th><th className="w-[12%]">檢核項目</th><th className="w-[28%]">檢核重點內容</th>
-                                <th className="w-[25%]">執行標準<br/><span className="text-[9px] font-normal opacity-80">(達成本月指標)</span></th>
-                                <th className="w-[6%]">配分</th><th className="w-[8%] bg-blue-900/80">店長<br/>自評</th>
-                                <th className="w-[8%] bg-indigo-900/80">總監<br/>覆評</th><th className="w-[20%]">建議改善事項</th>
+                            <tr className="bg-[#1d3557] text-white text-[11px] h-12">
+                                <th className="w-[4%]">項次</th>
+                                <th className="w-[10%]">檢核項目</th>
+                                <th className="w-[18%]">檢核重點內容</th>
+                                <th className="w-[18%]">執行標準<br/><span className="text-[8px] font-normal opacity-80">(達成本月指標)</span></th>
+                                <th className="w-[4%]">配分</th>
+                                <th className="w-[5%] leading-tight text-[10px]">店長<br/>自評</th>
+                                <th className="w-[5%] leading-tight text-[10px]">總監<br/>覆評</th>
+                                <th className="w-[36%]">建議改善事項</th>
                             </tr>
                         </thead>
                         <tbody>
                             {ZODIAC_ITEMS.map(item => (
                                 <tr key={item.no} className="hover:bg-gray-50/50">
-                                    <td className="font-bold bg-gray-50 border-gray-400">{item.no}</td>
-                                    <td className="font-black text-gray-800 text-left pl-1 border-gray-400"><i className={`fa-solid ${item.icon} text-blue-700 mr-1 w-4 text-center`}></i>{item.name}</td>
-                                    <td className="text-left font-normal text-[9px] leading-tight whitespace-pre-wrap p-1 border-gray-400">{item.desc}</td>
-                                    <td className="text-left font-semibold text-[9px] text-gray-600 leading-tight whitespace-pre-wrap p-1 border-gray-400">{item.std}</td>
-                                    <td className="font-bold bg-gray-50 border-gray-400 text-gray-700">{item.max}</td>
-                                    <td className="p-0 border-gray-400 bg-blue-50/30">
-                                        <input type="number" step="0.01" min="0" max={item.max} className="w-full h-full text-center p-1 font-black text-blue-700 bg-transparent outline-none focus:bg-white" placeholder="0" value={fData.scores?.[item.no]?.self !== undefined ? fData.scores[item.no].self : ''} onChange={e=>chg(`form4.scores.${item.no}.self`, e.target.value)} />
+                                    <td className="font-bold bg-gray-50 border-gray-400 align-middle">{item.no}</td>
+                                    <td className="font-black text-gray-800 text-left pl-1 border-gray-400 align-middle"><i className={`fa-solid ${item.icon} text-blue-700 mr-1 w-4 text-center`}></i>{item.name}</td>
+                                    <td className="text-left font-normal text-[9px] leading-tight whitespace-pre-wrap p-2 border-gray-400 align-middle">{item.desc}</td>
+                                    <td className="text-left font-semibold text-[9px] text-gray-600 leading-tight whitespace-pre-wrap p-2 border-gray-400 align-middle">{item.std}</td>
+                                    <td className="font-bold bg-gray-50 border-gray-400 text-gray-700 align-middle">{item.max}</td>
+                                    <td className="p-0 border-gray-400 bg-blue-50/30 align-middle">
+                                        <input type="number" step="0.01" min="0" max={item.max} className="w-full h-full min-h-[40px] text-center p-1 font-black text-blue-700 bg-transparent outline-none focus:bg-white" placeholder="0" value={fData.scores?.[item.no]?.self !== undefined ? fData.scores[item.no].self : ''} onChange={e=>chg(`form4.scores.${item.no}.self`, e.target.value)} />
                                     </td>
-                                    <td className="p-0 border-gray-400 bg-indigo-50/30">
-                                        <input type="number" step="0.01" min="0" max={item.max} className="w-full h-full text-center p-1 font-black text-indigo-700 bg-transparent outline-none focus:bg-white" placeholder="0" value={fData.scores?.[item.no]?.audit !== undefined ? fData.scores[item.no].audit : ''} onChange={e=>chg(`form4.scores.${item.no}.audit`, e.target.value)} />
+                                    <td className="p-0 border-gray-400 bg-indigo-50/30 align-middle">
+                                        <input type="number" step="0.01" min="0" max={item.max} className="w-full h-full min-h-[40px] text-center p-1 font-black text-indigo-700 bg-transparent outline-none focus:bg-white" placeholder="0" value={fData.scores?.[item.no]?.audit !== undefined ? fData.scores[item.no].audit : ''} onChange={e=>chg(`form4.scores.${item.no}.audit`, e.target.value)} />
                                     </td>
-                                    <td className="p-0 border-gray-400">
-                                        <textarea className="w-full h-full min-h-[40px] text-[9px] font-normal leading-tight p-1 border-none outline-none resize-none bg-transparent focus:bg-white text-left" placeholder="輸入改善建議..." value={fData.scores?.[item.no]?.note || ''} onChange={e=>chg(`form4.scores.${item.no}.note`, e.target.value)}></textarea>
+                                    <td className="p-0 border-gray-400 align-top">
+                                        {/* 移除固定高度限制，讓它根據內容自動撐開 */}
+                                        <div className="w-full h-full relative">
+                                            <textarea 
+                                                className="w-full h-full min-h-[50px] text-[9px] font-normal leading-relaxed p-2 border-none outline-none bg-transparent focus:bg-white text-left block" 
+                                                style={{ resize: 'none', overflow: 'hidden' }}
+                                                placeholder="輸入改善建議..." 
+                                                value={fData.scores?.[item.no]?.note || ''} 
+                                                onChange={(e) => {
+                                                    chg(`form4.scores.${item.no}.note`, e.target.value);
+                                                    // 自動調整高度邏輯
+                                                    e.target.style.height = 'auto';
+                                                    e.target.style.height = (e.target.scrollHeight) + 'px';
+                                                }}
+                                                ref={(el) => {
+                                                     if (el) {
+                                                         el.style.height = 'auto';
+                                                         el.style.height = (el.scrollHeight) + 'px';
+                                                     }
+                                                }}
+                                            ></textarea>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -1285,7 +1310,7 @@
 
                     <div className="border-2 border-blue-200 grid grid-cols-1 md:grid-cols-3 text-xs mb-3 font-bold">
                         <div className="border-b md:border-b-0 md:border-r border-blue-200 flex flex-col justify-center bg-gray-50/50 p-2">
-                            <div className="flex justify-between py-1 border-b border-dashed"><span>平均分數：</span><span className="text-blue-700 font-black">{avgScore} / 100 分</span></div>
+                            <div className="flex justify-between py-1 border-b border-dashed"><span>平均分數：</span><span className="text-blue-700 font-black">{totalScore} / 100 分</span></div>
                             <div className="flex justify-between py-1"><span>達成率：</span><span className="text-blue-700 font-black">{achieveRate} %</span></div>
                         </div>
                         <div className="border-b md:border-b-0 md:border-r border-blue-200 p-2 flex flex-col gap-1 justify-center">
@@ -1323,6 +1348,8 @@
                             <input type="date" className="border-b border-gray-400 bg-transparent outline-none text-center font-normal w-28 text-[11px]" value={fData.result?.auditDate || ''} onChange={e=>chg('form4.result.auditDate', e.target.value)} />
                         </div>
                     </div>
+
+                    <div className="text-[9px] text-gray-400 font-normal mt-4 text-center border-t pt-1">★ 說明：請店長每週或每月自評後由總監覆評，針對未達評核項目提交擬定改善計畫並持續追蹤，確保各項管理目標落實執行。</div>
                 </div>
             );
         };
