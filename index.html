@@ -1260,11 +1260,38 @@
                 }
             };
 
-            let defaultWeek = '';
-            let defaultMonth = '';
-            if (recordId) {
-                if (recordId.startsWith('week-')) defaultWeek = recordId.replace('week-', '');
-                if (recordId.startsWith('month-')) defaultMonth = recordId.replace('month-', '');
+            const getWeekRange = (weekStr) => {
+                if (!weekStr || !weekStr.includes('-W')) return '';
+                const [yearStr, weekNo] = weekStr.split('-W');
+                const year = parseInt(yearStr, 10);
+                const week = parseInt(weekNo, 10);
+                const d = new Date(year, 0, 4); 
+                const day = d.getDay() || 7; 
+                d.setDate(d.getDate() - day + 1 + (week - 1) * 7); 
+                const mon = new Date(d);
+                const sun = new Date(d);
+                sun.setDate(mon.getDate() + 6);
+                return `${String(mon.getMonth()+1).padStart(2,'0')}/${String(mon.getDate()).padStart(2,'0')}~${String(sun.getMonth()+1).padStart(2,'0')}/${String(sun.getDate()).padStart(2,'0')}`;
+            };
+
+            const getMonthRange = (monthStr) => {
+                if (!monthStr || !monthStr.includes('-')) return '';
+                const [yearStr, monthNo] = monthStr.split('-');
+                const year = parseInt(yearStr, 10);
+                const month = parseInt(monthNo, 10);
+                const lastDay = new Date(year, month, 0).getDate();
+                return `${String(month).padStart(2,'0')}/01~${String(month).padStart(2,'0')}/${String(lastDay).padStart(2,'0')}`;
+            };
+
+            let defaultWeekRange = '';
+            let defaultMonthRange = '';
+            const isWeek = recordId && recordId.startsWith('week-');
+            const isMonth = recordId && recordId.startsWith('month-');
+
+            if (isWeek) {
+                defaultWeekRange = getWeekRange(recordId.replace('week-', ''));
+            } else if (isMonth) {
+                defaultMonthRange = getMonthRange(recordId.replace('month-', ''));
             }
 
             return (
@@ -1276,13 +1303,25 @@
 
                     <div className="flex justify-between items-end px-2 mb-2 text-xs font-bold text-[#1d3557]">
                         <div className="flex items-end">
-                            店名：<input type="text" className="border-b border-[#1d3557] outline-none w-24 text-center bg-transparent" value={fData.basic?.store || emp.storeName || ''} onChange={e => chg('basic.store', e.target.value)} />
+                            店名：<input type="text" className="border-b border-[#1d3557] outline-none w-24 text-center bg-transparent text-blue-700 font-black tracking-wider" value={fData.basic?.store || emp.storeName || ''} onChange={e => chg('basic.store', e.target.value)} />
                         </div>
                         <div className="flex items-end">
-                            店長：<input type="text" className="border-b border-[#1d3557] outline-none w-24 text-center bg-transparent" value={fData.basic?.manager || ''} onChange={e => chg('basic.manager', e.target.value)} />
+                            店長：<input type="text" className="border-b border-[#1d3557] outline-none w-24 text-center bg-transparent text-blue-700 font-black tracking-wider" value={fData.basic?.manager || ''} onChange={e => chg('basic.manager', e.target.value)} />
                         </div>
-                        <div className="flex items-end">
-                            檢討期間：週(<input type="text" className="border-b border-[#1d3557] outline-none w-16 text-center bg-transparent" value={fData.basic?.week !== undefined ? fData.basic.week : defaultWeek} onChange={e => chg('basic.week', e.target.value)} />)或月(<input type="text" className="border-b border-[#1d3557] outline-none w-16 text-center bg-transparent" value={fData.basic?.month !== undefined ? fData.basic.month : defaultMonth} onChange={e => chg('basic.month', e.target.value)} />)
+                        <div className="flex items-center gap-2">
+                            <span>檢討期間：</span>
+                            <div className={`flex items-center gap-1 ${isWeek ? 'text-blue-700 font-bold' : 'text-gray-500 font-normal'}`}>
+                                <i className={`fa-regular ${isWeek ? 'fa-square-check' : 'fa-square'} text-sm`}></i>
+                                <span>週(</span>
+                                <input type="text" className={`border-b border-gray-400 outline-none w-24 text-center bg-transparent tracking-widest ${isWeek ? 'text-blue-700 font-black' : 'text-gray-400 font-normal'}`} placeholder="MM/DD~MM/DD" value={fData.basic?.weekRange !== undefined ? fData.basic.weekRange : (isWeek ? defaultWeekRange : '')} onChange={e => chg('basic.weekRange', e.target.value)} />
+                                <span>)</span>
+                            </div>
+                            <div className={`flex items-center gap-1 ml-1 ${isMonth ? 'text-blue-700 font-bold' : 'text-gray-500 font-normal'}`}>
+                                <i className={`fa-regular ${isMonth ? 'fa-square-check' : 'fa-square'} text-sm`}></i>
+                                <span>月(</span>
+                                <input type="text" className={`border-b border-gray-400 outline-none w-24 text-center bg-transparent tracking-widest ${isMonth ? 'text-blue-700 font-black' : 'text-gray-400 font-normal'}`} placeholder="MM/DD~MM/DD" value={fData.basic?.monthRange !== undefined ? fData.basic.monthRange : (isMonth ? defaultMonthRange : '')} onChange={e => chg('basic.monthRange', e.target.value)} />
+                                <span>)</span>
+                            </div>
                         </div>
                     </div>
 
