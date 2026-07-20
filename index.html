@@ -1379,7 +1379,7 @@
 
         const HrForm4Component = ({ emp, handleHrFieldChange, renderSignBox, delAuthUnlocked, showDialog }) => {
             const [selectedRecordId, setSelectedRecordId] = useState('');
-            const [newRecordType, setNewRecordType] = useState('month'); 
+            const [newRecordType, setNewRecordType] = useState('week'); 
             const [newRecordDate, setNewRecordDate] = useState('');
 
             const records = emp.form4Records || {};
@@ -1443,8 +1443,8 @@
                             <div>
                                 <label className="block text-xs font-bold text-blue-800 mb-1"><i className="fa-solid fa-file-circle-plus mr-1"></i>新增戰報</label>
                                 <select className="border border-blue-300 rounded p-1.5 text-sm outline-none bg-white" value={newRecordType} onChange={e => setNewRecordType(e.target.value)}>
-                                    <option value="month">月度戰報</option>
                                     <option value="week">週度戰報</option>
+                                    <option value="month">月度戰報</option>
                                 </select>
                             </div>
                             <div>
@@ -1720,7 +1720,7 @@
         // MODULE 3: MAIN ORCHESTRATOR APP
         // ==========================================
         function App() {
-            const [activeTab, setActiveTab] = useState('hr');
+            const [activeTab, setActiveTab] = useState('night');
             const [selectedDate, setSelectedDate] = useState(getTodayStr()); 
             const [inputDate, setInputDate] = useState(getTodayStr());       
             const [database, setDatabase] = useState({});
@@ -2072,7 +2072,7 @@
                         <button onClick={() => switchTab('audit')} className={`flex-1 py-2 px-3 whitespace-nowrap ${activeTab === 'audit' ? 'tab-active' : 'tab-inactive'}`}><i className="fa-solid fa-clipboard-check mr-1 text-red-600"></i>稽核</button>
                         <button onClick={() => switchTab('trend')} className={`flex-1 py-2 px-3 whitespace-nowrap ${activeTab === 'trend' ? 'tab-active' : 'tab-inactive'}`}><i className="fa-solid fa-chart-line mr-1 text-purple-600"></i>趨勢圖表</button>
                         <button onClick={() => switchTab('settings')} className={`flex-1 py-2 px-3 whitespace-nowrap ${activeTab === 'settings' ? 'tab-active' : 'tab-inactive'}`}><i className="fa-solid fa-gear mr-1 text-gray-500"></i>店長設定</button>
-                        <button onClick={() => switchTab('hr')} className={`flex-1 py-2 px-3 whitespace-nowrap border-l-2 border-blue-200 ${activeTab === 'hr' ? 'tab-active !border-b-blue-600 !text-blue-800' : 'text-blue-600 hover:bg-blue-50 font-bold'}`}><i className="fa-solid fa-user-shield mr-1"></i>人事戰報表單</button>
+                        <button onClick={() => { if(hrAuthUnlocked) { switchTab('hr'); } else { setShowPwdModal(true); } }} className={`flex-1 py-2 px-3 whitespace-nowrap border-l-2 border-blue-200 ${activeTab === 'hr' ? 'tab-active !border-b-blue-600 !text-blue-800' : 'text-blue-600 hover:bg-blue-50 font-bold'}`}><i className="fa-solid fa-user-shield mr-1"></i>領航員/績效改善</button>
                         {isSuperAdmin && (
                             <button onClick={() => switchTab('admin')} className={`flex-1 py-2 px-3 whitespace-nowrap border-l-2 border-red-200 ${activeTab === 'admin' ? 'tab-active !border-b-red-600 !text-red-700 bg-red-50' : 'text-red-500 hover:bg-red-50'}`}><i className="fa-solid fa-crown mr-1"></i>權限管理</button>
                         )}
