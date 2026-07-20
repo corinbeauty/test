@@ -132,7 +132,7 @@
         const ZODIAC_ITEMS = [
             { no: 1, name: '業績管理', desc: '• 每日業績目標設定與追蹤\n• 業績達成檢討與改善行動\n• 業績報表準確與回報', std: '每日追蹤、檢討並提出改善方案\n月目標達成率100%以上', max: 10, icon: 'fa-chart-line', color: 'text-blue-600' },
             { no: 2, name: '商品銷售', desc: '• 主推商品積極銷售\n• 滴雞精/湯品銷售推廣\n• 商品庫存與銷售分析', std: '主推商品銷售達成率100%以上\n每100位客人銷售數達標', max: 15, icon: 'fa-shopping-bag', color: 'text-orange-500' },
-            { no: 3, name: '筋膜推薦', desc: '• 筋膜主動介紹\n• 成交率提升與追蹤\n• 師傅話術落實與考核', std: '介紹率達80%以上\n成交率持續加強提升', max: 10, icon: 'fa-child', color: 'text-red-500' },
+            { no: 3, name: '筋膜推薦', desc: '• 筋膜主掌握介紹\n• 成交率提升與追蹤\n• 師傅話術落實與考核', std: '介紹率達80%以上\n成交率持續加強提升', max: 10, icon: 'fa-child', color: 'text-red-500' },
             { no: 4, name: '套餐銷售', desc: '• 套餐話術推廣\n• 套餐銷售數量提升\n• 顧客回購與滿意度', std: '套餐銷售達成率100%以上\n每100位客人套餐銷售數達標', max: 10, icon: 'fa-box', color: 'text-green-500' },
             { no: 5, name: '人力管理', desc: '• 新人關懷與輔導\n• 員工出勤與排班管理\n• 離職預防與留才措施', std: '離職率低於5%\n高風險員工主動關懷與追蹤', max: 10, icon: 'fa-users-gear', color: 'text-indigo-600' },
             { no: 6, name: '粉專經營', desc: '• 每週發文3篇以上\n• 互動與回覆粉絲增加\n• 短影音/活動分享', std: '每週發文3篇以上\n粉專至少30個按讚或互動', max: 5, icon: 'fa-thumbs-up', color: 'text-sky-500' },
@@ -832,7 +832,8 @@
 
         const HrForm1Component = ({ emp, handleHrFieldChange, renderSignBox }) => {
             const fData = emp.form1 || { rows: {}, summary: {} };
-            const chg = (path, val) => handleHrFieldChange(emp.id, 'form1', path, val);
+            // FIX: Removed 'form1' prefix from chg wrapper to prevent double-nesting
+            const chg = (path, val) => handleHrFieldChange(emp.id, null, path, val);
 
             return (
                 <div className="hr-form-container">
@@ -873,6 +874,7 @@
                             <tbody>
                                 {PILOT_ITEMS.map((item, idx) => {
                                     const row = (fData.rows && fData.rows[item.no]) || {};
+                                    // FIX: Adjusted to use correct pathing without double form1
                                     const rChg = (f, v) => chg(`form1.rows.${item.no}.${f}`, v);
                                     const isFirstInPhase = idx === 0 || PILOT_ITEMS[idx-1].phase !== item.phase;
                                     const phaseCount = PILOT_ITEMS.filter(i => i.phase === item.phase).length;
@@ -973,7 +975,8 @@
 
         const HrForm2Component = ({ emp, handleHrFieldChange, renderSignBox }) => {
             const fData = emp.form2 || { phase1:{}, phase2:{}, phase3:{}, phase4:{}, eval:{} };
-            const chg = (path, val) => handleHrFieldChange(emp.id, 'form2', path, val);
+            // FIX: Removed 'form2' prefix from chg wrapper to prevent double-nesting
+            const chg = (path, val) => handleHrFieldChange(emp.id, null, path, val);
 
             const renderCbx = (path, val, label) => {
                 const keys = path.split('.');
@@ -1100,7 +1103,8 @@
 
         const HrForm3Component = ({ emp, handleHrFieldChange, renderSignBox }) => {
             const fData = emp.form3 || { basic:{}, interview:{}, fact:'', emp:'', guide:{}, improve:[{},{},{}], track:{}, concl:{} };
-            const chg = (path, val) => handleHrFieldChange(emp.id, 'form3', path, val);
+            // FIX: Removed 'form3' prefix from chg wrapper to prevent double-nesting
+            const chg = (path, val) => handleHrFieldChange(emp.id, null, path, val);
 
             const ckbx = (path, val) => {
                 const keys = path.split('.');
@@ -1307,15 +1311,12 @@
                         </tbody>
                     </table>
 
-                    {/* REDESIGNED LAYOUT: 12-column grid for maximizing textareas */}
                     <div className="border-2 border-blue-200 grid grid-cols-1 md:grid-cols-12 text-xs mb-3 font-bold bg-white">
-                        {/* Column 1: Scores (Span 2) */}
                         <div className="col-span-1 md:col-span-2 border-b md:border-b-0 md:border-r border-blue-200 flex flex-col justify-center bg-gray-50/50 p-2">
                             <div className="flex justify-between py-1 border-b border-dashed"><span>自評總分：</span><span className="text-blue-700 font-black">{sumScore} <span className="text-[10px] font-normal text-gray-500">/ 100 分</span></span></div>
                             <div className="flex justify-between py-1"><span>達成率：</span><span className="text-blue-700 font-black">{achieveRate} <span className="text-[10px] font-normal text-gray-500">%</span></span></div>
                         </div>
                         
-                        {/* Column 2: Grades (Span 4) */}
                         <div className="col-span-1 md:col-span-4 border-b md:border-b-0 md:border-r border-blue-200 p-2 flex flex-col justify-center">
                             <div className="text-[10px] text-gray-500 mb-1">等級評估 (自動連動)：</div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
@@ -1326,7 +1327,6 @@
                             </div>
                         </div>
 
-                        {/* Column 3: Textareas (Span 6) - Maximized & Auto-resizing */}
                         <div className="col-span-1 md:col-span-6 p-2 flex flex-col justify-between text-[10px] gap-2">
                             <div className="bg-blue-50/50 p-1.5 rounded border">
                                 <span className="font-bold block text-blue-900 mb-0.5">本月亮點：</span>
@@ -1356,11 +1356,11 @@
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mt-4 px-2 font-bold text-xs">
                         <div className="flex items-center gap-2">
                             <span className="shrink-0">店長簽名：</span>
-                            <div className="flex-1 border-b border-gray-400 h-10">{renderSignBox('', `${recordId}.signs.manager`, emp, "border-none !min-h-0", chg)}</div>
+                            <div className="flex-1 border-b border-gray-400 h-10">{renderSignBox('', `form4Records.${recordId}.signs.manager`, emp, "border-none !min-h-0")}</div>
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="shrink-0">總監簽名：</span>
-                            <div className="flex-1 border-b border-gray-400 h-10">{renderSignBox('', `${recordId}.signs.director`, emp, "border-none !min-h-0", chg)}</div>
+                            <div className="flex-1 border-b border-gray-400 h-10">{renderSignBox('', `form4Records.${recordId}.signs.director`, emp, "border-none !min-h-0")}</div>
                         </div>
                         <div className="flex items-center justify-end gap-1 mb-1">
                             <span>評核日期：</span>
