@@ -1733,7 +1733,7 @@
             const [newSlotName, setNewSlotName] = useState('');
 
             // Auth & Modals state
-            const [hrAuthUnlocked, setHrAuthUnlocked] = useState(true); // Default true for demonstration
+            const [hrAuthUnlocked, setHrAuthUnlocked] = useState(false);
             const [showPwdModal, setShowPwdModal] = useState(false);
             const [pwdErrorModal, setPwdErrorModal] = useState(false); 
             const [pwdInput, setPwdInput] = useState('');
@@ -1781,7 +1781,7 @@
             }, [fullScreenMode]);
 
             const switchTab = (tabName) => {
-                if (tabName !== 'hr') { setHrAuthUnlocked(false); setShowPwdModal(false); setPwdInput(''); setPwdErrorModal(false); setFullScreenMode(false); }
+                if (tabName !== 'hr') { setShowPwdModal(false); setPwdInput(''); setPwdErrorModal(false); setFullScreenMode(false); }
                 if (tabName !== 'admin') { setIsSuperAdmin(false); }
                 setActiveTab(tabName);
             };
@@ -2060,7 +2060,7 @@
                     )}
 
                     <header className="px-4 py-2 border-b bg-white flex justify-between items-center shrink-0 shadow-sm relative z-10 hide-in-fullscreen">
-                        <h1 className="text-xl font-black text-gray-800 tracking-tight"><span className="text-blue-600 mr-1">{loggedInGroup}</span>營運與人事戰報系統</h1>
+                        <h1 className="text-xl font-black text-gray-800 tracking-tight"><span className="text-blue-600 mr-1">{loggedInGroup}</span>12生肖戰報</h1>
                         <button onClick={() => setShowSuperAuthModal(true)} className="bg-gray-900 text-yellow-500 px-3 py-1 rounded text-xs font-bold shadow hover:bg-gray-800 transition"><i className="fa-solid fa-key mr-1"></i>權限登入</button>
                     </header>
 
