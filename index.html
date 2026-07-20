@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>中清店12生肖戰報</title>
 
-    <!-- Firebase SDK Setup -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -67,6 +66,9 @@
         .sign-box:hover { background-color: #f1f5f9; border-color: #3b82f6; color: #3b82f6; }
         .sign-img { width: 100%; height: 100%; object-fit: contain; }
         .form-section-title { padding: 2px 10px !important; margin-bottom: 4px !important; font-size: 0.75rem !important;}
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
 
         /* PDF 預覽 / 列印模式 (A4 尺寸) */
         body.pdf-mode { background-color: #525659 !important; overflow: auto !important; height: auto !important; }
@@ -127,19 +129,18 @@
             { phase: '留任與發展', no: 17, item: '學習成長紀錄', desc: '新人學習歷程與成長紀錄完整保存', std: '持續更新' },
         ];
 
-        // ADDED COLORS AND FIXED ICON
         const ZODIAC_ITEMS = [
-            { no: 1, name: '業績管理', desc: '• 每日業績目標設定與追蹤\n• 業績達成檢討與改善行動\n• 業績報表準確與回報', std: '每日追蹤、檢討並提出改善方案\n月目標達成率100%以上', max: 10, icon: 'fa-chart-line', color: 'text-blue-500' },
+            { no: 1, name: '業績管理', desc: '• 每日業績目標設定與追蹤\n• 業績達成檢討與改善行動\n• 業績報表準確與回報', std: '每日追蹤、檢討並提出改善方案\n月目標達成率100%以上', max: 10, icon: 'fa-chart-line', color: 'text-blue-600' },
             { no: 2, name: '商品銷售', desc: '• 主推商品積極銷售\n• 滴雞精/湯品銷售推廣\n• 商品庫存與銷售分析', std: '主推商品銷售達成率100%以上\n每100位客人銷售數達標', max: 15, icon: 'fa-shopping-bag', color: 'text-orange-500' },
-            { no: 3, name: '筋膜推薦', desc: '• 筋膜主動介紹\n• 成交率提升與追蹤\n• 師傅話術落實與考核', std: '介紹率達80%以上\n成交率持續加強提升', max: 10, icon: 'fa-child', color: 'text-pink-500' },
+            { no: 3, name: '筋膜推薦', desc: '• 筋膜主動介紹\n• 成交率提升與追蹤\n• 師傅話術落實與考核', std: '介紹率達80%以上\n成交率持續加強提升', max: 10, icon: 'fa-child', color: 'text-red-500' },
             { no: 4, name: '套餐銷售', desc: '• 套餐話術推廣\n• 套餐銷售數量提升\n• 顧客回購與滿意度', std: '套餐銷售達成率100%以上\n每100位客人套餐銷售數達標', max: 10, icon: 'fa-box', color: 'text-green-500' },
-            { no: 5, name: '人力管理', desc: '• 新人關懷與輔導\n• 員工出勤與排班管理\n• 離職預防與留才措施', std: '離職率低於5%\n高風險員工主動關懷與追蹤', max: 10, icon: 'fa-users-gear', color: 'text-purple-500' }, // FIXED ICON
-            { no: 6, name: '粉專/社群經營', desc: '• 每週發文3篇以上\n• 互動與回覆粉絲增加\n• 短影音/活動分享', std: '每週發文3篇以上\n粉專至少30個按讚或互動', max: 5, icon: 'fa-thumbs-up', color: 'text-sky-500' },
-            { no: 7, name: '訪談與輔導', desc: '• 同仁定期例行訪談\n• 新人/績效考核紀錄\n• 訪談表完整填寫', std: '每週至少完成1次訪談\n訪談紀錄完整且有效追蹤', max: 5, icon: 'fa-comments', color: 'text-teal-500' },
-            { no: 8, name: 'Google評論管理', desc: '• 五星評論增加\n• 負評即時回覆與處理\n• 評論內容改善追蹤', std: '負評24小時內回覆率100%\n五星評論片數達指標', max: 10, icon: 'google', color: '' }, // Custom SVG
-            { no: 9, name: 'APP會員經營', desc: '• 新會員招募\n• 會員回訪與互動\n• 會員成長數據追蹤', std: '本月新增會員數達標\n會員成長率持續提升', max: 5, icon: 'fa-mobile-screen', color: 'text-indigo-500' },
-            { no: 10, name: '客訴管理', desc: '• 客訴即時處理\n• 處理流程符合SOP\n• 改善措施與追蹤', std: '客訴處理24小時內完成\n改善措施落實且追蹤', max: 10, icon: 'fa-headset', color: 'text-red-500' },
-            { no: 11, name: '銷貨管理', desc: '• 銷貨成本管控\n• 銷貨與使用差異管控\n• 現金/刷卡帳款一致', std: '票券、商品與銷售一致無誤差', max: 5, icon: 'fa-file-invoice-dollar', color: 'text-yellow-600' },
+            { no: 5, name: '人力管理', desc: '• 新人關懷與輔導\n• 員工出勤與排班管理\n• 離職預防與留才措施', std: '離職率低於5%\n高風險員工主動關懷與追蹤', max: 10, icon: 'fa-users-gear', color: 'text-indigo-600' },
+            { no: 6, name: '粉專經營', desc: '• 每週發文3篇以上\n• 互動與回覆粉絲增加\n• 短影音/活動分享', std: '每週發文3篇以上\n粉專至少30個按讚或互動', max: 5, icon: 'fa-thumbs-up', color: 'text-sky-500' },
+            { no: 7, name: '訪談與輔導', desc: '• 同仁定期例行訪談\n• 新人/績效考核紀錄\n• 訪談表完整填寫', std: '每週至少完成1次訪談\n訪談紀錄完整且有效追蹤', max: 5, icon: 'fa-comments', color: 'text-purple-500' },
+            { no: 8, name: 'Google評論', desc: '• 五星評論增加\n• 負評即時回覆與處理\n• 評論內容改善追蹤', std: '負評24小時內回覆率100%\n五星評論片數達指標', max: 10, icon: 'google', color: '' },
+            { no: 9, name: 'APP會員', desc: '• 新會員招募\n• 會員回訪與互動\n• 會員成長數據追蹤', std: '本月新增會員數達標\n會員成長率持續提升', max: 5, icon: 'fa-mobile-screen', color: 'text-teal-600' },
+            { no: 10, name: '客訴管理', desc: '• 客訴即時處理\n• 處理流程符合SOP\n• 改善措施與追蹤', std: '客訴處理24小時內完成\n改善措施落實且追蹤', max: 10, icon: 'fa-headset', color: 'text-rose-500' },
+            { no: 11, name: '銷貨管理', desc: '• 銷貨成本管控\n• 銷貨與使用差異管控\n• 現金/刷卡帳款一致', std: '票券、商品與銷售一致無誤差', max: 5, icon: 'fa-file-invoice-dollar', color: 'text-amber-600' },
             { no: 12, name: '庫存管理', desc: '• 定期盤點執行\n• 庫存數量管控\n• 效期商品管理', std: '每月盤點無誤差\n效期與庫存管理完整', max: 5, icon: 'fa-cubes', color: 'text-gray-600' }
         ];
 
@@ -151,6 +152,7 @@
         const calculateTarget = (baseData, itemId, settings) => {
             if (!baseData) return 0;
             const config = ITEM_CONFIG.find(i => i.id === itemId);
+            if (!config) return 0;
             const baseValue = config.type === 'amount' ? (Number(baseData.revenue) || 0) : (Number(baseData.customers) || 0);
             const rate = settings[itemId] && settings[itemId].rate ? Number(settings[itemId].rate) : 0;
             return Math.ceil(baseValue * (rate / 100));
@@ -1220,117 +1222,13 @@
             );
         };
 
-        const HrForm4Component = ({ emp, handleHrFieldChange, renderSignBox }) => {
-            const [selectedRecordId, setSelectedRecordId] = useState('');
-            const [newRecordType, setNewRecordType] = useState('month'); 
-            const [newRecordDate, setNewRecordDate] = useState('');
-
-            // Access form4Records or fallback to empty
-            const records = emp.form4Records || {};
-            const recordKeys = Object.keys(records).sort().reverse();
-
-            // Set initial selected record
-            useEffect(() => {
-                if (!selectedRecordId && recordKeys.length > 0) {
-                    setSelectedRecordId(recordKeys[0]);
-                }
-            }, [emp.id, recordKeys, selectedRecordId]);
-
-            const handleCreateRecord = () => {
-                if (!newRecordDate) { alert("請選擇日期"); return; }
-                const recordId = `${newRecordType}-${newRecordDate}`;
-                
-                if (records[recordId]) {
-                    setSelectedRecordId(recordId);
-                    return;
-                }
-
-                // Initialize new empty record based on standard template
-                const newRecord = { basic: { periodType: newRecordType, store: emp.storeName, manager: emp.name }, scores: {}, result: {} };
-                handleHrFieldChange(emp.id, 'form4Records', recordId, newRecord);
-                setSelectedRecordId(recordId);
-            };
-
-            const renderIcon = (item) => {
-                if (item.icon === 'google') {
-                    return (
-                        <svg viewBox="0 0 24 24" width="18" height="18" className="mr-1 inline-block shrink-0" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                        </svg>
-                    );
-                }
-                return <i className={`fa-solid ${item.icon} ${item.color} mr-1 text-base w-5 text-center shrink-0`}></i>;
-            };
-
-            return (
-                <div className="hr-form-container text-gray-800 p-4 relative">
-                    
-                    {/* Record Selector UI (Top Bar) */}
-                    <div className="bg-blue-50 border border-blue-200 p-2 rounded mb-4 flex flex-wrap gap-4 items-end hide-in-fullscreen shadow-sm">
-                        <div className="flex-1 min-w-[200px]">
-                            <label className="block text-xs font-bold text-blue-800 mb-1"><i className="fa-solid fa-folder-open mr-1"></i>選擇歷史戰報</label>
-                            <select 
-                                className="w-full border border-blue-300 rounded p-1.5 text-sm outline-none font-bold bg-white focus:ring-2 focus:ring-blue-500"
-                                value={selectedRecordId}
-                                onChange={e => setSelectedRecordId(e.target.value)}
-                            >
-                                <option value="">-- 請選擇戰報紀錄 --</option>
-                                {recordKeys.map(key => {
-                                    const display = key.startsWith('month') ? `月度戰報 : ${key.replace('month-', '')}` : `週度戰報 : ${key.replace('week-', '').replace('-', '年 第')}週`;
-                                    return <option key={key} value={key}>{display}</option>;
-                                })}
-                            </select>
-                        </div>
-                        <div className="border-l border-blue-300 pl-4 flex-1 min-w-[300px] flex gap-2 items-end">
-                            <div>
-                                <label className="block text-xs font-bold text-blue-800 mb-1"><i className="fa-solid fa-file-circle-plus mr-1"></i>新增戰報</label>
-                                <select className="border border-blue-300 rounded p-1.5 text-sm outline-none bg-white" value={newRecordType} onChange={e => setNewRecordType(e.target.value)}>
-                                    <option value="month">月度戰報</option>
-                                    <option value="week">週度戰報</option>
-                                </select>
-                            </div>
-                            <div>
-                                {newRecordType === 'month' ? (
-                                    <input type="month" className="border border-blue-300 rounded p-1.5 text-sm outline-none bg-white font-bold text-gray-700" value={newRecordDate} onChange={e => setNewRecordDate(e.target.value)} />
-                                ) : (
-                                    <input type="week" className="border border-blue-300 rounded p-1.5 text-sm outline-none bg-white font-bold text-gray-700" value={newRecordDate} onChange={e => setNewRecordDate(e.target.value)} />
-                                )}
-                            </div>
-                            <button onClick={handleCreateRecord} className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-bold shadow hover:bg-blue-700 transition">建立/載入</button>
-                        </div>
-                    </div>
-
-                    {!selectedRecordId ? (
-                        <div className="text-center py-16 text-gray-400 font-bold border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center">
-                            <i className="fa-solid fa-folder-open text-4xl mb-3 opacity-30"></i>
-                            <p>目前沒有選取任何戰報。</p>
-                            <p className="text-xs font-normal mt-1">請從上方選單選擇歷史紀錄，或建立一份全新的戰報。</p>
-                        </div>
-                    ) : (
-                        <Form4Content 
-                            emp={emp} 
-                            recordId={selectedRecordId} 
-                            fData={records[selectedRecordId]} 
-                            handleHrFieldChange={handleHrFieldChange}
-                            renderSignBox={renderSignBox}
-                            renderIcon={renderIcon}
-                        />
-                    )}
-                </div>
-            );
-        };
-
-        // Form 4 Inner Content Component (Extracted for cleaner state handling with multi-records)
         const Form4Content = ({ emp, recordId, fData = {}, handleHrFieldChange, renderSignBox, renderIcon }) => {
             const chg = (path, val) => handleHrFieldChange(emp.id, 'form4Records', `${recordId}.${path}`, val);
 
             let totalScore = 0;
             ZODIAC_ITEMS.forEach(item => { totalScore += (Number(fData.scores?.[item.no]?.self) || 0); });
-            const avgScore = (totalScore / 12).toFixed(2);
-            const achieveRate = ((totalScore / 100) * 100).toFixed(2);
+            const sumScore = totalScore.toFixed(2);
+            const achieveRate = totalScore.toFixed(2);
 
             let grade = '';
             if (totalScore >= 90) grade = 'excellent';
@@ -1338,55 +1236,43 @@
             else if (totalScore >= 60) grade = 'pass';
             else if (totalScore > 0) grade = 'fail';
 
+            const renderGradeCheck = (isCheck, label) => (
+                <div className="flex items-center gap-1.5 cursor-default">
+                    <div className={`w-3.5 h-3.5 flex items-center justify-center rounded-sm border ${isCheck ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-400 text-transparent'}`}>
+                        <i className="fa-solid fa-check text-[10px]"></i>
+                    </div>
+                    <span className="text-gray-700">{label}</span>
+                </div>
+            );
+
+            const handleTextareaInput = (e) => {
+                e.target.style.height = 'auto';
+                e.target.style.height = (e.target.scrollHeight) + 'px';
+            };
+            const textareaRef = (el) => {
+                if (el) {
+                    el.style.height = 'auto';
+                    el.style.height = (el.scrollHeight) + 'px';
+                }
+            };
+
             return (
                 <div className="relative animate-fadeIn">
                     <div className="text-center pb-2 mb-2 relative">
                         <h2 className="text-2xl font-black text-[#1d3557] tracking-wider mb-1">12生肖績效檢討表</h2>
                         <p className="text-xs text-red-500 font-bold tracking-widest">落實執行 ． 追蹤管理 ． 持續改善 ． 提升營運績效</p>
-                        <div className="absolute right-0 top-0 text-[10px] font-bold text-gray-400 border px-2 py-1 rounded bg-gray-50 hide-in-fullscreen">
-                            目前檢視: {recordId.startsWith('month') ? '月度' : '週度'} ({recordId.split('-').slice(1).join('-')})
-                        </div>
-                    </div>
-
-                    <div className="border-t-2 border-b-2 border-red-500 py-1.5 px-2 mb-2 text-xs font-bold flex flex-wrap justify-between items-center gap-y-2 bg-gray-50">
-                        <div className="flex gap-4">
-                            <div>店名：<input type="text" className="border-b border-gray-400 bg-transparent outline-none w-24 text-center text-blue-800 font-black" value={fData.basic?.store || emp.storeName || ''} onChange={e=>chg('basic.store', e.target.value)}/></div>
-                            <div>店長：<input type="text" className="border-b border-gray-400 bg-transparent outline-none w-20 text-center text-blue-800 font-black" value={fData.basic?.manager || emp.name || ''} onChange={e=>chg('basic.manager', e.target.value)}/></div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span>檢討期間：</span>
-                            <label className="flex items-center gap-0.5 cursor-pointer"><input type="checkbox" checked={fData.basic?.periodType==='week'} onChange={()=>chg('basic.periodType', 'week')} /> 週</label>
-                            <div className="flex items-center gap-1">
-                                <span className="text-gray-400">(</span>
-                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.wS_M||''} onChange={e=>chg('basic.wS_M', e.target.value)}/><span className="text-gray-400">/</span>
-                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.wS_D||''} onChange={e=>chg('basic.wS_D', e.target.value)}/><span className="text-gray-400">~</span>
-                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.wE_M||''} onChange={e=>chg('basic.wE_M', e.target.value)}/><span className="text-gray-400">/</span>
-                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.wE_D||''} onChange={e=>chg('basic.wE_D', e.target.value)}/>
-                                <span className="text-gray-400">)</span>
-                            </div>
-                            
-                            <label className="flex items-center gap-0.5 cursor-pointer ml-3"><input type="checkbox" checked={fData.basic?.periodType==='month'} onChange={()=>chg('basic.periodType', 'month')} /> 月</label>
-                            <div className="flex items-center gap-1">
-                                <span className="text-gray-400">(</span>
-                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.mS_M||''} onChange={e=>chg('basic.mS_M', e.target.value)}/><span className="text-gray-400">/</span>
-                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.mS_D||''} onChange={e=>chg('basic.mS_D', e.target.value)}/><span className="text-gray-400">~</span>
-                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.mE_M||''} onChange={e=>chg('basic.mE_M', e.target.value)}/><span className="text-gray-400">/</span>
-                                <input type="text" className="border-b border-gray-400 bg-transparent outline-none w-6 text-center text-[11px] text-blue-700 font-bold" value={fData.basic?.mE_D||''} onChange={e=>chg('basic.mE_D', e.target.value)}/>
-                                <span className="text-gray-400">)</span>
-                            </div>
-                        </div>
                     </div>
 
                     <table className="w-full hr-table mb-2 border-2 border-[#1d3557]">
                         <thead>
                             <tr className="bg-[#1d3557] text-white text-[11px]">
                                 <th className="w-[4%] py-2">項次</th>
-                                <th className="w-[11%]">檢核項目</th>
-                                <th className="w-[21%]">檢核重點內容</th>
-                                <th className="w-[18%]">執行標準<br/><span className="text-[9px] font-normal text-white/80">(達成本月指標)</span></th>
+                                <th className="w-[15%]">檢核項目</th>
+                                <th className="w-[20%]">檢核重點內容</th>
+                                <th className="w-[17%]">執行標準<br/><span className="text-[9px] font-normal text-white/80">(達成本月指標)</span></th>
                                 <th className="w-[4%]">配分</th>
-                                <th className="w-[6%]">店長<br/>自評</th>
-                                <th className="w-[6%]">總監<br/>覆評</th>
+                                <th className="w-[5%]">店長<br/>自評</th>
+                                <th className="w-[5%]">總監<br/>覆評</th>
                                 <th className="w-[30%]">建議改善事項</th>
                             </tr>
                         </thead>
@@ -1412,12 +1298,8 @@
                                             className="w-full h-full min-h-[40px] text-[10px] font-normal leading-relaxed p-1 border-none outline-none resize-none bg-transparent focus:bg-white text-left overflow-hidden block" 
                                             placeholder="輸入改善建議..." 
                                             value={fData.scores?.[item.no]?.note || ''} 
-                                            onChange={(e) => {
-                                                chg(`scores.${item.no}.note`, e.target.value);
-                                                e.target.style.height = 'auto';
-                                                e.target.style.height = (e.target.scrollHeight) + 'px';
-                                            }}
-                                            ref={(el) => { if(el) { el.style.height = 'auto'; el.style.height = (el.scrollHeight) + 'px'; } }}
+                                            onChange={(e) => { chg(`scores.${item.no}.note`, e.target.value); handleTextareaInput(e); }}
+                                            ref={textareaRef}
                                         ></textarea>
                                     </td>
                                 </tr>
@@ -1426,33 +1308,47 @@
                     </table>
 
                     {/* REDESIGNED LAYOUT: 12-column grid for maximizing textareas */}
-                    <div className="border-2 border-blue-200 grid grid-cols-1 md:grid-cols-12 text-xs mb-3 font-bold">
+                    <div className="border-2 border-blue-200 grid grid-cols-1 md:grid-cols-12 text-xs mb-3 font-bold bg-white">
                         {/* Column 1: Scores (Span 2) */}
                         <div className="col-span-1 md:col-span-2 border-b md:border-b-0 md:border-r border-blue-200 flex flex-col justify-center bg-gray-50/50 p-2">
-                            <div className="flex justify-between py-1 border-b border-dashed"><span>平均分數：</span><span className="text-blue-700 font-black">{avgScore} <span className="text-[10px] font-normal text-gray-500">/ 100 分</span></span></div>
+                            <div className="flex justify-between py-1 border-b border-dashed"><span>自評總分：</span><span className="text-blue-700 font-black">{sumScore} <span className="text-[10px] font-normal text-gray-500">/ 100 分</span></span></div>
                             <div className="flex justify-between py-1"><span>達成率：</span><span className="text-blue-700 font-black">{achieveRate} <span className="text-[10px] font-normal text-gray-500">%</span></span></div>
                         </div>
                         
-                        {/* Column 2: Grades (Span 3) */}
-                        <div className="col-span-1 md:col-span-3 border-b md:border-b-0 md:border-r border-blue-200 p-2 flex flex-col gap-1 justify-center">
-                            <div className="text-[10px] text-gray-500 mb-0.5">等級評估 (自動連動)：</div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-1 text-[10px]">
-                                <label className="flex items-center gap-1"><input type="checkbox" disabled checked={grade==='excellent'} className="scale-110"/> 優秀(90分以上)</label>
-                                <label className="flex items-center gap-1"><input type="checkbox" disabled checked={grade==='good'} className="scale-110"/> 良好(80-89分以上)</label>
-                                <label className="flex items-center gap-1"><input type="checkbox" disabled checked={grade==='pass'} className="scale-110"/> 合格(60-79分以上)</label>
-                                <label className="flex items-center gap-1"><input type="checkbox" disabled checked={grade==='fail'} className="scale-110"/> 待改善(未達60分)</label>
+                        {/* Column 2: Grades (Span 4) */}
+                        <div className="col-span-1 md:col-span-4 border-b md:border-b-0 md:border-r border-blue-200 p-2 flex flex-col justify-center">
+                            <div className="text-[10px] text-gray-500 mb-1">等級評估 (自動連動)：</div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                                {renderGradeCheck(grade==='excellent', '優秀(90分以上)')}
+                                {renderGradeCheck(grade==='good', '良好(80-89分以上)')}
+                                {renderGradeCheck(grade==='pass', '合格(60-79分以上)')}
+                                {renderGradeCheck(grade==='fail', '待改善(未達60分)')}
                             </div>
                         </div>
 
-                        {/* Column 3: Textareas (Span 7) - Maximized */}
-                        <div className="col-span-1 md:col-span-7 p-2 flex flex-col justify-between text-[10px] gap-1.5">
+                        {/* Column 3: Textareas (Span 6) - Maximized & Auto-resizing */}
+                        <div className="col-span-1 md:col-span-6 p-2 flex flex-col justify-between text-[10px] gap-2">
                             <div className="bg-blue-50/50 p-1.5 rounded border">
                                 <span className="font-bold block text-blue-900 mb-0.5">本月亮點：</span>
-                                <textarea className="w-full bg-transparent border-none outline-none resize-none font-normal h-16 leading-relaxed" placeholder="輸入亮點總結..." value={fData.result?.highlights || ''} onChange={e=>chg('result.highlights', e.target.value)}></textarea>
+                                <textarea 
+                                    className="w-full bg-transparent border-none outline-none resize-none font-normal leading-relaxed overflow-hidden block" 
+                                    style={{ minHeight: '40px' }}
+                                    placeholder="輸入亮點總結..." 
+                                    value={fData.result?.highlights || ''} 
+                                    onChange={e=>{chg('result.highlights', e.target.value); handleTextareaInput(e);}}
+                                    ref={textareaRef}
+                                ></textarea>
                             </div>
                             <div className="bg-red-50/50 p-1.5 rounded border">
                                 <span className="font-bold block text-red-900 mb-0.5">改善重點：</span>
-                                <textarea className="w-full bg-transparent border-none outline-none resize-none font-normal h-16 leading-relaxed" placeholder="輸入重點改善方向..." value={fData.result?.improvements || ''} onChange={e=>chg('result.improvements', e.target.value)}></textarea>
+                                <textarea 
+                                    className="w-full bg-transparent border-none outline-none resize-none font-normal leading-relaxed overflow-hidden block" 
+                                    style={{ minHeight: '40px' }}
+                                    placeholder="輸入重點改善方向..." 
+                                    value={fData.result?.improvements || ''} 
+                                    onChange={e=>{chg('result.improvements', e.target.value); handleTextareaInput(e);}}
+                                    ref={textareaRef}
+                                ></textarea>
                             </div>
                         </div>
                     </div>
@@ -1460,11 +1356,11 @@
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end mt-4 px-2 font-bold text-xs">
                         <div className="flex items-center gap-2">
                             <span className="shrink-0">店長簽名：</span>
-                            <div className="flex-1 border-b border-gray-400 h-10">{renderSignBox('', `form4Records.${recordId}.signs.manager`, emp, "border-none !min-h-0")}</div>
+                            <div className="flex-1 border-b border-gray-400 h-10">{renderSignBox('', `${recordId}.signs.manager`, emp, "border-none !min-h-0", chg)}</div>
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="shrink-0">總監簽名：</span>
-                            <div className="flex-1 border-b border-gray-400 h-10">{renderSignBox('', `form4Records.${recordId}.signs.director`, emp, "border-none !min-h-0")}</div>
+                            <div className="flex-1 border-b border-gray-400 h-10">{renderSignBox('', `${recordId}.signs.director`, emp, "border-none !min-h-0", chg)}</div>
                         </div>
                         <div className="flex items-center justify-end gap-1 mb-1">
                             <span>評核日期：</span>
@@ -1481,16 +1377,149 @@
             );
         };
 
-        const HrComponent = ({ hrAuthUnlocked, hrEmployees, selectedStore, setSelectedStore, selectedEmpId, setSelectedEmpId, newEmpId, setNewEmpId, newEmpName, setNewEmpName, hrFormTab, setHrFormTab, setFullScreenMode, handleAddHrEmployee, handleDeleteHrEmployee, setEditEmpData, setIsEditMode, setShowEmpModal, handleHrFieldChange, renderSignBox }) => {
+        const HrForm4Component = ({ emp, handleHrFieldChange, renderSignBox, delAuthUnlocked, showDialog }) => {
+            const [selectedRecordId, setSelectedRecordId] = useState('');
+            const [newRecordType, setNewRecordType] = useState('month'); 
+            const [newRecordDate, setNewRecordDate] = useState('');
+
+            const records = emp.form4Records || {};
+            const recordKeys = Object.keys(records).filter(k => !records[k].isDeleted || delAuthUnlocked).sort().reverse();
+
+            useEffect(() => {
+                if (!selectedRecordId && recordKeys.length > 0) {
+                    setSelectedRecordId(recordKeys[0]);
+                }
+            }, [emp.id, recordKeys, selectedRecordId]);
+
+            const handleCreateRecord = () => {
+                if (!newRecordDate) { showDialog("請選擇日期"); return; }
+                const recordId = `${newRecordType}-${newRecordDate}`;
+                
+                if (records[recordId]) {
+                    setSelectedRecordId(recordId);
+                    return;
+                }
+
+                const newRecord = { basic: { periodType: newRecordType, store: emp.storeName, manager: emp.name }, scores: {}, result: {}, isDeleted: false };
+                handleHrFieldChange(emp.id, 'form4Records', recordId, newRecord);
+                setSelectedRecordId(recordId);
+            };
+
+            const renderIcon = (item) => {
+                if (item.icon === 'google') {
+                    return (
+                        <svg viewBox="0 0 24 24" width="16" height="16" className="mr-1 inline-block shrink-0" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                        </svg>
+                    );
+                }
+                return <i className={`fa-solid ${item.icon} ${item.color} mr-1 text-base w-5 text-center shrink-0`}></i>;
+            };
+
+            return (
+                <div className="hr-form-container text-gray-800 p-4 relative">
+                    
+                    {/* Record Selector UI (Top Bar) */}
+                    <div className="bg-blue-50 border border-blue-200 p-2 rounded mb-4 flex flex-wrap gap-4 items-end hide-in-fullscreen shadow-sm">
+                        <div className="flex-1 min-w-[200px]">
+                            <label className="block text-xs font-bold text-blue-800 mb-1"><i className="fa-solid fa-folder-open mr-1"></i>選擇歷史戰報</label>
+                            <select 
+                                className="w-full border border-blue-300 rounded p-1.5 text-sm outline-none font-bold bg-white focus:ring-2 focus:ring-blue-500"
+                                value={selectedRecordId}
+                                onChange={e => setSelectedRecordId(e.target.value)}
+                            >
+                                <option value="">-- 請選擇戰報紀錄 --</option>
+                                {recordKeys.map(key => {
+                                    const display = key.startsWith('month') ? `月度戰報 : ${key.replace('month-', '')}` : `週度戰報 : ${key.replace('week-', '').replace('-', '年 第')}週`;
+                                    const delMark = records[key].isDeleted ? ' [已刪除]' : '';
+                                    return <option key={key} value={key}>{display}{delMark}</option>;
+                                })}
+                            </select>
+                        </div>
+                        <div className="border-l border-blue-300 pl-4 flex-1 min-w-[300px] flex gap-2 items-end">
+                            <div>
+                                <label className="block text-xs font-bold text-blue-800 mb-1"><i className="fa-solid fa-file-circle-plus mr-1"></i>新增戰報</label>
+                                <select className="border border-blue-300 rounded p-1.5 text-sm outline-none bg-white" value={newRecordType} onChange={e => setNewRecordType(e.target.value)}>
+                                    <option value="month">月度戰報</option>
+                                    <option value="week">週度戰報</option>
+                                </select>
+                            </div>
+                            <div>
+                                {newRecordType === 'month' ? (
+                                    <input type="month" className="border border-blue-300 rounded p-1.5 text-sm outline-none bg-white font-bold text-gray-700" value={newRecordDate} onChange={e => setNewRecordDate(e.target.value)} />
+                                ) : (
+                                    <input type="week" className="border border-blue-300 rounded p-1.5 text-sm outline-none bg-white font-bold text-gray-700" value={newRecordDate} onChange={e => setNewRecordDate(e.target.value)} />
+                                )}
+                            </div>
+                            <button onClick={handleCreateRecord} className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-bold shadow hover:bg-blue-700 transition">建立/載入</button>
+                            
+                            {selectedRecordId && delAuthUnlocked && (
+                                records[selectedRecordId]?.isDeleted ? (
+                                    <button onClick={() => showDialog('確定要復原此戰報嗎？', () => handleHrFieldChange(emp.id, 'form4Records', `${selectedRecordId}.isDeleted`, false))} className="bg-green-600 text-white px-3 py-1.5 rounded text-sm font-bold shadow hover:bg-green-700 transition ml-2 whitespace-nowrap"><i className="fa-solid fa-trash-arrow-up mr-1"></i>復原</button>
+                                ) : (
+                                    <button onClick={() => showDialog('確定要刪除此戰報嗎？', () => handleHrFieldChange(emp.id, 'form4Records', `${selectedRecordId}.isDeleted`, true))} className="bg-red-600 text-white px-3 py-1.5 rounded text-sm font-bold shadow hover:bg-red-700 transition ml-2 whitespace-nowrap"><i className="fa-solid fa-trash-can mr-1"></i>刪除</button>
+                                )
+                            )}
+                        </div>
+                    </div>
+
+                    {!selectedRecordId ? (
+                        <div className="text-center py-16 text-gray-400 font-bold border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center">
+                            <i className="fa-solid fa-file-invoice mb-3 text-4xl opacity-20"></i>
+                            <p>尚無任何戰報紀錄，請於上方新增或選擇歷史紀錄。</p>
+                        </div>
+                    ) : (
+                        <Form4Content emp={emp} recordId={selectedRecordId} fData={records[selectedRecordId]} handleHrFieldChange={handleHrFieldChange} renderSignBox={renderSignBox} renderIcon={renderIcon} />
+                    )}
+                </div>
+            );
+        };
+
+        const HrComponent = ({ hrAuthUnlocked, hrEmployees, selectedStore, setSelectedStore, selectedEmpId, setSelectedEmpId, newEmpId, setNewEmpId, newEmpName, setNewEmpName, hrFormTab, setHrFormTab, setFullScreenMode, handleAddHrEmployee, handleDeleteHrEmployee, handleRestoreHrEmployee, setEditEmpData, setIsEditMode, setShowEmpModal, handleHrFieldChange, renderSignBox, showDialog }) => {
             if (!hrAuthUnlocked) return <div className="p-4 text-center text-red-500 mt-10 font-bold">拒絕存取：請由導覽列重新驗證密碼。</div>;
             
-            const availableStores = [...new Set(Object.values(hrEmployees).map(emp => emp.storeName).filter(Boolean))];
+            const [delAuthUnlocked, setDelAuthUnlocked] = useState(false);
+            const [showDelAuthModal, setShowDelAuthModal] = useState(false);
+            const [delPwdInput, setDelPwdInput] = useState('');
+
+            const handleDelAuthSubmit = () => {
+                if (delPwdInput === '7310168888') {
+                    setDelAuthUnlocked(true);
+                    setShowDelAuthModal(false);
+                    setDelPwdInput('');
+                } else {
+                    showDialog('密碼錯誤！無法解鎖權限。');
+                    setDelPwdInput('');
+                }
+            };
+
+            const activeHrEmployees = Object.values(hrEmployees).filter(emp => !emp.isDeleted || delAuthUnlocked);
+            const availableStores = [...new Set(activeHrEmployees.map(emp => emp.storeName).filter(Boolean))];
             if (!availableStores.includes('中清店')) availableStores.push('中清店');
-            const empsInStore = Object.values(hrEmployees).filter(emp => emp.storeName === selectedStore);
+            const empsInStore = activeHrEmployees.filter(emp => emp.storeName === selectedStore);
             const currentEmp = hrEmployees[selectedEmpId] || null;
 
             return (
                 <div className="flex flex-col h-full bg-gray-50 overflow-hidden relative">
+                    {showDelAuthModal && (
+                        <div className="fixed inset-0 bg-black/60 z-[250] flex items-center justify-center p-4">
+                            <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border-2 border-red-500">
+                                <div className="bg-gray-900 text-red-500 p-4 font-bold text-lg flex items-center gap-2"><i className="fa-solid fa-lock"></i> 解鎖刪除與復原權限</div>
+                                <div className="p-6 space-y-4">
+                                    <p className="text-xs text-gray-500 font-bold mb-2">請輸入高階權限密碼以執行刪除或復原操作。</p>
+                                    <input type="password" placeholder="輸入解鎖密碼" className="w-full border-2 border-gray-300 rounded-lg p-2 text-center text-xl tracking-[0.2em] font-sans focus:border-red-500 outline-none" value={delPwdInput} onChange={e => setDelPwdInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleDelAuthSubmit()} autoFocus />
+                                </div>
+                                <div className="bg-gray-50 p-4 flex justify-end gap-3 border-t">
+                                    <button onClick={() => {setShowDelAuthModal(false); setDelPwdInput('');}} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded font-bold transition">取消</button>
+                                    <button onClick={handleDelAuthSubmit} className="px-6 py-2 bg-red-600 text-white rounded font-bold shadow hover:bg-red-700 transition">驗證解鎖</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="bg-white border-b px-4 py-2 flex justify-between items-center shrink-0 shadow-sm hide-in-fullscreen relative z-20">
                         <div className="flex items-center gap-4">
                             <h2 className="text-blue-800 font-bold flex items-center whitespace-nowrap"><i className="fa-solid fa-user-shield mr-2"></i>人事管理系統</h2>
@@ -1501,7 +1530,7 @@
                                 </select>
                                 <select className="border rounded px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-blue-500 font-bold" value={selectedEmpId} onChange={(e) => setSelectedEmpId(e.target.value)} disabled={!selectedStore}>
                                     <option value="">-- 選擇人員 --</option>
-                                    {empsInStore.map(emp => <option key={emp.id} value={emp.id}>{emp.id} - {emp.name}</option>)}
+                                    {empsInStore.map(emp => <option key={emp.id} value={emp.id} className={emp.isDeleted ? 'text-red-500' : ''}>{emp.id} - {emp.name} {emp.isDeleted ? '[已刪除]' : ''}</option>)}
                                 </select>
                             </div>
                         </div>
@@ -1510,13 +1539,27 @@
                             {currentEmp && (
                                 <>
                                     <button onClick={() => { setEditEmpData({ id: currentEmp.id, name: currentEmp.name, storeName: currentEmp.storeName }); setIsEditMode(true); setShowEmpModal(true); }} className="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 transition"><i className="fa-solid fa-pen mr-1"></i>編輯</button>
-                                    <button onClick={handleDeleteHrEmployee} className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition"><i className="fa-solid fa-trash-can mr-1"></i>刪除</button>
+                                    
+                                    {delAuthUnlocked && !currentEmp.isDeleted && (
+                                        <button onClick={handleDeleteHrEmployee} className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition"><i className="fa-solid fa-trash-can mr-1"></i>刪除</button>
+                                    )}
+                                    {delAuthUnlocked && currentEmp.isDeleted && (
+                                        <button onClick={handleRestoreHrEmployee} className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition"><i className="fa-solid fa-trash-arrow-up mr-1"></i>復原</button>
+                                    )}
                                 </>
                             )}
+                            <div className="border-l border-gray-300 mx-1 h-6"></div>
                             <input type="text" placeholder="編號" className="border rounded px-2 py-1 text-sm w-16" value={newEmpId} onChange={e => setNewEmpId(e.target.value)} />
                             <input type="text" placeholder="姓名" className="border rounded px-2 py-1 text-sm w-24" value={newEmpName} onChange={e => setNewEmpName(e.target.value)} />
                             <button onClick={handleAddHrEmployee} className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition whitespace-nowrap"><i className="fa-solid fa-plus mr-1"></i>快速新增</button>
                             <button onClick={() => { setEditEmpData({ id: '', name: '', storeName: selectedStore }); setIsEditMode(false); setShowEmpModal(true); }} className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition whitespace-nowrap"><i className="fa-solid fa-user-plus mr-1"></i>完整新增</button>
+                            
+                            <div className="border-l border-gray-300 mx-1 h-6"></div>
+                            {!delAuthUnlocked ? (
+                                <button onClick={() => setShowDelAuthModal(true)} className="bg-gray-200 text-gray-600 px-3 py-1 rounded text-sm hover:bg-gray-300 transition" title="解鎖刪除/復原權限"><i className="fa-solid fa-lock"></i></button>
+                            ) : (
+                                <button onClick={() => setDelAuthUnlocked(false)} className="bg-red-100 text-red-600 px-3 py-1 rounded text-sm hover:bg-red-200 transition border border-red-300" title="重新鎖定權限"><i className="fa-solid fa-unlock mr-1"></i>已解鎖</button>
+                            )}
                         </div>
                     </div>
 
@@ -1538,7 +1581,7 @@
                                     {hrFormTab === 'form1' && <HrForm1Component emp={currentEmp} handleHrFieldChange={handleHrFieldChange} renderSignBox={renderSignBox} />}
                                     {hrFormTab === 'form2' && <HrForm2Component emp={currentEmp} handleHrFieldChange={handleHrFieldChange} renderSignBox={renderSignBox} />}
                                     {hrFormTab === 'form3' && <HrForm3Component emp={currentEmp} handleHrFieldChange={handleHrFieldChange} renderSignBox={renderSignBox} />}
-                                    {hrFormTab === 'form4' && <HrForm4Component emp={currentEmp} handleHrFieldChange={handleHrFieldChange} renderSignBox={renderSignBox} />}
+                                    {hrFormTab === 'form4' && <HrForm4Component emp={currentEmp} handleHrFieldChange={handleHrFieldChange} renderSignBox={renderSignBox} delAuthUnlocked={delAuthUnlocked} showDialog={showDialog} />}
                                 </div>
                             </div>
                         </div>
@@ -1552,7 +1595,7 @@
             );
         };
 
-        const AdminComponent = ({ isSuperAdmin, systemUsers, saveToFirebase }) => {
+        const AdminComponent = ({ isSuperAdmin, systemUsers, saveToFirebase, showDialog }) => {
             if (!isSuperAdmin) return <div className="p-4 text-center text-red-500 font-bold">拒絕存取：請重新驗證最高權限。</div>;
             
             const [editUser, setEditUser] = useState(null);
@@ -1564,7 +1607,9 @@
             };
 
             const handleDeleteUser = (id) => {
-                if(confirm('確定要永久刪除此帳號嗎？')) { saveToFirebase('system_users', id, { status: 'deleted' }); }
+                showDialog('確定要永久刪除此帳號嗎？這將無法復原。', () => {
+                    saveToFirebase('system_users', id, { status: 'deleted' });
+                });
             };
 
             const saveUserForm = (e) => {
@@ -1675,7 +1720,7 @@
         // MODULE 3: MAIN ORCHESTRATOR APP
         // ==========================================
         function App() {
-            const [activeTab, setActiveTab] = useState('night');
+            const [activeTab, setActiveTab] = useState('hr');
             const [selectedDate, setSelectedDate] = useState(getTodayStr()); 
             const [inputDate, setInputDate] = useState(getTodayStr());       
             const [database, setDatabase] = useState({});
@@ -1688,11 +1733,23 @@
             const [newSlotName, setNewSlotName] = useState('');
 
             // Auth & Modals state
-            const [hrAuthUnlocked, setHrAuthUnlocked] = useState(false);
+            const [hrAuthUnlocked, setHrAuthUnlocked] = useState(true); // Default true for demonstration
             const [showPwdModal, setShowPwdModal] = useState(false);
             const [pwdErrorModal, setPwdErrorModal] = useState(false); 
             const [pwdInput, setPwdInput] = useState('');
             const [fullScreenMode, setFullScreenMode] = useState(false);
+
+            // Global Custom Dialog (Replaces native alert/confirm)
+            const [dialogState, setDialogState] = useState({ show: false, message: '', isConfirm: false, onConfirm: null });
+
+            const showDialog = (message, onConfirmCallback = null) => {
+                setDialogState({
+                    show: true,
+                    message,
+                    isConfirm: !!onConfirmCallback,
+                    onConfirm: onConfirmCallback
+                });
+            };
 
             // HR Employees state
             const [hrEmployees, setHrEmployees] = useState({});
@@ -1700,7 +1757,7 @@
             const [selectedEmpId, setSelectedEmpId] = useState(''); 
             const [newEmpId, setNewEmpId] = useState('');
             const [newEmpName, setNewEmpName] = useState('');
-            const [hrFormTab, setHrFormTab] = useState('form1');
+            const [hrFormTab, setHrFormTab] = useState('form4');
             const [showEmpModal, setShowEmpModal] = useState(false);
             const [isEditMode, setIsEditMode] = useState(false);
             const [editEmpData, setEditEmpData] = useState({ id: '', name: '', storeName: '' });
@@ -1761,7 +1818,7 @@
 
                         onSnapshot(recordsRef, snap => { const newDb = {}; snap.forEach(d => newDb[d.id] = d.data()); setDatabase(newDb); });
                         onSnapshot(settingsRef, snap => { snap.forEach(d => { if (d.id === "global") { const data = d.data(); if (data.rates) setSettings(prev => ({ ...prev, ...data.rates })); if (data.timeSlots) setTimeSlots(data.timeSlots); } }); });
-                        onSnapshot(hrRef, snap => { const newHr = {}; snap.forEach(d => { const data = d.data(); if(!data.isDeleted) newHr[d.id] = data; }); setHrEmployees(newHr); });
+                        onSnapshot(hrRef, snap => { const newHr = {}; snap.forEach(d => { newHr[d.id] = d.data(); }); setHrEmployees(newHr); }); // Retrieve all to allow restore
                         onSnapshot(usersRef, snap => { const users = []; snap.forEach(d => users.push({ id: d.id, ...d.data() })); setSystemUsers(users); });
                     });
                 };
@@ -1826,23 +1883,23 @@
             };
 
             const handleAddHrEmployee = () => {
-                if (!selectedStore) { alert("請先從左方選擇店別！或點擊「完整新增」建立新店別與員工。"); return; }
-                if (!newEmpId.trim() || !newEmpName.trim()) { alert("請輸入完整的員工編號與姓名！"); return; }
-                if (hrEmployees[newEmpId]) { alert("此員工編號已存在！"); return; }
+                if (!selectedStore) { showDialog("請先從左方選擇店別！或點擊「完整新增」建立新店別與員工。"); return; }
+                if (!newEmpId.trim() || !newEmpName.trim()) { showDialog("請輸入完整的員工編號與姓名！"); return; }
+                if (hrEmployees[newEmpId]) { showDialog("此員工編號已存在！"); return; }
                 const newEmp = { id: newEmpId, name: newEmpName, storeName: selectedStore, form1: { rows: {}, summary: {} }, form2: { phase1: {}, phase2: {}, phase3: {}, phase4: {}, eval: {} }, form3: { basic: {}, interview: {}, fact: '', emp: '', guide: {}, improve: [{},{},{}], track: {}, concl: {} }, form4Records: {} };
                 saveToFirebase('hr_employees', newEmpId, newEmp); setNewEmpId(''); setNewEmpName(''); setSelectedEmpId(newEmpId);
             };
 
             const handleSaveHrEmployee = (e) => {
                 e.preventDefault();
-                if (!editEmpData.storeName.trim() || !editEmpData.id.trim() || !editEmpData.name.trim()) { alert("請填寫完整的店別、員工編號與姓名！"); return; }
+                if (!editEmpData.storeName.trim() || !editEmpData.id.trim() || !editEmpData.name.trim()) { showDialog("請填寫完整的店別、員工編號與姓名！"); return; }
                 if (isEditMode) {
                     if (hrEmployees[editEmpData.id]) {
                         saveToFirebase('hr_employees', editEmpData.id, { ...hrEmployees[editEmpData.id], name: editEmpData.name, storeName: editEmpData.storeName });
                         setSelectedStore(editEmpData.storeName);
                     }
                 } else {
-                    if (hrEmployees[editEmpData.id]) { alert("此員工編號已存在！"); return; }
+                    if (hrEmployees[editEmpData.id]) { showDialog("此員工編號已存在！"); return; }
                     const newEmp = { id: editEmpData.id, name: editEmpData.name, storeName: editEmpData.storeName, form1: { rows: {}, summary: {} }, form2: { phase1: {}, phase2: {}, phase3: {}, phase4: {}, eval: {} }, form3: { basic: {}, interview: {}, fact: '', emp: '', guide: {}, improve: [{},{},{}], track: {}, concl: {} }, form4Records: {} };
                     saveToFirebase('hr_employees', editEmpData.id, newEmp); setSelectedStore(editEmpData.storeName); setSelectedEmpId(editEmpData.id);
                 }
@@ -1852,9 +1909,17 @@
             const handleDeleteHrEmployee = () => {
                 const currentEmp = hrEmployees[selectedEmpId] || null;
                 if(!currentEmp) return;
-                if(confirm(`確定要永久刪除員工 ${currentEmp.name} 及其所有表單紀錄嗎？這無法復原！`)) {
-                    saveToFirebase('hr_employees', currentEmp.id, { isDeleted: true }, false); setSelectedEmpId('');
-                }
+                showDialog(`確定要封存刪除員工 ${currentEmp.name} 及其所有表單紀錄嗎？`, () => {
+                    saveToFirebase('hr_employees', currentEmp.id, { isDeleted: true }, true); setSelectedEmpId('');
+                });
+            };
+
+            const handleRestoreHrEmployee = () => {
+                const currentEmp = hrEmployees[selectedEmpId] || null;
+                if(!currentEmp) return;
+                showDialog(`確定要復原員工 ${currentEmp.name} 的資料嗎？`, () => {
+                    saveToFirebase('hr_employees', currentEmp.id, { isDeleted: false }, true);
+                });
             };
 
             const handleHrFieldChange = (empId, formType, fieldPath, value) => {
@@ -1864,13 +1929,10 @@
                     const updatedEmp = JSON.parse(JSON.stringify(empData));
                     const keys = fieldPath.split('.');
                     let current = updatedEmp;
-                    
-                    // Allow saving to the specific formType key if needed (for Form 4 multi-records)
-                    if (formType === 'form4Records' && keys[0] !== 'form4Records') {
-                       if (!current.form4Records) current.form4Records = {};
-                       current = current.form4Records;
+                    if (formType) {
+                        if (!current[formType]) current[formType] = {};
+                        current = current[formType];
                     }
-
                     for (let i = 0; i < keys.length - 1; i++) { if (!current[keys[i]]) current[keys[i]] = {}; current = current[keys[i]]; }
                     current[keys[keys.length - 1]] = value;
                     saveToFirebase('hr_employees', empId, updatedEmp);
@@ -1897,19 +1959,15 @@
             const saveSignature = () => {
                 if (canvasRef.current && sigModal.fieldPath && selectedEmpId) {
                     const dataUrl = canvasRef.current.toDataURL('image/png');
-                    // We parse the first part of the path to know if it's form4Records or standard form
-                    let formType = null;
-                    if (sigModal.fieldPath.startsWith('form4Records.')) {
-                        formType = 'form4Records';
-                        // strip form4Records from path for the handler logic above if we want, or just pass as is.
-                        // Actually our handler is flexible enough to handle full paths from root
+                    if (sigModal.customChg) {
+                        sigModal.customChg(sigModal.fieldPath, dataUrl);
+                    } else {
+                        handleHrFieldChange(selectedEmpId, null, sigModal.fieldPath, dataUrl);
                     }
-                    
-                    handleHrFieldChange(selectedEmpId, formType, sigModal.fieldPath, dataUrl);
-                    setSigModal({ isOpen: false, fieldPath: '' });
+                    setSigModal({ isOpen: false, fieldPath: '', customChg: null });
                 }
             };
-            const renderSignBox = (label, fieldPath, empData, customClass="") => {
+            const renderSignBox = (label, fieldPath, empData, customClass="", customChg = null) => {
                 const keys = fieldPath.split('.');
                 let val = empData;
                 for (let k of keys) { val = val && val[k]; }
@@ -1917,7 +1975,7 @@
                     <div className="flex flex-col items-center justify-center h-full w-full">
                         {label && <div className="text-[10px] text-gray-500 mb-1">{label}</div>}
                         <div className={`sign-box w-full ${customClass}`} onClick={() => {
-                            setSigModal({ isOpen: true, fieldPath });
+                            setSigModal({ isOpen: true, fieldPath, customChg });
                             setTimeout(() => { if (canvasRef.current) { const p = canvasRef.current.parentElement; canvasRef.current.width = p.clientWidth; canvasRef.current.height = p.clientHeight; } }, 100);
                         }}>
                             {val ? <img src={val} className="sign-img" alt="簽名" /> : <span className="sign-placeholder">點擊簽名</span>}
@@ -1928,6 +1986,21 @@
 
             return (
                 <div className={`flex flex-col max-w-7xl mx-auto bg-gray-100 relative ${fullScreenMode ? 'pdf-mode' : 'h-full'}`}>
+                    
+                    {/* Global Confirm/Alert Dialog */}
+                    {dialogState.show && (
+                        <div className="fixed inset-0 bg-black/60 z-[350] flex items-center justify-center p-4">
+                            <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden border-2 border-blue-500 animate-fadeIn">
+                                <div className="bg-blue-600 text-white p-3 font-bold flex items-center gap-2"><i className="fa-solid fa-bell"></i> 系統提示</div>
+                                <div className="p-5 font-bold text-gray-700 leading-relaxed text-center">{dialogState.message}</div>
+                                <div className="bg-gray-50 p-3 flex justify-center gap-4 border-t">
+                                    {dialogState.isConfirm && <button onClick={() => setDialogState({show: false})} className="px-6 py-1.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-bold transition">取消</button>}
+                                    <button onClick={() => { if (dialogState.isConfirm && dialogState.onConfirm) dialogState.onConfirm(); setDialogState({show: false}); }} className="px-6 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold shadow transition">確定</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {showPwdModal && (
                         <div className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4">
                             <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100">
@@ -1987,7 +2060,7 @@
                     )}
 
                     <header className="px-4 py-2 border-b bg-white flex justify-between items-center shrink-0 shadow-sm relative z-10 hide-in-fullscreen">
-                        <h1 className="text-xl font-black text-gray-800 tracking-tight"><span className="text-blue-600 mr-1">{loggedInGroup}</span>12生肖戰報</h1>
+                        <h1 className="text-xl font-black text-gray-800 tracking-tight"><span className="text-blue-600 mr-1">{loggedInGroup}</span>營運與人事戰報系統</h1>
                         <button onClick={() => setShowSuperAuthModal(true)} className="bg-gray-900 text-yellow-500 px-3 py-1 rounded text-xs font-bold shadow hover:bg-gray-800 transition"><i className="fa-solid fa-key mr-1"></i>權限登入</button>
                     </header>
 
@@ -1999,7 +2072,7 @@
                         <button onClick={() => switchTab('audit')} className={`flex-1 py-2 px-3 whitespace-nowrap ${activeTab === 'audit' ? 'tab-active' : 'tab-inactive'}`}><i className="fa-solid fa-clipboard-check mr-1 text-red-600"></i>稽核</button>
                         <button onClick={() => switchTab('trend')} className={`flex-1 py-2 px-3 whitespace-nowrap ${activeTab === 'trend' ? 'tab-active' : 'tab-inactive'}`}><i className="fa-solid fa-chart-line mr-1 text-purple-600"></i>趨勢圖表</button>
                         <button onClick={() => switchTab('settings')} className={`flex-1 py-2 px-3 whitespace-nowrap ${activeTab === 'settings' ? 'tab-active' : 'tab-inactive'}`}><i className="fa-solid fa-gear mr-1 text-gray-500"></i>店長設定</button>
-                        <button onClick={() => setShowPwdModal(true)} className={`flex-1 py-2 px-3 whitespace-nowrap border-l-2 border-blue-200 ${activeTab === 'hr' ? 'tab-active !border-b-blue-600 !text-blue-800' : 'text-blue-600 hover:bg-blue-50'}`}><i className="fa-solid fa-user-shield mr-1"></i>領航員/績效改善</button>
+                        <button onClick={() => switchTab('hr')} className={`flex-1 py-2 px-3 whitespace-nowrap border-l-2 border-blue-200 ${activeTab === 'hr' ? 'tab-active !border-b-blue-600 !text-blue-800' : 'text-blue-600 hover:bg-blue-50 font-bold'}`}><i className="fa-solid fa-user-shield mr-1"></i>人事戰報表單</button>
                         {isSuperAdmin && (
                             <button onClick={() => switchTab('admin')} className={`flex-1 py-2 px-3 whitespace-nowrap border-l-2 border-red-200 ${activeTab === 'admin' ? 'tab-active !border-b-red-600 !text-red-700 bg-red-50' : 'text-red-500 hover:bg-red-50'}`}><i className="fa-solid fa-crown mr-1"></i>權限管理</button>
                         )}
@@ -2013,36 +2086,16 @@
                         {activeTab === 'audit' && <div className="p-2 h-full overflow-hidden"><AuditComponent database={database} safeInputDate={safeInputDate} settings={settings} timeSlots={timeSlots} setInputDate={setInputDate} handleShiftChange={handleShiftChange} handleSlotChange={handleSlotChange} /></div>}
                         {activeTab === 'trend' && <div className="p-2 h-full overflow-hidden"><TrendComponent database={database} safeInputDate={safeInputDate} setInputDate={setInputDate} settings={settings} /></div>}
                         {activeTab === 'settings' && <div className="p-2 h-full overflow-hidden"><SettingsComponent settings={settings} handleSettingChange={handleSettingChange} timeSlots={timeSlots} newSlotName={newSlotName} setNewSlotName={setNewSlotName} handleAddSlot={handleAddSlot} handleDeleteSlot={handleDeleteSlot} /></div>}
-                        {activeTab === 'hr' && <HrComponent hrAuthUnlocked={hrAuthUnlocked} hrEmployees={hrEmployees} selectedStore={selectedStore} setSelectedStore={setSelectedStore} selectedEmpId={selectedEmpId} setSelectedEmpId={setSelectedEmpId} newEmpId={newEmpId} setNewEmpId={setNewEmpId} newEmpName={newEmpName} setNewEmpName={setNewEmpName} hrFormTab={hrFormTab} setHrFormTab={setHrFormTab} setFullScreenMode={setFullScreenMode} handleAddHrEmployee={handleAddHrEmployee} handleDeleteHrEmployee={handleDeleteHrEmployee} setEditEmpData={setEditEmpData} setIsEditMode={setIsEditMode} setShowEmpModal={setShowEmpModal} handleHrFieldChange={handleHrFieldChange} renderSignBox={renderSignBox} />}
-                        {activeTab === 'admin' && <AdminComponent isSuperAdmin={isSuperAdmin} systemUsers={systemUsers} saveToFirebase={saveToFirebase} />}
+                        {activeTab === 'hr' && <HrComponent hrAuthUnlocked={hrAuthUnlocked} hrEmployees={hrEmployees} selectedStore={selectedStore} setSelectedStore={setSelectedStore} selectedEmpId={selectedEmpId} setSelectedEmpId={setSelectedEmpId} newEmpId={newEmpId} setNewEmpId={setNewEmpId} newEmpName={newEmpName} setNewEmpName={setNewEmpName} hrFormTab={hrFormTab} setHrFormTab={setHrFormTab} setFullScreenMode={setFullScreenMode} handleAddHrEmployee={handleAddHrEmployee} handleDeleteHrEmployee={handleDeleteHrEmployee} handleRestoreHrEmployee={handleRestoreHrEmployee} setEditEmpData={setEditEmpData} setIsEditMode={setIsEditMode} setShowEmpModal={setShowEmpModal} handleHrFieldChange={handleHrFieldChange} renderSignBox={renderSignBox} showDialog={showDialog} />}
+                        {activeTab === 'admin' && <AdminComponent isSuperAdmin={isSuperAdmin} systemUsers={systemUsers} saveToFirebase={saveToFirebase} showDialog={showDialog} />}
                         
-                        {/* 模態框等在最上層，若開啟簽名版也需放在這裡 */}
-                        {showEmpModal && (
-                            <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4">
-                                <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
-                                    <div className="bg-blue-600 text-white p-4 font-bold flex justify-between">
-                                        <span>{isEditMode ? '編輯人員資料' : '新增系統人員'}</span>
-                                        <button onClick={() => setShowEmpModal(false)}><i className="fa-solid fa-xmark text-xl"></i></button>
-                                    </div>
-                                    <form onSubmit={handleSaveHrEmployee} className="p-6 space-y-4">
-                                        <div><label className="block text-xs font-bold text-gray-500 mb-1">所屬店別</label><input required value={editEmpData.storeName} onChange={e => setEditEmpData({...editEmpData, storeName: e.target.value})} className="w-full border p-2 rounded outline-none focus:border-blue-500" placeholder="例: 中清店" /></div>
-                                        <div><label className="block text-xs font-bold text-gray-500 mb-1">人員編號</label><input required value={editEmpData.id} onChange={e => setEditEmpData({...editEmpData, id: e.target.value})} disabled={isEditMode} className="w-full border p-2 rounded outline-none focus:border-blue-500 disabled:bg-gray-100" placeholder="例: E001" /></div>
-                                        <div><label className="block text-xs font-bold text-gray-500 mb-1">人員姓名</label><input required value={editEmpData.name} onChange={e => setEditEmpData({...editEmpData, name: e.target.value})} className="w-full border p-2 rounded outline-none focus:border-blue-500" placeholder="例: 王小明" /></div>
-                                        <div className="pt-4 flex justify-end gap-3 border-t">
-                                            <button type="button" onClick={() => setShowEmpModal(false)} className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded font-bold transition">取消</button>
-                                            <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded font-bold shadow hover:bg-blue-700 transition">確認儲存</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        )}
-
+                        {/* 簽名版 Modal */}
                         {sigModal.isOpen && (
-                            <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4">
+                            <div className="fixed inset-0 bg-black/60 z-[300] flex items-center justify-center p-4">
                                 <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col h-[400px]">
                                     <div className="bg-blue-800 text-white p-4 font-bold flex justify-between items-center">
                                         <span><i className="fa-solid fa-pen-nib mr-2"></i>電子簽名板</span>
-                                        <button onClick={() => setSigModal({ isOpen: false, fieldPath: '' })} className="text-white/80 hover:text-white"><i className="fa-solid fa-xmark text-xl"></i></button>
+                                        <button onClick={() => setSigModal({ isOpen: false, fieldPath: '', customChg: null })} className="text-white/80 hover:text-white"><i className="fa-solid fa-xmark text-xl"></i></button>
                                     </div>
                                     <div className="flex-1 bg-gray-50 relative m-4 border-2 border-dashed border-gray-300 rounded-lg overflow-hidden cursor-crosshair">
                                         <canvas ref={canvasRef} onMouseDown={startDrawing} onMouseMove={draw} onMouseUp={stopDrawing} onMouseOut={stopDrawing} onTouchStart={startDrawing} onTouchMove={draw} onTouchEnd={stopDrawing} style={{ touchAction: 'none' }} className="w-full h-full" />
@@ -2050,7 +2103,7 @@
                                     <div className="p-4 border-t bg-gray-50 flex justify-between gap-3">
                                         <button onClick={clearCanvas} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded font-bold transition border border-gray-300">清除重簽</button>
                                         <div className="flex gap-2">
-                                            <button onClick={() => setSigModal({ isOpen: false, fieldPath: '' })} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded font-bold transition">取消</button>
+                                            <button onClick={() => setSigModal({ isOpen: false, fieldPath: '', customChg: null })} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded font-bold transition">取消</button>
                                             <button onClick={saveSignature} className="px-6 py-2 bg-blue-600 text-white rounded font-bold shadow hover:bg-blue-700 transition">確認存檔</button>
                                         </div>
                                     </div>
