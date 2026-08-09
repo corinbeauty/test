@@ -60,19 +60,28 @@
 
         /* 中獎資訊浮水印背景 */
         .result-bg-watermark {
-            background-image: url('新LOGO.png');
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: 50%;
+            background-color: #ffffff;
+            background-image: radial-gradient(rgba(236, 72, 153, 0.05) 1px, transparent 1px),
+                              radial-gradient(rgba(236, 72, 153, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
             position: relative;
         }
-        .result-bg-watermark::before {
+        .result-bg-watermark::after {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
-            border-radius: inherit;
-            z-index: -1;
+            background-image: url('新LOGO.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 60%;
+            opacity: 0.1; /* 浮水印透明度 */
+            z-index: 0;
+            pointer-events: none;
+        }
+        .result-content-z {
+            position: relative;
+            z-index: 10;
         }
 
         /* 轉盤專屬樣式 */
@@ -132,7 +141,7 @@
 <body class="min-h-screen flex items-center justify-center p-4">
 
     <!-- 狀態遮罩層 (系統載入與錯誤) -->
-    <div id="status-overlay" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center p-6 text-center">
+    <div id="status-overlay" class="fixed inset-0 bg-white z-[100] hidden flex-col items-center justify-center p-6 text-center">
         <div id="loading-ui">
             <div class="loading-spinner mx-auto mb-4"></div>
             <p class="text-pink-600 font-medium italic">載入會員資料庫中...</p>
@@ -145,29 +154,54 @@
         </div>
     </div>
 
-    <!-- 會員專屬驗證彈窗 -->
-    <div id="member-gate-modal" class="fixed inset-0 bg-white/95 z-[90] hidden items-center justify-center p-6 backdrop-blur-md">
+    <!-- 查無會員提示彈窗 -->
+    <div id="member-not-found-modal" class="fixed inset-0 bg-black/60 z-[160] hidden items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl border border-pink-100 relative overflow-hidden">
+             <!-- 背景裝飾 -->
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-pink-50 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+            
+            <div class="relative z-10">
+                <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                    🥺
+                </div>
+                <h3 class="text-xl font-black text-gray-800 mb-2">查無會員資料</h3>
+                <p class="text-gray-500 text-sm mb-6 leading-relaxed">我們在會員庫中找不到這支電話號碼，請先前往註冊會員，完成後即可參與活動喔！</p>
+                
+                <div class="flex flex-col gap-3">
+                    <button onclick="redirectToRegister()" class="w-full py-4 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-2xl font-black shadow-lg shadow-pink-200 active:scale-95 transition-transform">
+                        立即前往註冊
+                    </button>
+                    <button onclick="closeModal('member-not-found-modal')" class="w-full py-3 bg-white text-gray-400 font-bold hover:text-gray-600 transition-colors">
+                        重新輸入電話
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 會員專屬驗證彈窗 (預設顯示) -->
+    <div id="member-gate-modal" class="fixed inset-0 bg-white/95 z-[90] flex flex-col items-center justify-center p-6 backdrop-blur-md">
         <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl border border-pink-100 relative overflow-hidden">
             <!-- 背景裝飾 -->
             <div class="absolute -top-10 -right-10 w-32 h-32 bg-pink-50 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
             <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-rose-50 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
             
             <div class="relative z-10">
-                <img src="新LOGO.png" alt="Corin Beauty" class="h-16 mx-auto mb-4 drop-shadow-sm">
+                <!-- LOGO 替換皇冠 -->
+                <img src="新LOGO.png" alt="Corin Beauty" class="h-16 mx-auto mb-4 object-contain">
                 <h3 class="text-2xl font-black text-pink-600 mb-2">會員專屬活動</h3>
                 <p class="text-gray-600 mb-8 font-bold text-sm">此轉盤活動限定 <br> Corin Beauty 會員參與</p>
                 
-                <div id="member-step-1" class="space-y-3">
-                    <button onclick="showLoginInput()" class="w-full py-4 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-2xl font-black shadow-lg shadow-pink-200 hover:scale-[1.02] transition-transform">我是會員，立即登入</button>
-                    <button onclick="redirectToRegister()" class="w-full py-4 bg-white border-2 border-gray-100 text-gray-500 rounded-2xl font-bold hover:bg-gray-50 transition-colors">還不是會員？前往註冊</button>
-                </div>
-
-                <div id="member-step-2" class="hidden space-y-4">
-                    <input type="tel" id="member-phone" placeholder="手機號碼" class="w-full border-2 border-pink-100 rounded-xl px-4 py-4 text-center focus:border-pink-500 outline-none font-bold text-lg tracking-wider bg-gray-50/50" maxlength="10">
+                <div id="member-step-2" class="space-y-4">
+                    <input type="tel" id="member-phone" placeholder="請輸入電話號碼" class="w-full border-2 border-pink-100 rounded-xl px-4 py-4 text-center focus:border-pink-500 outline-none font-bold text-lg tracking-wider bg-gray-50/50" maxlength="10">
                     <button id="btn-verify" onclick="verifyMember()" class="w-full py-4 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-2xl font-black shadow-lg shadow-pink-200 active:scale-95 transition-transform mt-2">確認登入</button>
-                    <button onclick="backToStep1()" class="text-sm text-gray-400 font-bold underline mt-4 block w-full">返回上一步</button>
                 </div>
             </div>
+        </div>
+        
+        <!-- 系統管理入口移至此，方便在未登入時也能進入後台 -->
+        <div class="mt-8">
+            <p onclick="openAdminDashboard()" class="text-[10px] text-gray-400 font-bold tracking-widest uppercase cursor-pointer hover:text-pink-400 transition-colors">System By Corin</p>
         </div>
     </div>
 
@@ -260,6 +294,7 @@
                         <input type="tel" id="new-member-phone" class="flex-[2] px-3 py-2 rounded-lg border border-pink-100 text-sm bg-gray-50" placeholder="手機號碼" maxlength="10">
                         <button onclick="addMemberAdmin()" class="bg-pink-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md">新增</button>
                     </div>
+                    <p class="text-[10px] text-gray-400 mt-2">資料儲存於新資料庫: check-balance-13da9 / beauty_members</p>
                 </div>
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="max-h-[45vh] overflow-y-auto">
@@ -325,21 +360,23 @@
                     <div id="wheel-container" class="wheel-container">
                         <canvas id="wheel-canvas"></canvas>
                         
-                        <!-- 轉盤中心的裝飾圓餅 -->
-                        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-white rounded-full shadow-lg border-4 border-pink-100 flex items-center justify-center z-20">
-                            <div class="w-8 h-8 bg-pink-50 rounded-full flex items-center justify-center overflow-hidden">
-                                <img src="新LOGO.png" alt="Logo" class="w-full h-full object-cover">
+                        <!-- 轉盤中心的裝飾圓餅 (改為LOGO) -->
+                        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white rounded-full shadow-lg border-4 border-pink-100 flex items-center justify-center z-20">
+                            <div class="w-10 h-10 flex items-center justify-center overflow-hidden">
+                                <img src="新LOGO.png" alt="Logo" class="w-full h-full object-contain">
                             </div>
                         </div>
 
-                        <!-- 抽獎結果覆蓋層 -->
-                        <div id="prize-result-overlay" class="absolute inset-0 z-30 flex flex-col items-center justify-center text-center p-5 result-bg-watermark opacity-0 pointer-events-none transition-opacity duration-500 rounded-full border-4 border-white shadow-2xl scale-95 transform">
-                            <div id="top-prize-banner" class="hidden text-[10px] font-bold text-yellow-600 mb-1.5 uppercase tracking-widest animate-bounce bg-yellow-50 px-2 py-0.5 rounded-full border border-yellow-200">🌟 BIG WINNER 🌟</div>
-                            <div id="normal-prize-banner" class="text-[11px] font-bold text-pink-600 mb-1.5 uppercase tracking-wide bg-pink-50 px-2 py-0.5 rounded-full border border-pink-100">Congratulations</div>
-                            <div id="prize-name" class="text-base font-black text-gray-900 leading-tight mb-4 px-2 drop-shadow-sm"></div>
-                            <div class="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 w-full max-w-[200px] p-2.5 shadow-sm">
-                                <div id="verification-time" class="text-[9px] text-gray-500 font-mono truncate"></div>
-                                <div id="expiry-date" class="text-[10px] text-rose-500 font-bold mt-1.5 border-t border-gray-100/50 pt-1"></div>
+                        <!-- 抽獎結果覆蓋層 (美化浮水印版) -->
+                        <div id="prize-result-overlay" class="absolute inset-0 z-30 flex flex-col items-center justify-center text-center p-4 result-bg-watermark opacity-0 pointer-events-none transition-opacity duration-500 rounded-full border-4 border-white shadow-2xl scale-95 transform">
+                            <div class="result-content-z flex flex-col items-center justify-center w-full">
+                                <div id="top-prize-banner" class="hidden text-[10px] font-bold text-yellow-600 mb-1.5 uppercase tracking-widest animate-bounce bg-yellow-50 px-2 py-0.5 rounded-full border border-yellow-200">🌟 BIG WINNER 🌟</div>
+                                <div id="normal-prize-banner" class="text-[11px] font-bold text-pink-600 mb-1.5 uppercase tracking-wide bg-pink-50 px-2 py-0.5 rounded-full border border-pink-100">Congratulations</div>
+                                <div id="prize-name" class="text-[15px] font-black text-gray-900 leading-snug mb-3 px-1 drop-shadow-sm line-clamp-3"></div>
+                                <div class="bg-white/90 backdrop-blur-md rounded-xl border border-pink-100/50 w-full max-w-[200px] p-2 shadow-sm">
+                                    <div id="verification-time" class="text-[9px] text-gray-500 font-mono truncate"></div>
+                                    <div id="expiry-date" class="text-[10px] text-rose-500 font-bold mt-1 border-t border-gray-100/50 pt-1"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -362,7 +399,7 @@
                 <h3 class="text-gray-800 font-black text-xl mb-1">今日抽獎已結束</h3>
                 <p class="text-gray-500 text-sm mb-6">每人每日擁有 <span class="text-pink-600 font-bold">3</span> 次機會</p>
                 <div class="px-6 py-2 bg-white rounded-full border border-gray-100 shadow-sm">
-                    <div id="countdown-timer" class="text-xs font-mono font-bold text-pink-500 uppercase">Next Reset at Midnight</div>
+                    <div id="countdown-timer" class="text-xs font-mono font-bold text-pink-500 uppercase">重置：</div>
                 </div>
             </div>
 
@@ -400,7 +437,28 @@
             <div class="text-center space-y-1">
                 <p class="text-[9px] text-gray-300 tracking-wide">建議使用手機瀏覽以獲得最佳操作體驗</p>
                 <p onclick="openAdminDashboard()" class="text-[10px] text-gray-400 font-bold tracking-widest uppercase cursor-pointer hover:text-pink-400 transition-colors">System By Corin</p>
-                <p class="text-[8px] text-gray-300/60 font-mono tracking-tighter">v28.6.Wheel.DB</p>
+                <p class="text-[8px] text-gray-300/60 font-mono tracking-tighter">v29.1.Wheel.DB.Sync</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 一般提示訊息彈窗 -->
+    <div id="msg-modal" class="fixed inset-0 bg-black/40 z-[150] hidden items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-6 max-w-xs w-full text-center shadow-2xl">
+            <p id="msg-text" class="text-gray-800 font-bold mb-6"></p>
+            <button onclick="closeModal('msg-modal')" class="w-full py-3 bg-gray-800 text-white rounded-xl font-bold">我知道了</button>
+        </div>
+    </div>
+
+    <!-- 兌換確認彈窗 -->
+    <div id="redeem-confirm-modal" class="fixed inset-0 bg-black/60 z-[140] hidden items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white rounded-[2rem] p-8 max-w-xs w-full text-center shadow-2xl">
+            <div class="w-16 h-16 bg-pink-50 text-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🎫</div>
+            <h3 class="text-xl font-black text-gray-800 mb-2">確認兌換？</h3>
+            <p class="text-sm text-gray-500 mb-6 leading-relaxed">請確認您已在櫃檯現場，點擊後獎項將標註為已兌換且無法恢復。</p>
+            <div class="flex gap-2">
+                <button onclick="closeModal('redeem-confirm-modal')" class="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl text-sm font-bold">取消</button>
+                <button id="confirm-redeem-btn" class="flex-1 py-4 bg-pink-600 text-white rounded-2xl text-sm font-bold">確定兌換</button>
             </div>
         </div>
     </div>
@@ -408,29 +466,29 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc, collection, getDocs, query } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
+        // 更新連線至新的會員資料庫
         const firebaseConfig = {
-            apiKey: "AIzaSyB48QgamPtCi6o44ymd-2E1VLCrzWEkM_0",
-            authDomain: "corin-beauty-app.firebaseapp.com",
-            projectId: "corin-beauty-app",
-            storageBucket: "corin-beauty-app.firebasestorage.app",
-            messagingSenderId: "364585149363",
-            appId: "1:364585149363:web:779df52c038f328f439kcl",
-            measurementId: "G-439KCLRJ43"
+            apiKey: "AIzaSyCe0KE7va2H4-A6XECdzhTUCjhTeT6FOJM",
+            authDomain: "check-balance-13da9.firebaseapp.com",
+            projectId: "check-balance-13da9",
+            storageBucket: "check-balance-13da9.firebasestorage.app",
+            messagingSenderId: "827416952029",
+            appId: "1:827416952029:web:e18ac89b984c8351e36f34"
         };
 
-        const APP_ID = 'corin-beauty-slot'; 
-        const INITIAL_CHANCES = 3; // 改為每人每日 3 次
+        const APP_ID = 'check-balance-13da9'; 
+        const INITIAL_CHANCES = 3; 
         const EXPIRY_DAYS = 7;
-        const ADMIN_PASS = "7310168888"; // 統一管理員密碼
+        const ADMIN_PASS = "7310168888"; 
         
         let db, auth;
         let userId = null; 
         
-        // 讀取本地快取資料
-        let memberPhone = localStorage.getItem('memberPhone') || ''; 
-        let memberName = localStorage.getItem('memberName') || ''; 
+        // 移除本地暫存，每次重整強制驗證
+        let memberPhone = ''; 
+        let memberName = ''; 
 
         // 初始預設獎項池 (如果雲端沒有設定時使用)
         const DEFAULT_PRIZE_POOL = [
@@ -460,66 +518,19 @@
         };
 
         let isSpinning = false; 
-        let currentRotation = 0; // 紀錄當前轉盤角度 (Radians)
-        const canvasSize = 300; // 轉盤畫布尺寸
+        let currentRotation = 0; 
+        const canvasSize = 300; 
 
         // 轉盤配色表 (交錯使用)
         const WHEEL_COLORS = ['#fdf2f8', '#fce7f3', '#fbcfe8', '#ffffff', '#fff1f2', '#ffe4e6'];
         const TEXT_COLORS = ['#be185d', '#db2777', '#9d174d', '#e11d48', '#9f1239'];
 
         async function initApp() {
-            // 檢查會員登入狀態 (只需電話)
-            if (!memberPhone) {
-                document.getElementById('status-overlay').classList.add('hidden');
-                document.getElementById('member-gate-modal').classList.remove('hidden');
-                return;
-            }
-
-            document.getElementById('member-gate-modal').classList.add('hidden');
-            document.getElementById('status-overlay').classList.remove('hidden');
-
-            try {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-                
-                await signInAnonymously(auth);
-                userId = auth.currentUser?.uid;
-                
-                if(!userId) throw new Error("Auth failed");
-
-                await loadGlobalConfig();
-                await loadUserProfileData();
-                
-                // 設定歷史紀錄的帳號顯示 (中間字米掉 + 電話全碼)
-                document.getElementById('history-user-info').innerText = `${maskName(memberName)} - ${memberPhone}`;
-                
-                updateUI();
-                initWheelCanvas();
-                drawWheel(0);
-                startTimer();
-                
-                document.getElementById('status-overlay').classList.add('hidden');
-                document.getElementById('main-card').classList.remove('hidden');
-            } catch (error) {
-                console.error("Firebase Error:", error);
-                document.getElementById('loading-ui').classList.add('hidden');
-                document.getElementById('error-ui').classList.remove('hidden');
-                document.getElementById('error-message').textContent = "伺服器連線失敗，請檢查網路。";
-            }
-        }
-
-        // 姓名遮蔽邏輯：中間第2字米掉 (王小明 -> 王*明, 陳大 -> 陳*)
-        function maskName(name) {
-            if (!name) return '未知';
-            if (name.length <= 1) return name;
-            if (name.length === 2) return name[0] + '*';
-            return name[0] + '*' + name.substring(2);
+            // 每次開啟都先顯示驗證畫面，不依賴 localStorage
+            document.getElementById('member-gate-modal').classList.remove('hidden');
         }
 
         window.redirectToRegister = () => { window.location.href = 'https://check-balance-jbiy.vercel.app/'; };
-        window.showLoginInput = () => { document.getElementById('member-step-1').classList.add('hidden'); document.getElementById('member-step-2').classList.remove('hidden'); };
-        window.backToStep1 = () => { document.getElementById('member-step-2').classList.add('hidden'); document.getElementById('member-step-1').classList.remove('hidden'); };
 
         window.verifyMember = async () => {
             const phone = document.getElementById('member-phone').value.trim();
@@ -531,41 +542,63 @@
             btn.disabled = true;
 
             try {
-                // 初始化與匿名登入以取得讀取權限
-                const app = initializeApp(firebaseConfig);
-                const tempAuth = getAuth(app);
-                await signInAnonymously(tempAuth);
-                const tempDb = getFirestore(app);
-
-                // 從資料庫核對此手機號碼
-                const membersRef = collection(tempDb, 'artifacts', APP_ID, 'public', 'data', 'members');
-                const snap = await getDocs(membersRef);
+                // 初始化與登入
+                if (!app) {
+                    var app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+                }
                 
-                let foundName = '';
+                await signInAnonymously(auth);
+                userId = auth.currentUser?.uid;
+
+                // 查詢新的資料庫路徑 beauty_members
+                const membersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'beauty_members');
+                const qPhone = query(membersRef, where('phone', '==', phone));
+                const snap = await getDocs(qPhone);
+                
                 let isMember = false;
                 
-                snap.forEach(doc => {
-                    if (doc.data().phone === phone) {
-                        isMember = true;
-                        foundName = doc.data().name || '專屬會員';
-                    }
-                });
+                if (!snap.empty) {
+                    isMember = true;
+                    // 取出第一筆相符資料的名字
+                    memberName = snap.docs[0].data().name || '會員';
+                    memberPhone = phone;
+                }
 
                 if (isMember) {
-                    memberName = foundName;
-                    memberPhone = phone;
-                    localStorage.setItem('memberName', memberName);
-                    localStorage.setItem('memberPhone', memberPhone);
-                    initApp(); 
+                    // 驗證成功，準備進入遊戲
+                    document.getElementById('member-gate-modal').classList.add('hidden');
+                    document.getElementById('status-overlay').classList.remove('hidden');
+                    
+                    await loadGlobalConfig();
+                    
+                    // 個人資料綁定電話號碼 (因為同一個裝置可能會換人登入)
+                    // 所以 UID 結合電話號碼作為唯一識別，避免資料混亂
+                    userId = `user_${phone}`; 
+                    
+                    await loadUserProfileData();
+                    
+                    // 設定歷史紀錄的帳號顯示 (中間字米掉 + 電話全碼)
+                    document.getElementById('history-user-info').innerText = `${maskName(memberName)} - ${memberPhone}`;
+                    
+                    updateUI();
+                    initWheelCanvas();
+                    drawWheel(0);
+                    startTimer();
+                    
+                    document.getElementById('status-overlay').classList.add('hidden');
+                    document.getElementById('main-card').classList.remove('hidden');
                 } else {
-                    // 若非會員則跳轉至註冊畫面，確保一定會執行
-                    console.log("Phone not found in DB, redirecting...");
-                    window.location.href = 'https://check-balance-jbiy.vercel.app/';
+                    // 查無資料，跳出精美提示框
+                    document.getElementById('member-gate-modal').classList.add('hidden');
+                    document.getElementById('member-not-found-modal').classList.remove('hidden');
+                    document.getElementById('member-not-found-modal').classList.add('flex');
                 }
             } catch (e) {
                 console.error("Verification error:", e);
-                // 為了避免 Firebase 暫時連線異常導致卡住，若發生錯誤我們還是先提示使用者
-                alert("查無會員資料，將為您導向註冊頁面");
+                // 連線異常等錯誤
+                alert("伺服器連線異常，將為您導向註冊頁面重試");
                 window.location.href = 'https://check-balance-jbiy.vercel.app/';
             } finally {
                 btn.innerHTML = ogText;
@@ -573,9 +606,17 @@
             }
         };
 
+        // 姓名遮蔽邏輯：中間第2字米掉 (王小明 -> 王*明, 陳大 -> 陳*)
+        function maskName(name) {
+            if (!name) return '未知';
+            if (name.length <= 1) return name;
+            if (name.length === 2) return name[0] + '*';
+            return name[0] + '*' + name.substring(2);
+        }
+
         async function loadGlobalConfig() {
             try {
-                const configRef = doc(db, 'artifacts', APP_ID, 'public', 'config');
+                const configRef = doc(db, 'artifacts', APP_ID, 'public', 'slot_config');
                 const snap = await getDoc(configRef);
                 if (snap.exists() && snap.data().prizePool && snap.data().prizePool.length > 0) {
                     state.prizePool = snap.data().prizePool;
@@ -592,7 +633,7 @@
         async function loadUserProfileData() {
             if(!userId || !db) return;
             try {
-                const profileRef = doc(db, 'artifacts', APP_ID, 'users', userId, 'profile');
+                const profileRef = doc(db, 'artifacts', APP_ID, 'slot_users', userId, 'profile');
                 const profileSnap = await getDoc(profileRef);
                 const today = new Date().toDateString();
 
@@ -610,7 +651,7 @@
                     await saveProfileData();
                 }
 
-                const prizesQuery = query(collection(db, 'artifacts', APP_ID, 'users', userId, 'prizes'));
+                const prizesQuery = query(collection(db, 'artifacts', APP_ID, 'slot_users', userId, 'prizes'));
                 const prizesSnap = await getDocs(prizesQuery);
                 state.prizes = prizesSnap.docs.map(d => ({ ...d.data(), id: d.id }));
                 state.prizes.sort((a,b) => b.winDate - a.winDate);
@@ -620,7 +661,7 @@
         async function saveProfileData() {
             if(!userId || !db) return;
             try {
-                await setDoc(doc(db, 'artifacts', APP_ID, 'users', userId, 'profile'), {
+                await setDoc(doc(db, 'artifacts', APP_ID, 'slot_users', userId, 'profile'), {
                     name: memberName,
                     phone: memberPhone,
                     count: state.count,
@@ -678,16 +719,45 @@
             wheelCtx.scale(scale, scale);
         }
 
-        // 簡化字串以適合繪製於轉盤格內
-        function formatPrizeText(text) {
-            // 嘗試取 '-' 前面的字串，或是截斷
-            let short = text;
-            if(short.includes('－')) short = short.split('－')[0]; // 如果有破折號，取前面的類別
-            if(short.includes('[')) short = short.split('[')[0]; // 移除備註
-            short = short.trim();
-            // 轉盤空間有限，過長字串進行縮寫
-            if(short.length > 6) short = short.substring(0, 6) + '..';
-            return short;
+        // 文字換行函數
+        function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+            let words = text.split(''); // 將中文字拆分
+            let line = '';
+            let lines = [];
+            
+            // 如果包含特殊符號，嘗試在特定位置斷行
+            if(text.includes('－')) {
+                const parts = text.split('－');
+                lines.push(parts[0] + '－');
+                words = parts[1].split('');
+            }
+
+            for(let n = 0; n < words.length; n++) {
+                let testLine = line + words[n];
+                let metrics = ctx.measureText(testLine);
+                let testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    lines.push(line);
+                    line = words[n];
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line);
+            
+            // 限制最多顯示 3 行，多餘的用 '...' 代替
+            if(lines.length > 3) {
+                lines = lines.slice(0, 3);
+                lines[2] = lines[2].substring(0, lines[2].length - 1) + '..';
+            }
+
+            // 調整起始 Y 軸讓多行文字垂直置中
+            const totalHeight = lines.length * lineHeight;
+            let startY = y - (totalHeight / 2) + (lineHeight / 2);
+
+            for(let i = 0; i < lines.length; i++) {
+                ctx.fillText(lines[i], x, startY + (i * lineHeight));
+            }
         }
 
         function drawWheel(rotationAngle) {
@@ -726,11 +796,13 @@
                 wheelCtx.fillStyle = textColor;
                 wheelCtx.textAlign = 'right';
                 wheelCtx.textBaseline = 'middle';
-                // 縮小字體以適應格子
-                wheelCtx.font = 'bold 11px "Noto Sans TC", sans-serif';
+                // 稍微縮小字體以適應多行
+                wheelCtx.font = 'bold 9px "Noto Sans TC", sans-serif';
                 
-                const text = formatPrizeText(state.prizePool[i].name);
-                wheelCtx.fillText(text, radius - 18, 0); // 往內移一點避免貼邊
+                const text = state.prizePool[i].name;
+                // 留出中間 LOGO 的空間，並設定最大寬度
+                wrapText(wheelCtx, text, radius - 15, 0, radius - 55, 12); 
+                
                 wheelCtx.restore();
             }
             
@@ -773,26 +845,19 @@
             const arc = (2 * Math.PI) / slices;
             
             // 指針位於頂部，在 Canvas 中對應的角度是 -Math.PI / 2 (即 270 度)
-            // 為了讓第 index 個獎項的中心點停在頂端：
-            // 當前畫法：第 index 個扇形的起點是 rotation + index*arc。中心點是 rotation + index*arc + arc/2。
-            // 目標：(rotation + index*arc + arc/2) % 2PI === -Math.PI/2 (or 3PI/2)
-            // 推導出所需的目標 Base Rotation: (-Math.PI/2) - (index*arc + arc/2)
-            
             const targetBaseRotation = (-Math.PI / 2) - (prizeIndex * arc + arc / 2);
-            // 加上 8 圈完整的旋轉 (8 * 2PI)
+            // 加上 8 圈完整的旋轉
             const extraSpins = 8 * 2 * Math.PI;
             
             // 計算需要旋轉的相對增量
-            // 要考慮目前的 currentRotation，確保是往正向旋轉
             let targetRotation = extraSpins + targetBaseRotation;
-            // 修正到相對 currentRotation 的絕對位置
             let remainder = currentRotation % (2 * Math.PI);
             targetRotation += (currentRotation - remainder);
             if (targetRotation < currentRotation + extraSpins) {
                 targetRotation += 2 * Math.PI;
             }
 
-            const duration = 6500; // 動畫時長 6.5 秒
+            const duration = 6500; // 動畫時長
             const startRotation = currentRotation;
             const startTime = performance.now();
 
@@ -872,11 +937,11 @@
             try {
                 if(db && userId) {
                     // 1. 寫入個人獎項庫
-                    const docRef = await addDoc(collection(db, 'artifacts', APP_ID, 'users', userId, 'prizes'), prizeObj);
+                    const docRef = await addDoc(collection(db, 'artifacts', APP_ID, 'slot_users', userId, 'prizes'), prizeObj);
                     prizeObj.id = docRef.id;
                     
                     // 2. 寫入全域日誌 (供管理員統計查看)
-                    await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'spin_logs'), {
+                    await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'slot_logs'), {
                         name: memberName,
                         phone: memberPhone,
                         prizeName: prizeObj.name,
@@ -949,11 +1014,12 @@
 
         window.redeem = (id) => {
             const p = state.prizes.find(x => x.id === id); if(!p) return;
-            document.getElementById('redeem-confirm-modal').classList.add('modal-active');
+            document.getElementById('redeem-confirm-modal').classList.remove('hidden');
+            document.getElementById('redeem-confirm-modal').classList.add('flex');
             document.getElementById('confirm-redeem-btn').onclick = async () => { 
                 p.isRedeemed = true; 
                 try {
-                    if(db && userId && id) await updateDoc(doc(db, 'artifacts', APP_ID, 'users', userId, 'prizes', id), { isRedeemed: true });
+                    if(db && userId && id) await updateDoc(doc(db, 'artifacts', APP_ID, 'slot_users', userId, 'prizes', id), { isRedeemed: true });
                 } catch(e){ console.error(e) }
                 renderHistory(); closeModal('redeem-confirm-modal'); 
             };
@@ -968,7 +1034,18 @@
             if (document.getElementById('admin-pass').value === ADMIN_PASS) {
                 closeModal('admin-auth-modal');
                 document.getElementById('admin-dashboard-modal').classList.add('modal-active');
-                switchAdminTab('stats'); 
+                
+                // 若系統尚未初始化 (例如直接點擊後台)，先匿名登入獲取權限
+                if (!db) {
+                     var app = initializeApp(firebaseConfig);
+                     auth = getAuth(app);
+                     db = getFirestore(app);
+                     signInAnonymously(auth).then(() => {
+                         switchAdminTab('stats');
+                     });
+                } else {
+                     switchAdminTab('stats');
+                }
             } else { 
                 showMsg("❌ 密碼錯誤"); 
             }
@@ -999,7 +1076,7 @@
             tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400 font-bold">資料抓取中...</td></tr>';
             try {
                 if(!db) throw new Error("DB not ready");
-                const q = query(collection(db, 'artifacts', APP_ID, 'public', 'spin_logs'));
+                const q = query(collection(db, 'artifacts', APP_ID, 'public', 'slot_logs'));
                 const snap = await getDocs(q);
                 let logs = snap.docs.map(d => d.data());
                 
@@ -1061,20 +1138,20 @@
             const btn = document.getElementById('btn-save-admin');
             btn.innerHTML = `<div class="loading-spinner w-5 h-5 border-white border-t-transparent mx-auto"></div>`;
             try {
-                if(db) await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'config'), { prizePool: state.prizePool }, { merge: true });
-                drawWheel(currentRotation); // 更新畫面轉盤
+                if(db) await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'slot_config'), { prizePool: state.prizePool }, { merge: true });
+                if(wheelCtx) drawWheel(currentRotation); // 更新畫面轉盤
                 showMsg("✅ 雲端獎項機率已成功同步");
             } catch(e) { console.error(e); showMsg("❌ 儲存失敗"); } 
             finally { btn.innerHTML = `同步儲存設定`; }
         };
 
-        // 會員庫管理邏輯
+        // 會員庫管理邏輯 (連接新的資料庫)
         window.loadMembersAdmin = async () => {
             const tbody = document.getElementById('members-table-body');
             tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-400 font-bold">資料抓取中...</td></tr>';
             try {
                 if(!db) throw new Error("DB not ready");
-                const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'members'));
+                const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'beauty_members'));
                 const snap = await getDocs(q);
                 let members = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 
@@ -1109,7 +1186,7 @@
             
             try {
                 if(db) {
-                    await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'members'), {
+                    await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'beauty_members'), {
                         name: name,
                         phone: phone,
                         createdAt: Date.now()
@@ -1128,7 +1205,7 @@
         window.deleteMemberAdmin = async (docId) => {
             try {
                 if(db) {
-                    await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'members', docId));
+                    await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'beauty_members', docId));
                     loadMembersAdmin();
                 }
             } catch(e) {
@@ -1139,15 +1216,19 @@
 
         // 當前玩家次數重置
         window.adminResetCurrentUser = async () => {
+            if (!userId) {
+                showMsg("❌ 找不到當前玩家，請先以會員登入遊玩一次");
+                return;
+            }
             state.count = 0;
             await saveProfileData(); 
             resetWheelUI(); 
             updateUI(); 
-            showMsg("✅ 此裝置玩家次數已歸零，可重新抽獎！");
+            showMsg("✅ 此會員玩家次數已歸零，可重新抽獎！");
         };
 
         window.showMsg = (text) => { document.getElementById('msg-text').innerText = text; document.getElementById('msg-modal').classList.add('modal-active'); };
-        window.closeModal = (id) => { document.getElementById(id).classList.remove('modal-active'); };
+        window.closeModal = (id) => { document.getElementById(id).classList.remove('modal-active', 'flex'); document.getElementById(id).classList.add('hidden'); };
         window.handleReservation = () => { window.open("https://liff.line.me/2010909434-eVswjkpc", "_blank"); };
 
         function startTimer() {
@@ -1156,7 +1237,7 @@
                 const now = new Date(), mid = new Date(); mid.setHours(23, 59, 59, 999);
                 const diff = mid - now; if(diff <= 0) { location.reload(); return; }
                 const h = String(Math.floor(diff/3600000)).padStart(2,'0'), m = String(Math.floor((diff%3600000)/60000)).padStart(2,'0'), s = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
-                el.innerText = `RESET IN: ${h}:${m}:${s}`;
+                el.innerText = `重置：${h}:${m}:${s}`;
             };
             tick(); setInterval(tick, 1000);
         }
