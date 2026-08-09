@@ -58,6 +58,23 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+        /* 中獎資訊浮水印背景 */
+        .result-bg-watermark {
+            background-image: url('新LOGO.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 50%;
+            position: relative;
+        }
+        .result-bg-watermark::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
+            border-radius: inherit;
+            z-index: -1;
+        }
+
         /* 轉盤專屬樣式 */
         .wheel-container {
             position: relative;
@@ -130,21 +147,26 @@
 
     <!-- 會員專屬驗證彈窗 -->
     <div id="member-gate-modal" class="fixed inset-0 bg-white/95 z-[90] hidden items-center justify-center p-6 backdrop-blur-md">
-        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl border border-pink-100">
-            <div class="text-5xl mb-4">👑</div>
-            <h3 class="text-2xl font-black text-pink-600 mb-2">會員專屬活動</h3>
-            <p class="text-gray-600 mb-8 font-bold text-sm">此轉盤活動限定 <br> Corin Beauty 會員參與</p>
+        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl border border-pink-100 relative overflow-hidden">
+            <!-- 背景裝飾 -->
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-pink-50 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-rose-50 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
             
-            <div id="member-step-1" class="space-y-3">
-                <button onclick="showLoginInput()" class="w-full py-4 bg-pink-600 text-white rounded-2xl font-black shadow-lg hover:bg-pink-700 transition-colors">我是會員，立即登入</button>
-                <button onclick="redirectToRegister()" class="w-full py-4 bg-gray-50 border border-gray-200 text-gray-500 rounded-2xl font-bold hover:bg-gray-100 transition-colors">還不是會員？前往註冊</button>
-            </div>
+            <div class="relative z-10">
+                <img src="新LOGO.png" alt="Corin Beauty" class="h-16 mx-auto mb-4 drop-shadow-sm">
+                <h3 class="text-2xl font-black text-pink-600 mb-2">會員專屬活動</h3>
+                <p class="text-gray-600 mb-8 font-bold text-sm">此轉盤活動限定 <br> Corin Beauty 會員參與</p>
+                
+                <div id="member-step-1" class="space-y-3">
+                    <button onclick="showLoginInput()" class="w-full py-4 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-2xl font-black shadow-lg shadow-pink-200 hover:scale-[1.02] transition-transform">我是會員，立即登入</button>
+                    <button onclick="redirectToRegister()" class="w-full py-4 bg-white border-2 border-gray-100 text-gray-500 rounded-2xl font-bold hover:bg-gray-50 transition-colors">還不是會員？前往註冊</button>
+                </div>
 
-            <div id="member-step-2" class="hidden space-y-4">
-                <p class="text-xs text-gray-400 font-bold mb-1">請輸入您的註冊手機號碼</p>
-                <input type="tel" id="member-phone" placeholder="手機號碼 (例如：0912345678)" class="w-full border-2 border-pink-100 rounded-xl px-4 py-3 text-center focus:border-pink-500 outline-none font-bold text-lg tracking-wider" maxlength="10">
-                <button id="btn-verify" onclick="verifyMember()" class="w-full py-4 bg-pink-600 text-white rounded-2xl font-black shadow-lg active:scale-95 transition-transform mt-4 block">確認登入</button>
-                <button onclick="backToStep1()" class="text-sm text-gray-400 font-bold underline mt-2 block w-full">返回上一步</button>
+                <div id="member-step-2" class="hidden space-y-4">
+                    <input type="tel" id="member-phone" placeholder="手機號碼" class="w-full border-2 border-pink-100 rounded-xl px-4 py-4 text-center focus:border-pink-500 outline-none font-bold text-lg tracking-wider bg-gray-50/50" maxlength="10">
+                    <button id="btn-verify" onclick="verifyMember()" class="w-full py-4 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-2xl font-black shadow-lg shadow-pink-200 active:scale-95 transition-transform mt-2">確認登入</button>
+                    <button onclick="backToStep1()" class="text-sm text-gray-400 font-bold underline mt-4 block w-full">返回上一步</button>
+                </div>
             </div>
         </div>
     </div>
@@ -305,19 +327,19 @@
                         
                         <!-- 轉盤中心的裝飾圓餅 -->
                         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-white rounded-full shadow-lg border-4 border-pink-100 flex items-center justify-center z-20">
-                            <div class="w-8 h-8 bg-pink-50 rounded-full flex items-center justify-center">
-                                <span class="text-[10px] font-black text-pink-400 tracking-tighter">Corin</span>
+                            <div class="w-8 h-8 bg-pink-50 rounded-full flex items-center justify-center overflow-hidden">
+                                <img src="新LOGO.png" alt="Logo" class="w-full h-full object-cover">
                             </div>
                         </div>
 
                         <!-- 抽獎結果覆蓋層 -->
-                        <div id="prize-result-overlay" class="absolute inset-0 z-30 flex flex-col items-center justify-center text-center p-4 bg-white/95 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-500 rounded-full border-4 border-white shadow-2xl scale-95 transform">
-                            <div id="top-prize-banner" class="hidden text-[10px] font-bold text-yellow-600 mb-1 uppercase tracking-widest animate-bounce">🌟 BIG WINNER 🌟</div>
-                            <div id="normal-prize-banner" class="text-[11px] font-bold text-pink-600 mb-1 uppercase tracking-wide">Congratulations</div>
-                            <div id="prize-name" class="text-sm font-black text-gray-900 leading-tight mb-3 px-2"></div>
-                            <div class="bg-gray-50 rounded-xl border border-gray-100 w-[85%] p-2 shadow-inner">
-                                <div id="verification-time" class="text-[8px] text-gray-400 font-mono truncate"></div>
-                                <div id="expiry-date" class="text-[9px] text-rose-500 font-bold mt-1"></div>
+                        <div id="prize-result-overlay" class="absolute inset-0 z-30 flex flex-col items-center justify-center text-center p-5 result-bg-watermark opacity-0 pointer-events-none transition-opacity duration-500 rounded-full border-4 border-white shadow-2xl scale-95 transform">
+                            <div id="top-prize-banner" class="hidden text-[10px] font-bold text-yellow-600 mb-1.5 uppercase tracking-widest animate-bounce bg-yellow-50 px-2 py-0.5 rounded-full border border-yellow-200">🌟 BIG WINNER 🌟</div>
+                            <div id="normal-prize-banner" class="text-[11px] font-bold text-pink-600 mb-1.5 uppercase tracking-wide bg-pink-50 px-2 py-0.5 rounded-full border border-pink-100">Congratulations</div>
+                            <div id="prize-name" class="text-base font-black text-gray-900 leading-tight mb-4 px-2 drop-shadow-sm"></div>
+                            <div class="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-100 w-full max-w-[200px] p-2.5 shadow-sm">
+                                <div id="verification-time" class="text-[9px] text-gray-500 font-mono truncate"></div>
+                                <div id="expiry-date" class="text-[10px] text-rose-500 font-bold mt-1.5 border-t border-gray-100/50 pt-1"></div>
                             </div>
                         </div>
                     </div>
@@ -501,7 +523,7 @@
 
         window.verifyMember = async () => {
             const phone = document.getElementById('member-phone').value.trim();
-            if (phone.length < 8) { showMsg("請輸入完整的手機號碼！"); return; }
+            if (phone.length < 8) { alert("請輸入完整的手機號碼！"); return; }
             
             const btn = document.getElementById('btn-verify');
             const ogText = btn.innerHTML;
@@ -536,12 +558,15 @@
                     localStorage.setItem('memberPhone', memberPhone);
                     initApp(); 
                 } else {
-                    // 若非會員則跳轉至註冊畫面
+                    // 若非會員則跳轉至註冊畫面，確保一定會執行
+                    console.log("Phone not found in DB, redirecting...");
                     window.location.href = 'https://check-balance-jbiy.vercel.app/';
                 }
             } catch (e) {
                 console.error("Verification error:", e);
-                showMsg("驗證時發生錯誤，請稍後再試。");
+                // 為了避免 Firebase 暫時連線異常導致卡住，若發生錯誤我們還是先提示使用者
+                alert("查無會員資料，將為您導向註冊頁面");
+                window.location.href = 'https://check-balance-jbiy.vercel.app/';
             } finally {
                 btn.innerHTML = ogText;
                 btn.disabled = false;
@@ -657,10 +682,11 @@
         function formatPrizeText(text) {
             // 嘗試取 '-' 前面的字串，或是截斷
             let short = text;
-            if(short.includes('－')) short = short.split('－')[1] || short.split('－')[0]; // 如果有破折號，取內容
+            if(short.includes('－')) short = short.split('－')[0]; // 如果有破折號，取前面的類別
             if(short.includes('[')) short = short.split('[')[0]; // 移除備註
             short = short.trim();
-            if(short.length > 8) short = short.substring(0, 8) + '..';
+            // 轉盤空間有限，過長字串進行縮寫
+            if(short.length > 6) short = short.substring(0, 6) + '..';
             return short;
         }
 
@@ -700,10 +726,11 @@
                 wheelCtx.fillStyle = textColor;
                 wheelCtx.textAlign = 'right';
                 wheelCtx.textBaseline = 'middle';
-                wheelCtx.font = 'bold 12px "Noto Sans TC", sans-serif';
+                // 縮小字體以適應格子
+                wheelCtx.font = 'bold 11px "Noto Sans TC", sans-serif';
                 
                 const text = formatPrizeText(state.prizePool[i].name);
-                wheelCtx.fillText(text, radius - 15, 0);
+                wheelCtx.fillText(text, radius - 18, 0); // 往內移一點避免貼邊
                 wheelCtx.restore();
             }
             
