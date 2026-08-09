@@ -29,17 +29,15 @@
             background-color: #fff5f7; 
         }
         
-        /* 基礎動畫設定 */
         .modal-active { display: flex !important; animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
         .big-win-glow {
             animation: bigWinGlow 1.5s infinite alternate;
-            border-color: #fbbf24 !important;
         }
         @keyframes bigWinGlow {
             from { box-shadow: 0 0 10px #fbbf24; transform: scale(1); }
-            to { box-shadow: 0 0 30px #f59e0b, 0 0 50px rgba(245, 158, 11, 0.3); transform: scale(1.02); }
+            to { box-shadow: 0 0 40px #f59e0b, 0 0 60px rgba(245, 158, 11, 0.4); transform: scale(1.02); }
         }
         
         .prize-text-anim {
@@ -60,37 +58,37 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* 3軸拉霸機專屬樣式 */
-        .slot-machine-container {
+        /* 轉盤專屬樣式 */
+        .wheel-container {
             position: relative;
-            width: 100%;
-            max-width: 300px;
-            height: 110px;
-            background: #ffffff;
-            border-radius: 16px;
-            overflow: hidden;
-            border: 4px solid #fce7f3;
+            width: 320px;
+            height: 320px;
             margin: 0 auto;
-            box-shadow: inset 0 4px 10px rgba(0,0,0,0.05);
-            transition: border-color 0.5s ease;
+            border-radius: 50%;
+            box-shadow: 0 10px 25px rgba(219, 39, 119, 0.15), inset 0 0 15px rgba(0,0,0,0.05);
+            background: #fff;
+            padding: 8px;
+            border: 4px solid #fdf2f8;
+            transition: all 0.5s ease;
         }
         
-        .slot-item {
-            height: 110px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3.5rem; /* 大符號 */
-            line-height: 1;
-            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.1));
+        #wheel-canvas {
+            border-radius: 50%;
+            width: 100%;
+            height: 100%;
+            display: block;
         }
 
-        /* 符號殘影效果 (旋轉中) */
-        .spinning .slot-item {
-            filter: blur(2px);
-        }
-        .stopped .slot-item {
-            filter: blur(0px);
+        /* 轉盤指針 */
+        .wheel-pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 50px;
+            z-index: 10;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
         }
 
         /* 按鈕立體效果 */
@@ -108,6 +106,10 @@
             box-shadow: none;
             transform: translateY(6px);
         }
+
+        /* 表格滾動隱藏捲軸 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
@@ -126,12 +128,12 @@
         </div>
     </div>
 
-    <!-- 會員專屬驗證彈窗 (強制卡關) -->
+    <!-- 會員專屬驗證彈窗 -->
     <div id="member-gate-modal" class="fixed inset-0 bg-white/95 z-[90] hidden items-center justify-center p-6 backdrop-blur-md">
         <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl border border-pink-100">
             <div class="text-5xl mb-4">👑</div>
             <h3 class="text-2xl font-black text-pink-600 mb-2">會員專屬活動</h3>
-            <p class="text-gray-600 mb-8 font-bold text-sm">此轉轉樂活動限定 <br> Corin Beauty 會員參與</p>
+            <p class="text-gray-600 mb-8 font-bold text-sm">此轉盤活動限定 <br> Corin Beauty 會員參與</p>
             
             <div id="member-step-1" class="space-y-3">
                 <button onclick="showLoginInput()" class="w-full py-4 bg-pink-600 text-white rounded-2xl font-black shadow-lg hover:bg-pink-700 transition-colors">我是會員，立即登入</button>
@@ -140,89 +142,127 @@
 
             <div id="member-step-2" class="hidden space-y-4">
                 <p class="text-xs text-gray-400 font-bold mb-1">請輸入您的註冊手機號碼</p>
-                <input type="tel" id="member-phone" placeholder="例如：0912345678" class="w-full border-2 border-pink-100 rounded-xl px-4 py-3 text-center focus:border-pink-500 outline-none font-bold text-lg tracking-wider" maxlength="10">
-                <button onclick="verifyMember()" class="w-full py-4 bg-pink-600 text-white rounded-2xl font-black shadow-lg active:scale-95 transition-transform">確認登入</button>
+                <input type="tel" id="member-phone" placeholder="手機號碼 (例如：0912345678)" class="w-full border-2 border-pink-100 rounded-xl px-4 py-3 text-center focus:border-pink-500 outline-none font-bold text-lg tracking-wider" maxlength="10">
+                <button id="btn-verify" onclick="verifyMember()" class="w-full py-4 bg-pink-600 text-white rounded-2xl font-black shadow-lg active:scale-95 transition-transform mt-4 block">確認登入</button>
                 <button onclick="backToStep1()" class="text-sm text-gray-400 font-bold underline mt-2 block w-full">返回上一步</button>
             </div>
         </div>
     </div>
 
-    <!-- 管理員驗證彈窗 -->
-    <div id="admin-modal" class="fixed inset-0 bg-black/80 z-[120] hidden items-center justify-center p-6 backdrop-blur-md">
+    <!-- 統一管理員密碼驗證彈窗 -->
+    <div id="admin-auth-modal" class="fixed inset-0 bg-black/80 z-[120] hidden items-center justify-center p-6 backdrop-blur-md">
         <div class="bg-white rounded-[2rem] p-8 max-w-xs w-full text-center shadow-2xl">
-            <h3 id="admin-modal-title" class="text-xl font-black text-gray-800 mb-4">管理員驗證</h3>
-            <input type="password" id="admin-pass" class="w-full border-2 border-pink-100 rounded-xl px-4 py-3 mb-4 text-center focus:border-pink-500 outline-none" placeholder="輸入密碼">
+            <h3 class="text-xl font-black text-gray-800 mb-4">管理員專區登入</h3>
+            <input type="password" id="admin-pass" class="w-full border-2 border-pink-100 rounded-xl px-4 py-3 mb-4 text-center focus:border-pink-500 outline-none tracking-widest font-mono" placeholder="輸入管理密碼">
             <div class="flex gap-2">
-                <button onclick="closeModal('admin-modal')" class="flex-1 py-3 bg-gray-100 text-gray-400 rounded-xl font-bold">取消</button>
-                <button onclick="verifyAdmin()" class="flex-1 py-3 bg-pink-600 text-white rounded-xl font-bold">確認</button>
+                <button onclick="closeModal('admin-auth-modal')" class="flex-1 py-3 bg-gray-100 text-gray-400 rounded-xl font-bold">取消</button>
+                <button onclick="verifyAdmin()" class="flex-1 py-3 bg-pink-600 text-white rounded-xl font-bold">進入後台</button>
             </div>
         </div>
     </div>
 
-    <!-- 獎項管理後台彈窗 (資料庫連動) -->
-    <div id="prize-admin-modal" class="fixed inset-0 bg-black/80 z-[130] hidden items-center justify-center p-4 backdrop-blur-md">
-        <div class="bg-white rounded-[2rem] p-6 max-w-md w-full max-h-[90vh] flex flex-col shadow-2xl">
-            <h3 class="text-xl font-black text-gray-800 mb-4 flex justify-between items-center">
-                雲端獎項機率管理
-                <button onclick="closeModal('prize-admin-modal')" class="text-gray-300 text-2xl">&times;</button>
-            </h3>
-            
-            <!-- 新增獎項區 -->
-            <div class="bg-pink-50 p-4 rounded-2xl mb-4 space-y-2">
-                <input type="text" id="new-prize-name" class="w-full px-3 py-2 rounded-lg border border-pink-100 text-sm" placeholder="新獎項名稱">
-                <div class="flex gap-2">
-                    <input type="number" id="new-prize-weight" class="flex-1 px-3 py-2 rounded-lg border border-pink-100 text-sm" placeholder="權重 (例: 10)">
-                    <button onclick="addPrizeToPool()" class="bg-pink-600 text-white px-4 py-2 rounded-lg text-sm font-bold">新增</button>
+    <!-- 管理員專區儀表板 -->
+    <div id="admin-dashboard-modal" class="fixed inset-0 bg-gray-50 z-[130] hidden flex-col">
+        <div class="bg-white shadow-sm flex items-center justify-between p-4 px-6 border-b border-pink-100">
+            <h2 class="text-xl font-black text-pink-600">管理員專區</h2>
+            <button onclick="closeModal('admin-dashboard-modal')" class="text-gray-400 text-3xl font-light">&times;</button>
+        </div>
+        
+        <div class="flex p-4 gap-1 bg-white overflow-x-auto no-scrollbar">
+            <button onclick="switchAdminTab('stats')" id="tab-admin-stats" class="whitespace-nowrap px-3 py-2 text-xs font-bold rounded-lg bg-pink-50 text-pink-600">統計</button>
+            <button onclick="switchAdminTab('prizes')" id="tab-admin-prizes" class="whitespace-nowrap px-3 py-2 text-xs font-bold rounded-lg text-gray-400">獎項</button>
+            <button onclick="switchAdminTab('users')" id="tab-admin-users" class="whitespace-nowrap px-3 py-2 text-xs font-bold rounded-lg text-gray-400">玩家</button>
+            <button onclick="switchAdminTab('members')" id="tab-admin-members" class="whitespace-nowrap px-3 py-2 text-xs font-bold rounded-lg text-gray-400">會員庫</button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 relative" id="admin-content-area">
+            <!-- 統計分頁 -->
+            <div id="admin-page-stats" class="space-y-4">
+                <div class="flex justify-between items-end mb-2">
+                    <h3 class="font-bold text-gray-800">全站抽獎紀錄 (即時)</h3>
+                    <button onclick="loadGlobalStats()" class="text-xs bg-gray-200 px-3 py-1 rounded font-bold text-gray-600">重新整理</button>
                 </div>
-                <p class="text-[9px] text-pink-400">※ 全局生效。權重越高，中獎機率越高</p>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="max-h-[65vh] overflow-y-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-pink-50 text-pink-600 sticky top-0 z-10">
+                                <tr>
+                                    <th class="p-3 font-bold">時間</th>
+                                    <th class="p-3 font-bold">姓名</th>
+                                    <th class="p-3 font-bold">電話</th>
+                                    <th class="p-3 font-bold">第幾次</th>
+                                    <th class="p-3 font-bold min-w-[120px]">抽中獎項</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stats-table-body" class="divide-y divide-gray-50 text-gray-600 font-medium">
+                                <tr><td colspan="5" class="p-4 text-center text-gray-400">載入中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
-            <!-- 獎項清單 -->
-            <div id="prize-manage-list" class="flex-1 overflow-y-auto space-y-2 pr-1 text-sm">
-                <!-- 獎項項目會動態插入 -->
+            <!-- 獎項分頁 -->
+            <div id="admin-page-prizes" class="hidden space-y-4">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-gray-800 mb-3 text-sm">新增獎項 (新增後自動加入轉盤)</h3>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="new-prize-name" class="flex-[2] px-3 py-2 rounded-lg border border-pink-100 text-sm bg-gray-50" placeholder="獎項名稱">
+                        <input type="number" id="new-prize-weight" class="flex-1 px-3 py-2 rounded-lg border border-pink-100 text-sm bg-gray-50" placeholder="權重">
+                        <button onclick="addPrizeToPool()" class="bg-pink-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md">新增</button>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                    <h3 class="font-bold text-gray-800 mb-3 text-sm">目前轉盤獎項配比</h3>
+                    <div id="prize-manage-list" class="space-y-2 max-h-[40vh] overflow-y-auto pr-1"></div>
+                </div>
+                <button id="btn-save-admin" onclick="saveAndClosePrizeAdmin()" class="w-full py-4 bg-gray-800 text-white rounded-2xl font-bold shadow-lg">同步儲存設定</button>
             </div>
 
-            <button id="btn-save-admin" onclick="saveAndClosePrizeAdmin()" class="mt-4 w-full py-4 bg-gray-800 text-white rounded-2xl font-bold flex items-center justify-center gap-2">
-                <span>同步至雲端資料庫並關閉</span>
-            </button>
-        </div>
-    </div>
+            <!-- 玩家管理分頁 -->
+            <div id="admin-page-users" class="hidden space-y-4">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center">
+                    <div class="text-4xl mb-4">🔄</div>
+                    <h3 class="font-black text-gray-800 mb-2">重置當前裝置玩家次數</h3>
+                    <p class="text-sm text-gray-500 mb-6">點擊後，此裝置的玩家本日已用次數將歸零，可重新抽獎。</p>
+                    <button onclick="adminResetCurrentUser()" class="w-full py-4 bg-rose-500 text-white rounded-2xl font-black shadow-lg">立即重置此玩家</button>
+                </div>
+            </div>
 
-    <!-- 通用訊息提示 -->
-    <div id="msg-modal" class="fixed inset-0 bg-black/40 z-[150] hidden items-center justify-center p-6 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl p-6 max-w-xs w-full text-center shadow-2xl">
-            <p id="msg-text" class="text-gray-800 font-bold mb-6"></p>
-            <button onclick="closeModal('msg-modal')" class="w-full py-3 bg-gray-800 text-white rounded-xl font-bold">我知道了</button>
-        </div>
-    </div>
-
-    <!-- 分享成功彈窗 -->
-    <div id="share-success-modal" class="fixed inset-0 bg-black/60 z-[110] hidden items-center justify-center p-6 backdrop-blur-md">
-        <div class="bg-white rounded-[2.5rem] p-8 max-w-xs w-full text-center shadow-2xl">
-            <div class="text-6xl mb-4">🎉</div>
-            <h3 class="text-2xl font-black text-pink-600 mb-2">分享成功！</h3>
-            <p class="text-gray-600 font-bold mb-6">恭喜獲得額外<br><span class="text-3xl text-pink-500">1</span> 次抽獎機會</p>
-            <button onclick="closeModal('share-success-modal')" class="w-full py-4 bg-pink-600 text-white rounded-2xl font-black shadow-lg">立即去抽獎</button>
-        </div>
-    </div>
-
-    <!-- 兌換確認彈窗 -->
-    <div id="redeem-confirm-modal" class="fixed inset-0 bg-black/60 z-[110] hidden items-center justify-center p-6 backdrop-blur-sm">
-        <div class="bg-white rounded-[2rem] p-8 max-w-xs w-full text-center shadow-2xl">
-            <div class="w-16 h-16 bg-pink-50 text-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🎫</div>
-            <h3 class="text-xl font-black text-gray-800 mb-2">確認兌換？</h3>
-            <p class="text-sm text-gray-500 mb-6 leading-relaxed">請確認您已在櫃檯現場，點擊後獎項將標註為已兌換且無法恢復。</p>
-            <div class="flex gap-2">
-                <button onclick="closeModal('redeem-confirm-modal')" class="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl text-sm font-bold">取消</button>
-                <button id="confirm-redeem-btn" class="flex-1 py-4 bg-pink-600 text-white rounded-2xl text-sm font-bold">確定兌換</button>
+            <!-- 會員庫管理分頁 -->
+            <div id="admin-page-members" class="hidden space-y-4">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-gray-800 mb-3 text-sm">新增允許遊玩的會員 (供驗證用)</h3>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="new-member-name" class="flex-1 px-3 py-2 rounded-lg border border-pink-100 text-sm bg-gray-50" placeholder="姓名">
+                        <input type="tel" id="new-member-phone" class="flex-[2] px-3 py-2 rounded-lg border border-pink-100 text-sm bg-gray-50" placeholder="手機號碼" maxlength="10">
+                        <button onclick="addMemberAdmin()" class="bg-pink-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md">新增</button>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="max-h-[45vh] overflow-y-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-pink-50 text-pink-600 sticky top-0 z-10">
+                                <tr>
+                                    <th class="p-3 font-bold">姓名</th>
+                                    <th class="p-3 font-bold">電話</th>
+                                    <th class="p-3 font-bold text-right">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="members-table-body" class="divide-y divide-gray-50 text-gray-600 font-medium">
+                                <tr><td colspan="3" class="p-4 text-center text-gray-400">載入中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- 主卡片 -->
-    <div id="main-card" class="bg-white rounded-[2.5rem] shadow-2xl p-6 w-full max-w-sm border border-pink-50 flex flex-col min-h-[580px] relative hidden">
+    <div id="main-card" class="bg-white rounded-[2.5rem] shadow-2xl p-6 w-full max-w-sm border border-pink-50 flex flex-col min-h-[620px] relative hidden">
         
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex justify-between items-center mb-4">
             <div class="flex bg-gray-100 p-1 rounded-xl">
                 <button id="tab-game" onclick="switchTab('game')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-white shadow-sm text-pink-600">幸運轉盤</button>
                 <button id="tab-history" onclick="switchTab('history')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400">中獎紀錄</button>
@@ -233,60 +273,62 @@
             </div>
         </div>
 
+        <!-- 遊戲頁面 -->
         <div id="page-game" class="flex-1 flex flex-col">
             <div class="text-center mb-4">
                 <h1 class="text-2xl font-black text-gray-800 tracking-tight">Corin Beauty</h1>
-                <p class="text-[10px] text-pink-500 font-bold tracking-[0.3em] uppercase mt-1">Slot Machine</p>
+                <p class="text-[10px] text-pink-500 font-bold tracking-[0.3em] uppercase mt-1">Lucky Wheel</p>
             </div>
 
             <!-- 醒目提醒 -->
-            <div class="bg-rose-500 text-white rounded-2xl p-3 mb-6 shadow-md border-b-4 border-rose-600">
-                <div class="flex items-center gap-2 font-black text-[11px] mb-1.5">
-                    <span>⚠️ 重要提醒</span>
-                </div>
+            <div class="bg-rose-500 text-white rounded-2xl p-3 mb-4 shadow-md border-b-4 border-rose-600">
+                <div class="flex items-center gap-2 font-black text-[11px] mb-1.5"><span>⚠️ 重要提醒</span></div>
                 <div class="text-[10px] font-bold space-y-1">
                     <p class="flex items-start gap-1.5 leading-tight"><span class="shrink-0">•</span> 獎項逾期失效，建議獲獎後「截圖保存」。</p>
                     <p class="flex items-start gap-1.5 leading-tight"><span class="shrink-0">•</span> 單次消費限用一項優惠，不可重複折抵。</p>
                 </div>
             </div>
 
-            <div id="game-area" class="flex flex-col mb-4 relative">
+            <div id="game-area" class="flex flex-col mb-4 relative flex-1 justify-center">
                 
-                <!-- 3軸拉霸機視窗 -->
-                <div id="slot-machine" class="slot-machine-container flex">
-                    <!-- 左中右三條轉軸區 -->
-                    <div class="flex-1 relative overflow-hidden border-r border-gray-100">
-                        <div id="reel-0" class="absolute top-0 w-full flex flex-col items-center slot-reel"></div>
-                    </div>
-                    <div class="flex-1 relative overflow-hidden border-r border-gray-100">
-                        <div id="reel-1" class="absolute top-0 w-full flex flex-col items-center slot-reel"></div>
-                    </div>
-                    <div class="flex-1 relative overflow-hidden">
-                        <div id="reel-2" class="absolute top-0 w-full flex flex-col items-center slot-reel"></div>
-                    </div>
+                <!-- 精美轉盤區域 -->
+                <div class="relative w-full flex justify-center items-center py-2">
+                    <!-- 頂部指針 -->
+                    <svg class="wheel-pointer" viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 50L0 20C0 8.95431 8.95431 0 20 0C31.0457 0 40 8.95431 40 20L20 50Z" fill="#be185d"/>
+                        <path d="M20 45L4 20C4 11.1634 11.1634 4 20 4C28.8366 4 36 11.1634 36 20L20 45Z" fill="#ec4899"/>
+                        <circle cx="20" cy="16" r="6" fill="#fbcfe8"/>
+                    </svg>
 
-                    <!-- 玻璃反光與對齊線 -->
-                    <div class="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-black/5 z-10 pointer-events-none"></div>
-                    <div class="absolute top-1/2 left-0 w-full h-0.5 -mt-px bg-pink-500/30 z-10 pointer-events-none"></div>
-                    
-                    <!-- 抽獎結果覆蓋層 (完整文字說明) -->
-                    <div id="prize-result-overlay" class="absolute inset-0 z-20 flex flex-col items-center justify-center text-center p-3 bg-white/95 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-500">
-                        <div id="top-prize-banner" class="hidden text-[10px] font-bold text-yellow-600 mb-1 uppercase tracking-widest animate-bounce">🌟 BIG WINNER 🌟</div>
-                        <div id="normal-prize-banner" class="text-[10px] font-bold text-pink-600 mb-1 uppercase">Congratulations</div>
-                        <div id="prize-name" class="text-xs font-black text-gray-900 leading-tight mb-2"></div>
-                        <div class="mt-1 py-1 px-3 bg-gray-50 rounded-lg border border-gray-100 w-full max-w-[200px]">
-                            <div id="verification-time" class="text-[8px] text-gray-400 font-mono truncate"></div>
-                            <div id="expiry-date" class="text-[9px] text-rose-500 font-bold mt-0.5"></div>
+                    <div id="wheel-container" class="wheel-container">
+                        <canvas id="wheel-canvas"></canvas>
+                        
+                        <!-- 轉盤中心的裝飾圓餅 -->
+                        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-white rounded-full shadow-lg border-4 border-pink-100 flex items-center justify-center z-20">
+                            <div class="w-8 h-8 bg-pink-50 rounded-full flex items-center justify-center">
+                                <span class="text-[10px] font-black text-pink-400 tracking-tighter">Corin</span>
+                            </div>
+                        </div>
+
+                        <!-- 抽獎結果覆蓋層 -->
+                        <div id="prize-result-overlay" class="absolute inset-0 z-30 flex flex-col items-center justify-center text-center p-4 bg-white/95 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-500 rounded-full border-4 border-white shadow-2xl scale-95 transform">
+                            <div id="top-prize-banner" class="hidden text-[10px] font-bold text-yellow-600 mb-1 uppercase tracking-widest animate-bounce">🌟 BIG WINNER 🌟</div>
+                            <div id="normal-prize-banner" class="text-[11px] font-bold text-pink-600 mb-1 uppercase tracking-wide">Congratulations</div>
+                            <div id="prize-name" class="text-sm font-black text-gray-900 leading-tight mb-3 px-2"></div>
+                            <div class="bg-gray-50 rounded-xl border border-gray-100 w-[85%] p-2 shadow-inner">
+                                <div id="verification-time" class="text-[8px] text-gray-400 font-mono truncate"></div>
+                                <div id="expiry-date" class="text-[9px] text-rose-500 font-bold mt-1"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 抽獎按鈕 -->
-                <div class="mt-6">
+                <div class="mt-6 z-40 relative">
                     <button id="btn-spin" onclick="startSpin()" class="w-full btn-3d py-4 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-2xl text-lg font-black tracking-wide flex items-center justify-center gap-2">
-                        <span>🎰</span> 啟動拉霸 (剩餘 <span id="remaining-count">0</span> 次)
+                        <span>🎡</span> 啟動轉盤 (剩餘 <span id="remaining-count">0</span> 次)
                     </button>
-                    <button id="btn-reset-spin" onclick="resetSlotMachine()" class="w-full hidden btn-3d py-4 bg-gray-800 text-white rounded-2xl text-lg font-black tracking-wide flex items-center justify-center gap-2 mt-0">
+                    <button id="btn-reset-spin" onclick="resetWheelUI()" class="w-full hidden btn-3d py-4 bg-gray-800 text-white rounded-2xl text-lg font-black tracking-wide flex items-center justify-center gap-2 mt-0">
                         再次抽獎 (剩餘 <span id="remaining-count-next">0</span> 次)
                     </button>
                 </div>
@@ -294,24 +336,23 @@
 
             <!-- 次數用盡遮罩 (Locked) -->
             <div id="locked-overlay" class="hidden flex-1 flex flex-col items-center justify-center text-center py-6 bg-gray-50 rounded-3xl mb-6 border border-dashed border-gray-200">
-                <div class="text-5xl mb-4">🎁</div>
-                <h3 id="locked-title" class="text-gray-800 font-black text-xl mb-1">今日抽獎已結束</h3>
-                <p id="locked-desc" class="text-gray-500 text-sm mb-4">分享好友可額外獲得 <span class="text-pink-600 font-bold">1</span> 次機會</p>
-                <button id="locked-share-btn" onclick="shareToFriends()" class="px-8 py-3 bg-emerald-500 text-white rounded-full font-black shadow-lg flex items-center gap-2 active:scale-95 transition-transform">
-                    <span>🚀</span> 立即分享好友
-                </button>
-                <div id="countdown-timer" class="mt-6 text-[10px] font-mono font-bold text-gray-300 uppercase">Next Reset at Midnight</div>
+                <div class="text-5xl mb-4 text-gray-300">🌙</div>
+                <h3 class="text-gray-800 font-black text-xl mb-1">今日抽獎已結束</h3>
+                <p class="text-gray-500 text-sm mb-6">每人每日擁有 <span class="text-pink-600 font-bold">3</span> 次機會</p>
+                <div class="px-6 py-2 bg-white rounded-full border border-gray-100 shadow-sm">
+                    <div id="countdown-timer" class="text-xs font-mono font-bold text-pink-500 uppercase">Next Reset at Midnight</div>
+                </div>
             </div>
 
-            <div id="footer-controls" class="mt-auto pt-4 text-center">
+            <div id="footer-controls" class="mt-auto pt-2 text-center pb-2">
                 <button onclick="handleReservation()" class="text-pink-500 font-bold text-sm hover:underline decoration-2 underline-offset-4">手刀預約專屬課程 ➔</button>
             </div>
         </div>
 
         <!-- 紀錄頁面 -->
-        <div id="page-history" class="hidden flex-1 flex flex-col">
+        <div id="page-history" class="hidden flex-1 flex flex-col h-[520px]">
             <h2 class="text-lg font-black text-gray-800 mb-2">我的獎項紀錄</h2>
-            <div class="flex gap-2 mb-4">
+            <div class="flex gap-2 mb-4 shrink-0">
                 <div class="flex-1 bg-emerald-50 border border-emerald-100 rounded-xl p-2 text-center">
                     <div id="count-valid" class="text-emerald-600 font-black text-lg leading-tight">0</div>
                     <div class="text-[9px] text-emerald-500 font-bold uppercase">有效/未使用</div>
@@ -321,18 +362,24 @@
                     <div class="text-[9px] text-gray-400 font-bold uppercase">無效/已使用</div>
                 </div>
             </div>
-            <div id="history-list" class="flex-1 overflow-y-auto space-y-6 pr-1"></div>
+            
+            <div class="flex items-center text-[10px] text-gray-400 mb-2 bg-gray-50 p-2 rounded-lg shrink-0 justify-between">
+                <span>帳號資訊：</span>
+                <span id="history-user-info" class="font-bold text-gray-600 font-mono tracking-wide">載入中...</span>
+            </div>
+
+            <div id="history-list" class="flex-1 overflow-y-auto space-y-4 pr-1 no-scrollbar"></div>
         </div>
 
-        <div class="mt-6 pt-4 border-t border-gray-50">
+        <div class="mt-4 pt-4 border-t border-gray-50 shrink-0">
             <div class="flex justify-between items-center mb-3">
                 <p class="text-[9px] text-gray-400 font-medium tracking-tight">每日 23:59 自動重置抽獎次數</p>
-                <span id="user-id-display" onclick="openAdmin('reset')" class="text-[9px] text-gray-300 font-mono cursor-pointer hover:text-pink-300 transition-colors">會員載入中...</span>
+                <span onclick="openAdminDashboard()" class="text-[9px] text-pink-600/50 font-bold cursor-pointer hover:text-pink-600 transition-colors bg-pink-50 px-2 py-0.5 rounded uppercase tracking-wider">管理員專區</span>
             </div>
             <div class="text-center space-y-1">
                 <p class="text-[9px] text-gray-300 tracking-wide">建議使用手機瀏覽以獲得最佳操作體驗</p>
-                <p onclick="openAdmin('prizes')" class="text-[10px] text-gray-400 font-bold tracking-widest uppercase cursor-pointer hover:text-pink-400">System By Corin</p>
-                <p class="text-[8px] text-gray-300/60 font-mono tracking-tighter">v27.2.Slot.Pro.DB</p>
+                <p class="text-[10px] text-gray-400 font-bold tracking-widest uppercase">System By Corin</p>
+                <p class="text-[8px] text-gray-300/60 font-mono tracking-tighter">v28.5.Wheel.DB</p>
             </div>
         </div>
     </div>
@@ -340,7 +387,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, addDoc, updateDoc, collection, getDocs, query } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc, collection, getDocs, query } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB48QgamPtCi6o44ymd-2E1VLCrzWEkM_0",
@@ -353,17 +400,16 @@
         };
 
         const APP_ID = 'corin-beauty-slot'; 
-        const INITIAL_CHANCES = 2; // 改為標準每日 2 次
-        const SHARE_BONUS = 1;     // 改為分享獲得 1 次
+        const INITIAL_CHANCES = 3; // 改為每人每日 3 次
         const EXPIRY_DAYS = 7;
-        const ITEM_HEIGHT = 110; 
+        const ADMIN_PASS = "7310168888"; // 統一管理員密碼
         
-        // 符號設定
-        const SYMBOLS = ['🍒', '🍋', '🔔', '💎', '🍀', '👑', '🎁', '✨', '💄', '💖'];
-
         let db, auth;
-        let userId = null; // 用戶唯一標識 (Auth UID)
-        let memberPhone = localStorage.getItem('memberPhone') || ''; // 會員登入的電話
+        let userId = null; 
+        
+        // 讀取本地快取資料
+        let memberPhone = localStorage.getItem('memberPhone') || ''; 
+        let memberName = localStorage.getItem('memberName') || ''; 
 
         // 初始預設獎項池 (如果雲端沒有設定時使用)
         const DEFAULT_PRIZE_POOL = [
@@ -371,7 +417,7 @@
             { name: "2獎－當日當次消費 7 折 [以原價總額計算]", weight: 4 },
             { name: "3獎－當日當次消費 75 折 [以原價總額計算]", weight: 4 },
             { name: "4獎－暗沉掰掰單部位三堂 $899 [原價1399]", weight: 30 },
-            { name: "5獎－腋下除毛一堂優惠價 $99 [限新客]", weight: 50 },
+            { name: "5獎－腋下除毛優惠價 $99 [限新客]", weight: 50 },
             { name: "6獎－免費除毛專用乳液 50ml [價值239]", weight: 2 },
             { name: "7獎－現折 100 元", weight: 70 },
             { name: "8獎－現折 50 元", weight: 80 },
@@ -387,25 +433,27 @@
 
         let state = {
             count: 0,
-            bonusCount: 0,
             lastPlayedDate: '',
-            hasSharedToday: false,
             prizes: [],
-            prizePool: [] // 將由雲端載入
+            prizePool: [] 
         };
 
-        let currentAdminMode = '';
         let isSpinning = false; 
+        let currentRotation = 0; // 紀錄當前轉盤角度 (Radians)
+        const canvasSize = 300; // 轉盤畫布尺寸
+
+        // 轉盤配色表 (交錯使用)
+        const WHEEL_COLORS = ['#fdf2f8', '#fce7f3', '#fbcfe8', '#ffffff', '#fff1f2', '#ffe4e6'];
+        const TEXT_COLORS = ['#be185d', '#db2777', '#9d174d', '#e11d48', '#9f1239'];
 
         async function initApp() {
-            // 檢查會員登入狀態
+            // 檢查會員登入狀態 (只需電話)
             if (!memberPhone) {
                 document.getElementById('status-overlay').classList.add('hidden');
                 document.getElementById('member-gate-modal').classList.remove('hidden');
                 return;
             }
 
-            // 若有會員資料，進行 Firebase 初始化連線
             document.getElementById('member-gate-modal').classList.add('hidden');
             document.getElementById('status-overlay').classList.remove('hidden');
 
@@ -414,7 +462,6 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
                 
-                // 登入獲取 UID 以符合安全規則
                 await signInAnonymously(auth);
                 userId = auth.currentUser?.uid;
                 
@@ -423,11 +470,14 @@
                 await loadGlobalConfig();
                 await loadUserProfileData();
                 
-                updateUI();
-                startTimer();
-                initReelUI(); // 畫出預設符號
+                // 設定歷史紀錄的帳號顯示 (中間字米掉 + 電話全碼)
+                document.getElementById('history-user-info').innerText = `${maskName(memberName)} - ${memberPhone}`;
                 
-                document.getElementById('user-id-display').innerText = `Phone: ${memberPhone.substring(0,4)}...`;
+                updateUI();
+                initWheelCanvas();
+                drawWheel(0);
+                startTimer();
+                
                 document.getElementById('status-overlay').classList.add('hidden');
                 document.getElementById('main-card').classList.remove('hidden');
             } catch (error) {
@@ -438,45 +488,79 @@
             }
         }
 
-        // 會員註冊跳轉
-        window.redirectToRegister = () => {
-            window.location.href = 'https://check-balance-jbiy.vercel.app/';
-        };
+        // 姓名遮蔽邏輯：中間第2字米掉 (王小明 -> 王*明, 陳大 -> 陳*)
+        function maskName(name) {
+            if (!name) return '未知';
+            if (name.length <= 1) return name;
+            if (name.length === 2) return name[0] + '*';
+            return name[0] + '*' + name.substring(2);
+        }
 
-        // 顯示手機輸入框
-        window.showLoginInput = () => {
-            document.getElementById('member-step-1').classList.add('hidden');
-            document.getElementById('member-step-2').classList.remove('hidden');
-        };
-        window.backToStep1 = () => {
-            document.getElementById('member-step-2').classList.add('hidden');
-            document.getElementById('member-step-1').classList.remove('hidden');
-        };
+        window.redirectToRegister = () => { window.location.href = 'https://check-balance-jbiy.vercel.app/'; };
+        window.showLoginInput = () => { document.getElementById('member-step-1').classList.add('hidden'); document.getElementById('member-step-2').classList.remove('hidden'); };
+        window.backToStep1 = () => { document.getElementById('member-step-2').classList.add('hidden'); document.getElementById('member-step-1').classList.remove('hidden'); };
 
-        // 確認登入會員
-        window.verifyMember = () => {
+        window.verifyMember = async () => {
             const phone = document.getElementById('member-phone').value.trim();
-            if (phone.length < 8) {
-                alert("請輸入完整的手機號碼！");
-                return;
+            if (phone.length < 8) { showMsg("請輸入完整的手機號碼！"); return; }
+            
+            const btn = document.getElementById('btn-verify');
+            const ogText = btn.innerHTML;
+            btn.innerHTML = `<div class="loading-spinner w-5 h-5 border-white border-t-transparent mx-auto"></div>`;
+            btn.disabled = true;
+
+            try {
+                // 初始化與匿名登入以取得讀取權限
+                const app = initializeApp(firebaseConfig);
+                const tempAuth = getAuth(app);
+                await signInAnonymously(tempAuth);
+                const tempDb = getFirestore(app);
+
+                // 從資料庫核對此手機號碼
+                const membersRef = collection(tempDb, 'artifacts', APP_ID, 'public', 'data', 'members');
+                const snap = await getDocs(membersRef);
+                
+                let foundName = '';
+                let isMember = false;
+                
+                snap.forEach(doc => {
+                    if (doc.data().phone === phone) {
+                        isMember = true;
+                        foundName = doc.data().name || '專屬會員';
+                    }
+                });
+
+                if (isMember) {
+                    memberName = foundName;
+                    memberPhone = phone;
+                    localStorage.setItem('memberName', memberName);
+                    localStorage.setItem('memberPhone', memberPhone);
+                    initApp(); 
+                } else {
+                    // 若非會員則跳轉至註冊畫面
+                    window.location.href = 'https://check-balance-jbiy.vercel.app/';
+                }
+            } catch (e) {
+                console.error("Verification error:", e);
+                showMsg("驗證時發生錯誤，請稍後再試。");
+            } finally {
+                btn.innerHTML = ogText;
+                btn.disabled = false;
             }
-            memberPhone = phone;
-            localStorage.setItem('memberPhone', memberPhone);
-            initApp(); // 重新啟動 App 流程
         };
 
         async function loadGlobalConfig() {
             try {
                 const configRef = doc(db, 'artifacts', APP_ID, 'public', 'config');
                 const snap = await getDoc(configRef);
-                if (snap.exists() && snap.data().prizePool) {
+                if (snap.exists() && snap.data().prizePool && snap.data().prizePool.length > 0) {
                     state.prizePool = snap.data().prizePool;
                 } else {
                     state.prizePool = [...DEFAULT_PRIZE_POOL];
                     await setDoc(configRef, { prizePool: state.prizePool }, { merge: true });
                 }
             } catch(e) {
-                console.warn("Could not load global config, using default", e);
+                console.warn("Load config error", e);
                 state.prizePool = [...DEFAULT_PRIZE_POOL];
             }
         }
@@ -484,7 +568,6 @@
         async function loadUserProfileData() {
             if(!userId || !db) return;
             try {
-                // 讀取 Profile
                 const profileRef = doc(db, 'artifacts', APP_ID, 'users', userId, 'profile');
                 const profileSnap = await getDoc(profileRef);
                 const today = new Date().toDateString();
@@ -492,12 +575,10 @@
                 if (profileSnap.exists()) {
                     const data = profileSnap.data();
                     if (data.lastPlayedDate !== today) {
-                        state.count = 0; state.bonusCount = 0; state.hasSharedToday = false; state.lastPlayedDate = today;
+                        state.count = 0; state.lastPlayedDate = today;
                         await saveProfileData();
                     } else {
                         state.count = data.count || 0;
-                        state.bonusCount = data.bonusCount || 0;
-                        state.hasSharedToday = data.hasSharedToday || false;
                         state.lastPlayedDate = data.lastPlayedDate || today;
                     }
                 } else {
@@ -505,34 +586,28 @@
                     await saveProfileData();
                 }
 
-                // 讀取 Prizes (單純讀取 collection, 避免複合查詢)
                 const prizesQuery = query(collection(db, 'artifacts', APP_ID, 'users', userId, 'prizes'));
                 const prizesSnap = await getDocs(prizesQuery);
                 state.prizes = prizesSnap.docs.map(d => ({ ...d.data(), id: d.id }));
-                
-                // 在 JS 記憶體中排序 (最新在前)
                 state.prizes.sort((a,b) => b.winDate - a.winDate);
-            } catch(e) {
-                console.error("Load user data error:", e);
-            }
+            } catch(e) { console.error("Load user data error:", e); }
         }
 
         async function saveProfileData() {
             if(!userId || !db) return;
             try {
                 await setDoc(doc(db, 'artifacts', APP_ID, 'users', userId, 'profile'), {
-                    count: state.count,
-                    bonusCount: state.bonusCount,
-                    hasSharedToday: state.hasSharedToday,
-                    lastPlayedDate: state.lastPlayedDate,
+                    name: memberName,
                     phone: memberPhone,
+                    count: state.count,
+                    lastPlayedDate: state.lastPlayedDate,
                     updatedAt: Date.now()
-                });
+                }, { merge: true });
             } catch(e) { console.error("Save profile error", e); }
         }
 
         function updateUI() {
-            const totalMax = INITIAL_CHANCES + state.bonusCount;
+            const totalMax = INITIAL_CHANCES;
             const remaining = Math.max(0, totalMax - state.count);
             const isLocked = remaining <= 0;
             
@@ -542,13 +617,6 @@
             if (isLocked) {
                 document.getElementById('game-area').classList.add('hidden');
                 document.getElementById('locked-overlay').classList.remove('hidden');
-                
-                const titleEl = document.getElementById('locked-title'), descEl = document.getElementById('locked-desc'), btnEl = document.getElementById('locked-share-btn');
-                if (state.hasSharedToday) {
-                    titleEl.innerText = "今日次數已用完"; descEl.innerText = "請明日再來！"; btnEl.classList.add('hidden');
-                } else {
-                    titleEl.innerText = "今日抽獎已結束"; descEl.innerHTML = `分享可得 <span class="text-pink-600 font-bold">${SHARE_BONUS}</span> 次機會`; btnEl.classList.remove('hidden');
-                }
             } else {
                 document.getElementById('game-area').classList.remove('hidden');
                 document.getElementById('locked-overlay').classList.add('hidden');
@@ -557,7 +625,7 @@
             const dots = document.getElementById('chance-dots');
             if (dots) {
                 dots.innerHTML = '';
-                const maxDots = Math.max(3, totalMax); // 視覺上至少顯示3個點的位置
+                const maxDots = Math.max(3, totalMax); 
                 for(let i=0; i<maxDots; i++) {
                     const dot = document.createElement('div');
                     dot.className = `w-1.5 h-1.5 rounded-full ${i < (totalMax - remaining) ? 'bg-gray-200' : (i < totalMax ? 'bg-pink-500' : 'hidden')}`;
@@ -565,181 +633,6 @@
                 }
             }
         }
-
-        // 根據獎項名稱指派對應的符號
-        function getSymbolForPrize(name) {
-            if(name.includes('1獎') || name.includes('2獎') || name.includes('3獎')) return '👑';
-            if(name.includes('儲值')) return '💎';
-            if(name.includes('折')) return '🎁';
-            if(name.includes('除毛')) return '✨';
-            return '💖'; 
-        }
-
-        function initReelUI() {
-            const reels = [document.getElementById('reel-0'), document.getElementById('reel-1'), document.getElementById('reel-2')];
-            reels.forEach(reel => {
-                reel.style.transform = `translateY(0px)`;
-                reel.innerHTML = `<div class="slot-item text-gray-300">🎰</div>`;
-            });
-        }
-
-        window.startSpin = async () => {
-            if (isSpinning) return;
-            const totalMax = INITIAL_CHANCES + state.bonusCount;
-            if (state.count >= totalMax) {
-                updateUI(); return;
-            }
-
-            isSpinning = true;
-            document.getElementById('btn-spin').disabled = true;
-            document.getElementById('slot-machine').classList.remove('big-win-glow');
-            document.getElementById('prize-result-overlay').style.opacity = '0';
-            
-            // 決定獎項
-            const prizeName = preparePrize();
-            const targetSymbol = getSymbolForPrize(prizeName);
-            
-            const reels = [document.getElementById('reel-0'), document.getElementById('reel-1'), document.getElementById('reel-2')];
-            // 每個軸的停頓數量 (越後面的軸轉越久)
-            const spinItemsCount = [40, 55, 75]; 
-            
-            reels.forEach((reel, index) => {
-                reel.style.transition = 'none'; 
-                reel.style.transform = `translateY(0px)`;
-                reel.innerHTML = '';
-                reel.classList.add('spinning');
-
-                // 產生隨機過場項目
-                for(let i = 0; i < spinItemsCount[index]; i++) {
-                    const randomSym = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-                    reel.innerHTML += `<div class="slot-item">${randomSym}</div>`;
-                }
-                
-                // 放置最終中獎項目 (三個軸最終都會停在目標符號上以示配對成功)
-                reel.innerHTML += `<div class="slot-item font-bold text-pink-600">${targetSymbol}</div>`;
-
-                // 強制重繪
-                reel.offsetHeight; 
-
-                // 啟動動畫 (時間依序拉長 3秒, 4.5秒, 6.5秒)
-                const targetY = -(spinItemsCount[index] * ITEM_HEIGHT);
-                const duration = 3000 + (index * 1500) + (index === 2 ? 500 : 0); // 拉長旋轉動畫
-                
-                reel.style.transition = `transform ${duration}ms cubic-bezier(0.1, 0.7, 0.1, 1)`; 
-                reel.style.transform = `translateY(${targetY}px)`;
-
-                // 移除殘影
-                setTimeout(() => { reel.classList.remove('spinning'); }, duration - 500);
-            });
-
-            // 等待最長的動畫結束後結算
-            setTimeout(() => {
-                finishSpin();
-            }, 6500 + 300);
-        };
-
-        function preparePrize() {
-            const totalWeight = state.prizePool.reduce((sum, p) => sum + Number(p.weight), 0);
-            let random = Math.random() * totalWeight, prizeName = state.prizePool[0].name;
-            for (const p of state.prizePool) { if (random < p.weight) { prizeName = p.name; break; } random -= p.weight; }
-            
-            const now = Date.now(), exp = now + (EXPIRY_DAYS * 86400000);
-            // 產生暫時物件，寫入資料庫後會更新 ID
-            window.currentPrize = { name: prizeName, winDate: now, expDate: exp, isRedeemed: false };
-            
-            return prizeName;
-        }
-
-        async function finishSpin() {
-            const prizeObj = window.currentPrize;
-            const prizeName = prizeObj.name;
-            const isTopPrize = prizeName.includes("1獎") || prizeName.includes("2獎") || prizeName.includes("3獎") || prizeName.includes("加碼金 $1000");
-            
-            // 更新 UI
-            document.getElementById('prize-name').innerText = prizeName;
-            document.getElementById('verification-time').innerText = `開獎：${new Date(prizeObj.winDate).toLocaleString()}`;
-            document.getElementById('expiry-date').innerText = `有效至：${new Date(prizeObj.expDate).toLocaleDateString()}`;
-            
-            if (isTopPrize) {
-                document.getElementById('slot-machine').classList.add('big-win-glow');
-                document.getElementById('prize-name').classList.add('prize-text-anim');
-                document.getElementById('top-prize-banner').classList.remove('hidden');
-                document.getElementById('normal-prize-banner').classList.add('hidden');
-                
-                const end = Date.now() + 2500, colors = ['#fbbf24', '#f59e0b', '#ec4899', '#ffffff'];
-                (function frame() {
-                    confetti({ particleCount: 4, angle: 60, spread: 65, origin: { x: 0 }, colors: colors });
-                    confetti({ particleCount: 4, angle: 120, spread: 65, origin: { x: 1 }, colors: colors });
-                    if (Date.now() < end) requestAnimationFrame(frame);
-                }());
-            } else { 
-                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); 
-                document.getElementById('top-prize-banner').classList.add('hidden');
-                document.getElementById('normal-prize-banner').classList.remove('hidden');
-            }
-
-            document.getElementById('prize-result-overlay').style.opacity = '1';
-            document.getElementById('prize-result-overlay').style.pointerEvents = 'auto';
-
-            // 寫入雲端 Firestore (Prizes collection)
-            try {
-                if(db && userId) {
-                    const docRef = await addDoc(collection(db, 'artifacts', APP_ID, 'users', userId, 'prizes'), prizeObj);
-                    prizeObj.id = docRef.id;
-                }
-            } catch(e) {
-                console.error("Save prize error", e);
-                prizeObj.id = "local-" + Date.now(); // Fallback
-            }
-
-            state.prizes.unshift(prizeObj); // 放到最前面
-            state.count++; 
-            await saveProfileData(); // 儲存次數
-            
-            window.currentPrize = null;
-
-            document.getElementById('btn-spin').classList.add('hidden');
-            document.getElementById('btn-spin').disabled = false;
-            
-            updateUI(); 
-
-            const totalMax = INITIAL_CHANCES + state.bonusCount;
-            if (state.count < totalMax) {
-                document.getElementById('btn-reset-spin').classList.remove('hidden');
-            }
-
-            isSpinning = false;
-        }
-
-        window.resetSlotMachine = () => {
-            document.getElementById('btn-reset-spin').classList.add('hidden');
-            document.getElementById('btn-spin').classList.remove('hidden');
-            
-            document.getElementById('prize-result-overlay').style.opacity = '0';
-            document.getElementById('prize-result-overlay').style.pointerEvents = 'none';
-            document.getElementById('slot-machine').classList.remove('big-win-glow');
-            
-            initReelUI();
-            updateUI();
-        };
-
-        window.shareToFriends = async () => {
-            const shareData = { title: 'Corin Beauty 官方轉轉樂活動', text: '我抽中了專屬好禮！你也快來試試好運！', url: window.location.href };
-            const grantBonus = async () => {
-                if (!state.hasSharedToday) { 
-                    state.bonusCount += SHARE_BONUS; 
-                    state.hasSharedToday = true; 
-                    await saveProfileData(); 
-                    document.getElementById('share-success-modal').classList.add('modal-active'); 
-                    updateUI(); 
-                }
-                else { showMsg("今日已領過分享獎勵囉！"); }
-            };
-            try { 
-                if (navigator.share) { await navigator.share(shareData); grantBonus(); } 
-                else { await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`); showMsg("連結已複製！"); grantBonus(); } 
-            } catch (err) { grantBonus(); }
-        };
 
         window.switchTab = (t) => {
             const isGame = t === 'game';
@@ -750,6 +643,256 @@
             if(!isGame) renderHistory();
         };
 
+        let wheelCanvas, wheelCtx;
+        function initWheelCanvas() {
+            wheelCanvas = document.getElementById('wheel-canvas');
+            wheelCtx = wheelCanvas.getContext('2d', { alpha: false });
+            // 提高解析度以適應 Retina 螢幕
+            const scale = window.devicePixelRatio || 2;
+            wheelCanvas.width = canvasSize * scale;
+            wheelCanvas.height = canvasSize * scale;
+            wheelCtx.scale(scale, scale);
+        }
+
+        // 簡化字串以適合繪製於轉盤格內
+        function formatPrizeText(text) {
+            // 嘗試取 '-' 前面的字串，或是截斷
+            let short = text;
+            if(short.includes('－')) short = short.split('－')[1] || short.split('－')[0]; // 如果有破折號，取內容
+            if(short.includes('[')) short = short.split('[')[0]; // 移除備註
+            short = short.trim();
+            if(short.length > 8) short = short.substring(0, 8) + '..';
+            return short;
+        }
+
+        function drawWheel(rotationAngle) {
+            if(!wheelCtx) return;
+            const cx = canvasSize / 2;
+            const cy = canvasSize / 2;
+            const radius = cx - 10;
+            const slices = state.prizePool.length;
+            const arc = (2 * Math.PI) / slices;
+
+            wheelCtx.fillStyle = '#ffffff';
+            wheelCtx.fillRect(0, 0, canvasSize, canvasSize);
+
+            // 繪製扇形
+            for (let i = 0; i < slices; i++) {
+                const angle = rotationAngle + i * arc;
+                wheelCtx.beginPath();
+                wheelCtx.fillStyle = WHEEL_COLORS[i % WHEEL_COLORS.length];
+                wheelCtx.moveTo(cx, cy);
+                wheelCtx.arc(cx, cy, radius, angle, angle + arc, false);
+                wheelCtx.lineTo(cx, cy);
+                wheelCtx.fill();
+                
+                // 扇形邊界線
+                wheelCtx.lineWidth = 1.5;
+                wheelCtx.strokeStyle = '#fbcfe8';
+                wheelCtx.stroke();
+
+                // 繪製文字
+                wheelCtx.save();
+                wheelCtx.translate(cx, cy);
+                // 旋轉至扇形正中央
+                wheelCtx.rotate(angle + arc / 2);
+                
+                const textColor = TEXT_COLORS[i % TEXT_COLORS.length];
+                wheelCtx.fillStyle = textColor;
+                wheelCtx.textAlign = 'right';
+                wheelCtx.textBaseline = 'middle';
+                wheelCtx.font = 'bold 12px "Noto Sans TC", sans-serif';
+                
+                const text = formatPrizeText(state.prizePool[i].name);
+                wheelCtx.fillText(text, radius - 15, 0);
+                wheelCtx.restore();
+            }
+            
+            // 外圈裝飾邊界
+            wheelCtx.beginPath();
+            wheelCtx.arc(cx, cy, radius, 0, 2 * Math.PI, false);
+            wheelCtx.lineWidth = 4;
+            wheelCtx.strokeStyle = '#fbcfe8';
+            wheelCtx.stroke();
+            
+            // 內圈鉚釘裝飾 (賭場風)
+            for(let i = 0; i < slices * 2; i++) {
+                const dotAngle = rotationAngle + i * (Math.PI / slices);
+                const dotX = cx + Math.cos(dotAngle) * (radius - 5);
+                const dotY = cy + Math.sin(dotAngle) * (radius - 5);
+                wheelCtx.beginPath();
+                wheelCtx.arc(dotX, dotY, 2, 0, 2 * Math.PI);
+                wheelCtx.fillStyle = '#f9a8d4';
+                wheelCtx.fill();
+            }
+        }
+
+        // 緩動函數 (Ease Out Quart) - 讓轉盤慢慢停下
+        function easeOutQuart(t) { return 1 - (--t) * t * t * t; }
+
+        window.startSpin = async () => {
+            if (isSpinning) return;
+            if (state.count >= INITIAL_CHANCES) { updateUI(); return; }
+
+            isSpinning = true;
+            document.getElementById('btn-spin').disabled = true;
+            document.getElementById('prize-result-overlay').style.opacity = '0';
+            document.getElementById('wheel-container').classList.remove('scale-105', 'shadow-2xl');
+            
+            // 依權重抽取獎項
+            const { prizeName, prizeIndex } = preparePrize();
+            
+            // 計算目標角度
+            const slices = state.prizePool.length;
+            const arc = (2 * Math.PI) / slices;
+            
+            // 指針位於頂部，在 Canvas 中對應的角度是 -Math.PI / 2 (即 270 度)
+            // 為了讓第 index 個獎項的中心點停在頂端：
+            // 當前畫法：第 index 個扇形的起點是 rotation + index*arc。中心點是 rotation + index*arc + arc/2。
+            // 目標：(rotation + index*arc + arc/2) % 2PI === -Math.PI/2 (or 3PI/2)
+            // 推導出所需的目標 Base Rotation: (-Math.PI/2) - (index*arc + arc/2)
+            
+            const targetBaseRotation = (-Math.PI / 2) - (prizeIndex * arc + arc / 2);
+            // 加上 8 圈完整的旋轉 (8 * 2PI)
+            const extraSpins = 8 * 2 * Math.PI;
+            
+            // 計算需要旋轉的相對增量
+            // 要考慮目前的 currentRotation，確保是往正向旋轉
+            let targetRotation = extraSpins + targetBaseRotation;
+            // 修正到相對 currentRotation 的絕對位置
+            let remainder = currentRotation % (2 * Math.PI);
+            targetRotation += (currentRotation - remainder);
+            if (targetRotation < currentRotation + extraSpins) {
+                targetRotation += 2 * Math.PI;
+            }
+
+            const duration = 6500; // 動畫時長 6.5 秒
+            const startRotation = currentRotation;
+            const startTime = performance.now();
+
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime;
+                if (elapsed >= duration) {
+                    currentRotation = targetRotation;
+                    drawWheel(currentRotation);
+                    finishSpin();
+                    return;
+                }
+                
+                const progress = easeOutQuart(elapsed / duration);
+                currentRotation = startRotation + (targetRotation - startRotation) * progress;
+                drawWheel(currentRotation);
+                requestAnimationFrame(animate);
+            }
+            requestAnimationFrame(animate);
+        };
+
+        function preparePrize() {
+            const totalWeight = state.prizePool.reduce((sum, p) => sum + Number(p.weight), 0);
+            let random = Math.random() * totalWeight;
+            let prizeIndex = 0;
+            let prizeName = state.prizePool[0].name;
+            
+            for (let i = 0; i < state.prizePool.length; i++) { 
+                if (random < state.prizePool[i].weight) { 
+                    prizeName = state.prizePool[i].name; 
+                    prizeIndex = i;
+                    break; 
+                } 
+                random -= state.prizePool[i].weight; 
+            }
+            
+            const now = Date.now(), exp = now + (EXPIRY_DAYS * 86400000);
+            window.currentPrize = { name: prizeName, winDate: now, expDate: exp, isRedeemed: false };
+            return { prizeName, prizeIndex };
+        }
+
+        async function finishSpin() {
+            const prizeObj = window.currentPrize;
+            const prizeName = prizeObj.name;
+            const isTopPrize = prizeName.includes("1獎") || prizeName.includes("2獎") || prizeName.includes("3獎") || prizeName.includes("加碼金 $1000");
+            
+            document.getElementById('prize-name').innerText = prizeName;
+            document.getElementById('verification-time').innerText = `開獎：${new Date(prizeObj.winDate).toLocaleString()}`;
+            document.getElementById('expiry-date').innerText = `有效至：${new Date(prizeObj.expDate).toLocaleDateString()}`;
+            
+            const overlay = document.getElementById('prize-result-overlay');
+            overlay.classList.remove('scale-95');
+            overlay.classList.add('scale-100');
+            
+            if (isTopPrize) {
+                document.getElementById('wheel-container').classList.add('big-win-glow');
+                document.getElementById('prize-name').classList.add('prize-text-anim');
+                document.getElementById('top-prize-banner').classList.remove('hidden');
+                document.getElementById('normal-prize-banner').classList.add('hidden');
+                
+                const end = Date.now() + 2500, colors = ['#fbbf24', '#f59e0b', '#ec4899', '#ffffff'];
+                (function frame() {
+                    confetti({ particleCount: 5, angle: 60, spread: 65, origin: { x: 0 }, colors: colors });
+                    confetti({ particleCount: 5, angle: 120, spread: 65, origin: { x: 1 }, colors: colors });
+                    if (Date.now() < end) requestAnimationFrame(frame);
+                }());
+            } else { 
+                confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 } }); 
+                document.getElementById('top-prize-banner').classList.add('hidden');
+                document.getElementById('normal-prize-banner').classList.remove('hidden');
+            }
+
+            overlay.style.opacity = '1';
+            overlay.style.pointerEvents = 'auto';
+
+            state.count++; 
+            
+            try {
+                if(db && userId) {
+                    // 1. 寫入個人獎項庫
+                    const docRef = await addDoc(collection(db, 'artifacts', APP_ID, 'users', userId, 'prizes'), prizeObj);
+                    prizeObj.id = docRef.id;
+                    
+                    // 2. 寫入全域日誌 (供管理員統計查看)
+                    await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'spin_logs'), {
+                        name: memberName,
+                        phone: memberPhone,
+                        prizeName: prizeObj.name,
+                        timestamp: prizeObj.winDate,
+                        countUsed: state.count
+                    });
+                }
+            } catch(e) {
+                console.error("Save prize error", e);
+                prizeObj.id = "local-" + Date.now(); 
+            }
+
+            state.prizes.unshift(prizeObj); 
+            await saveProfileData(); 
+            window.currentPrize = null;
+
+            document.getElementById('btn-spin').classList.add('hidden');
+            document.getElementById('btn-spin').disabled = false;
+            
+            updateUI(); 
+
+            if (state.count < INITIAL_CHANCES) {
+                document.getElementById('btn-reset-spin').classList.remove('hidden');
+            }
+
+            isSpinning = false;
+        }
+
+        window.resetWheelUI = () => {
+            document.getElementById('btn-reset-spin').classList.add('hidden');
+            document.getElementById('btn-spin').classList.remove('hidden');
+            
+            const overlay = document.getElementById('prize-result-overlay');
+            overlay.style.opacity = '0';
+            overlay.style.pointerEvents = 'none';
+            overlay.classList.remove('scale-100');
+            overlay.classList.add('scale-95');
+            
+            document.getElementById('wheel-container').classList.remove('big-win-glow');
+            updateUI();
+        };
+
         function renderHistory() {
             const list = document.getElementById('history-list'); list.innerHTML = ''; const now = Date.now();
             const valid = state.prizes.filter(p => !p.isRedeemed && now <= p.expDate), invalid = state.prizes.filter(p => p.isRedeemed || now > p.expDate);
@@ -758,10 +901,20 @@
             
             const createSection = (title, items, isInv) => {
                 if (items.length === 0) return '';
-                let html = `<div class="mb-8"><div class="flex items-center gap-2 mb-3"><div class="h-4 w-1 rounded-full ${isInv ? 'bg-gray-300' : 'bg-pink-500'}"></div><h3 class="text-xs font-black ${isInv ? 'text-gray-400' : 'text-gray-800'} uppercase tracking-widest">${title}</h3></div>`;
+                let html = `<div class="mb-6"><div class="flex items-center gap-2 mb-3"><div class="h-4 w-1 rounded-full ${isInv ? 'bg-gray-300' : 'bg-pink-500'}"></div><h3 class="text-xs font-black ${isInv ? 'text-gray-400' : 'text-gray-800'} uppercase tracking-widest">${title}</h3></div>`;
                 items.forEach(p => {
                     const isExp = now > p.expDate && !p.isRedeemed;
-                    html += `<div class="p-4 rounded-2xl border mb-3 transition-all ${p.isRedeemed || isExp ? 'bg-gray-50 border-gray-100 opacity-70' : 'bg-white border-pink-100 shadow-sm'}"><div class="flex justify-between items-start mb-1"><span class="text-[9px] text-gray-400 font-mono">ID: ${p.id ? p.id.substring(0,8) : '---'}</span><span class="text-[10px] font-bold ${p.isRedeemed ? 'text-gray-400' : (isExp ? 'text-rose-400' : 'text-emerald-500')}">${p.isRedeemed ? '已使用' : (isExp ? '已逾期' : '有效')}</span></div><div class="font-bold text-gray-800 text-sm mb-2">${p.name}</div><div class="flex justify-between items-end"><span class="text-[9px] text-gray-400">有效至：${new Date(p.expDate).toLocaleDateString()}</span>${(!p.isRedeemed && !isExp) ? `<button onclick="redeem('${p.id}')" class="px-4 py-1.5 bg-pink-600 text-white rounded-lg text-xs font-bold shadow-md">兌換</button>` : ''}</div></div>`;
+                    html += `<div class="p-4 rounded-2xl border mb-3 transition-all ${p.isRedeemed || isExp ? 'bg-gray-50 border-gray-100 opacity-70' : 'bg-white border-pink-100 shadow-sm'}">
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="text-[9px] text-gray-400 font-mono">ID: ${p.id ? p.id.substring(0,8) : '---'}</span>
+                            <span class="text-[10px] font-bold ${p.isRedeemed ? 'text-gray-400' : (isExp ? 'text-rose-400' : 'text-emerald-500')}">${p.isRedeemed ? '已使用' : (isExp ? '已逾期' : '有效')}</span>
+                        </div>
+                        <div class="font-bold text-gray-800 text-sm mb-2">${p.name}</div>
+                        <div class="flex justify-between items-end">
+                            <span class="text-[9px] text-gray-400">有效至：${new Date(p.expDate).toLocaleDateString()}</span>
+                            ${(!p.isRedeemed && !isExp) ? `<button onclick="redeem('${p.id}')" class="px-4 py-1.5 bg-pink-600 text-white rounded-lg text-xs font-bold shadow-md active:scale-95">兌換</button>` : ''}
+                        </div>
+                    </div>`;
                 });
                 return html + '</div>';
             };
@@ -773,57 +926,102 @@
             document.getElementById('redeem-confirm-modal').classList.add('modal-active');
             document.getElementById('confirm-redeem-btn').onclick = async () => { 
                 p.isRedeemed = true; 
-                // 更新雲端
                 try {
                     if(db && userId && id) await updateDoc(doc(db, 'artifacts', APP_ID, 'users', userId, 'prizes', id), { isRedeemed: true });
                 } catch(e){ console.error(e) }
-                
                 renderHistory(); closeModal('redeem-confirm-modal'); 
             };
         };
 
-        window.openAdmin = (mode) => {
-            currentAdminMode = mode;
+        window.openAdminDashboard = () => {
             document.getElementById('admin-pass').value = "";
-            document.getElementById('admin-modal-title').innerText = mode === 'reset' ? "管理員重置次數" : "雲端獎項後台登入";
-            document.getElementById('admin-modal').classList.add('modal-active');
+            document.getElementById('admin-auth-modal').classList.add('modal-active');
         };
 
-        window.verifyAdmin = async () => {
-            if (document.getElementById('admin-pass').value === "1016") {
-                closeModal('admin-modal');
-                if (currentAdminMode === 'reset') {
-                    state.count = 0; state.bonusCount = 0; state.hasSharedToday = false; 
-                    await saveProfileData(); 
-                    resetSlotMachine(); 
-                    updateUI(); 
-                    showMsg("✅ 次數已為該帳號重置歸零！");
+        window.verifyAdmin = () => {
+            if (document.getElementById('admin-pass').value === ADMIN_PASS) {
+                closeModal('admin-auth-modal');
+                document.getElementById('admin-dashboard-modal').classList.add('modal-active');
+                switchAdminTab('stats'); 
+            } else { 
+                showMsg("❌ 密碼錯誤"); 
+            }
+        };
+
+        window.switchAdminTab = (tab) => {
+            const tabs = ['stats', 'prizes', 'users', 'members'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-admin-${t}`);
+                const page = document.getElementById(`admin-page-${t}`);
+                if (t === tab) {
+                    btn.className = "whitespace-nowrap px-3 py-2 text-xs font-bold rounded-lg bg-pink-50 text-pink-600 transition-colors";
+                    page.classList.remove('hidden');
                 } else {
-                    openPrizeAdmin();
+                    btn.className = "whitespace-nowrap px-3 py-2 text-xs font-bold rounded-lg text-gray-400 transition-colors";
+                    page.classList.add('hidden');
                 }
-            } else { showMsg("❌ 密碼錯誤"); }
+            });
+
+            if (tab === 'prizes') renderPrizeManageList();
+            if (tab === 'stats') loadGlobalStats();
+            if (tab === 'members') loadMembersAdmin();
         };
 
-        function openPrizeAdmin() {
-            renderPrizeManageList();
-            document.getElementById('prize-admin-modal').classList.add('modal-active');
-        }
+        // 讀取全站抽獎紀錄
+        window.loadGlobalStats = async () => {
+            const tbody = document.getElementById('stats-table-body');
+            tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400 font-bold">資料抓取中...</td></tr>';
+            try {
+                if(!db) throw new Error("DB not ready");
+                const q = query(collection(db, 'artifacts', APP_ID, 'public', 'spin_logs'));
+                const snap = await getDocs(q);
+                let logs = snap.docs.map(d => d.data());
+                
+                // JS 記憶體中排序 (最新在前)
+                logs.sort((a,b) => b.timestamp - a.timestamp);
+                
+                if (logs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400">目前尚無抽獎紀錄</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = '';
+                logs.forEach(log => {
+                    const dateObj = new Date(log.timestamp);
+                    const timeStr = `${dateObj.getMonth()+1}/${dateObj.getDate()} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
+                    
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-pink-50/50 transition-colors border-b border-gray-50 last:border-0";
+                    tr.innerHTML = `
+                        <td class="p-3 text-[10px] text-gray-400 font-mono">${timeStr}</td>
+                        <td class="p-3 text-[11px] font-bold text-gray-700">${maskName(log.name)}</td>
+                        <td class="p-3 text-[11px] font-mono text-gray-500">${log.phone}</td>
+                        <td class="p-3 text-[11px] text-center text-pink-500 font-bold">${log.countUsed}</td>
+                        <td class="p-3 text-[11px] text-gray-800 font-medium truncate max-w-[120px]" title="${log.prizeName}">${log.prizeName}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch(e) {
+                console.error("Load stats error", e);
+                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-rose-400">無法讀取資料</td></tr>';
+            }
+        };
 
+        // 獎項管理區塊
         function renderPrizeManageList() {
             const container = document.getElementById('prize-manage-list');
             container.innerHTML = '';
             state.prizePool.forEach((p, index) => {
                 const div = document.createElement('div');
-                div.className = "flex items-center gap-2 bg-white border border-gray-100 p-2 rounded-xl";
+                div.className = "flex items-center gap-2 bg-gray-50 p-2 rounded-xl";
                 div.innerHTML = `
-                    <span class="flex-1 text-[11px] font-bold truncate">${p.name}</span>
-                    <input type="number" onchange="updatePrizeWeight(${index}, this.value)" value="${p.weight}" class="w-12 text-center border-b border-pink-200 text-[11px]" title="權重">
-                    <button onclick="deletePrize(${index})" class="text-rose-400 font-bold px-2">✕</button>
+                    <span class="flex-1 text-[11px] font-bold truncate text-gray-700">${p.name}</span>
+                    <input type="number" onchange="updatePrizeWeight(${index}, this.value)" value="${p.weight}" class="w-12 text-center border-b border-pink-200 text-[11px] bg-transparent outline-none font-bold text-pink-600" title="權重">
+                    <button onclick="deletePrize(${index})" class="text-rose-400 font-bold px-2 hover:bg-rose-100 rounded">✕</button>
                 `;
                 container.appendChild(div);
             });
         }
-
         window.updatePrizeWeight = (idx, val) => { state.prizePool[idx].weight = Number(val); };
         window.deletePrize = (idx) => { if(state.prizePool.length <= 1) return showMsg("至少需保留一個獎項"); state.prizePool.splice(idx, 1); renderPrizeManageList(); };
         window.addPrizeToPool = () => {
@@ -833,20 +1031,93 @@
             document.getElementById('new-prize-name').value = ''; document.getElementById('new-prize-weight').value = '';
             renderPrizeManageList();
         };
-        
         window.saveAndClosePrizeAdmin = async () => { 
             const btn = document.getElementById('btn-save-admin');
             btn.innerHTML = `<div class="loading-spinner w-5 h-5 border-white border-t-transparent mx-auto"></div>`;
             try {
                 if(db) await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'config'), { prizePool: state.prizePool }, { merge: true });
-                closeModal('prize-admin-modal'); 
+                drawWheel(currentRotation); // 更新畫面轉盤
                 showMsg("✅ 雲端獎項機率已成功同步");
+            } catch(e) { console.error(e); showMsg("❌ 儲存失敗"); } 
+            finally { btn.innerHTML = `同步儲存設定`; }
+        };
+
+        // 會員庫管理邏輯
+        window.loadMembersAdmin = async () => {
+            const tbody = document.getElementById('members-table-body');
+            tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-400 font-bold">資料抓取中...</td></tr>';
+            try {
+                if(!db) throw new Error("DB not ready");
+                const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'members'));
+                const snap = await getDocs(q);
+                let members = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                
+                if (members.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-400">目前尚無會員資料</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = '';
+                members.forEach(m => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-pink-50/50 transition-colors border-b border-gray-50 last:border-0";
+                    tr.innerHTML = `
+                        <td class="p-3 text-[11px] font-bold text-gray-700">${m.name}</td>
+                        <td class="p-3 text-[11px] font-mono text-gray-500">${m.phone}</td>
+                        <td class="p-3 text-right">
+                            <button onclick="deleteMemberAdmin('${m.id}')" class="text-rose-400 hover:text-rose-600 font-bold px-2 py-1 bg-rose-50 rounded">刪除</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch(e) {
+                console.error("Load members error", e);
+                tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-rose-400">無法讀取資料</td></tr>';
+            }
+        };
+
+        window.addMemberAdmin = async () => {
+            const name = document.getElementById('new-member-name').value.trim();
+            const phone = document.getElementById('new-member-phone').value.trim();
+            if(!name || !phone) return showMsg("請輸入姓名與電話");
+            
+            try {
+                if(db) {
+                    await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'members'), {
+                        name: name,
+                        phone: phone,
+                        createdAt: Date.now()
+                    });
+                    document.getElementById('new-member-name').value = '';
+                    document.getElementById('new-member-phone').value = '';
+                    loadMembersAdmin();
+                    showMsg("✅ 新增會員成功");
+                }
             } catch(e) {
                 console.error(e);
-                showMsg("❌ 儲存失敗");
-            } finally {
-                btn.innerHTML = `<span>同步至雲端資料庫並關閉</span>`;
+                showMsg("❌ 新增失敗");
             }
+        };
+
+        window.deleteMemberAdmin = async (docId) => {
+            try {
+                if(db) {
+                    await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'members', docId));
+                    loadMembersAdmin();
+                }
+            } catch(e) {
+                console.error(e);
+                showMsg("❌ 刪除失敗");
+            }
+        };
+
+        // 當前玩家次數重置
+        window.adminResetCurrentUser = async () => {
+            state.count = 0;
+            await saveProfileData(); 
+            resetWheelUI(); 
+            updateUI(); 
+            showMsg("✅ 此裝置玩家次數已歸零，可重新抽獎！");
         };
 
         window.showMsg = (text) => { document.getElementById('msg-text').innerText = text; document.getElementById('msg-modal').classList.add('modal-active'); };
