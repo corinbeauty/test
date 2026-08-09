@@ -6,7 +6,7 @@
     <title>Corin Beauty - 幸運轉轉樂</title>
     
     <!-- 引入字體、Tailwind 與特效套件 -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Playfair+Display:ital,wght@0,700;1,700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&family=Playfair+Display:ital,wght@0,700;1,700&family=Montserrat:wght@300;400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
@@ -55,7 +55,7 @@
         .wheel-canvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 10px 25px rgba(176, 141, 119, 0.2); border: 4px solid #fff; transition: transform cubic-bezier(0.17, 0.67, 0.12, 0.99); }
         .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 36px; height: 42px; background: #b08d77; clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 10; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
         
-        /* SVG LOGO 樣式 */
+        /* SVG LOGO 樣式 (純手工繪製路徑) */
         .cr-logo-svg { width: 100%; height: auto; display: block; }
         .cr-path { fill: #b08d77; }
         .cr-text { fill: #b08d77; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 300; letter-spacing: 0.4em; }
@@ -69,10 +69,10 @@
             border: 3px solid #fdf6e3; z-index: 5;
         }
 
-        /* 浮水印背景 */
+        /* 浮水印背景 (精美中獎畫面) */
         .watermark-bg {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 150%; opacity: 0.04; pointer-events: none; z-index: 0;
+            width: 150%; opacity: 0.05; pointer-events: none; z-index: 0;
         }
 
         .btn-navy { background-color: #181829; color: white; transition: all 0.2s ease; }
@@ -81,20 +81,18 @@
 </head>
 <body class="flex flex-col items-center justify-center p-4 relative overflow-hidden">
 
-    <!-- 隱藏的 SVG 定義，供全站複用 -->
     <svg width="0" height="0" class="hidden">
         <defs>
             <g id="cr-logo-graphic">
                 <!-- C 的彎月 (微調平滑度) -->
                 <path d="M 60,20 C 20,20 15,90 60,110 C 35,95 30,35 60,20 Z" class="cr-path"/>
-                <!-- R 的左側直線與右側曲線 (相連調整) -->
-                <path d="M 65,20 L 78,20 C 78,20 68,55 78,110 L 65,110 C 65,110 75,55 65,20 Z" class="cr-path"/>
-                <path d="M 78,20 C 115,20 120,60 90,70 C 105,75 130,95 135,110 L 115,110 C 110,100 100,85 85,85 L 75,85 C 75,85 80,50 78,20 Z M 77,30 C 75,55 75,65 82,65 C 95,65 100,35 85,30 C 82,29 78,29 77,30 Z" class="cr-path"/>
+                <!-- R 的左側直線與右側曲線 (向左平移結合) -->
+                <path d="M 60,20 L 73,20 C 73,20 63,55 73,110 L 60,110 C 60,110 70,55 60,20 Z" class="cr-path"/>
+                <path d="M 73,20 C 110,20 115,60 85,70 C 100,75 125,95 130,110 L 110,110 C 105,100 95,85 80,85 L 70,85 C 70,85 75,50 73,20 Z M 72,30 C 70,55 70,65 77,65 C 90,65 95,35 80,30 C 77,29 73,29 72,30 Z" class="cr-path"/>
             </g>
         </defs>
     </svg>
 
-    <!-- 全域 Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-white/90 z-[999] flex flex-col items-center justify-center backdrop-blur-sm">
         <div class="mb-6">
             <svg class="animate-spin h-12 w-12 text-pink-400 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -105,14 +103,13 @@
         <p class="text-pulse-pink font-bold tracking-widest text-sm">連線至Corin Beauty伺服器中...</p>
     </div>
 
-    <!-- 登入卡片視窗 -->
     <div id="login-view" class="w-full max-w-sm relative z-50 flex flex-col hidden">
         <div class="glow-card p-10 text-center flex flex-col items-center">
             <!-- 帶入 SVG LOGO -->
             <div class="w-40 mb-2">
                 <svg viewBox="0 0 150 140" class="cr-logo-svg">
                     <use href="#cr-logo-graphic" x="5" y="0"></use>
-                    <text x="75" y="135" text-anchor="middle" class="cr-text">HAIR REMOVAL</text>
+                    <text x="70" y="135" text-anchor="middle" class="cr-text">HAIR REMOVAL</text>
                 </svg>
             </div>
             
@@ -136,7 +133,6 @@
         </div>
     </div>
 
-    <!-- 主遊戲畫面 -->
     <div id="main-app" class="w-full max-w-md hidden flex-col relative z-50 min-h-[90vh]">
         
         <div class="bg-white/90 backdrop-blur-md rounded-[2rem] shadow-2xl p-6 border border-[#fdf6e3] flex flex-col flex-1 relative overflow-hidden">
@@ -156,7 +152,6 @@
                 </div>
             </div>
 
-            <!-- 轉盤區塊 -->
             <div id="view-game" class="flex-1 flex flex-col items-center relative z-10">
                 <div class="text-center mb-4">
                     <p class="text-sm font-bold text-gray-500">請點擊下方按鈕啟動轉盤</p>
@@ -170,7 +165,7 @@
                     <div class="wheel-center-logo">
                         <svg viewBox="0 0 150 140" class="w-[85%] mt-1">
                             <use href="#cr-logo-graphic" x="5" y="0"></use>
-                            <text x="75" y="135" text-anchor="middle" class="cr-text" style="font-size: 16px;">HAIR REMOVAL</text>
+                            <text x="70" y="135" text-anchor="middle" class="cr-text" style="font-size: 16px;">HAIR REMOVAL</text>
                         </svg>
                     </div>
                 </div>
@@ -180,14 +175,16 @@
                         START 立即抽獎
                     </button>
                     <div class="text-center pt-2">
-                        <a href="https://liff.line.me/2010909434-eVswjkpc" target="_blank" class="text-[#b08d77] font-bold text-sm hover:underline decoration-2 underline-offset-4">預約專屬課程 ➔</a>
+                        <a href="https://liff.line.me/2010909434-eVswjkpc" target="_blank" class="text-[#b08d77] font-bold text-sm hover:underline decoration-2 underline-offset-4">手刀預約專屬課程 ➔</a>
                     </div>
                 </div>
             </div>
 
-            <!-- 紀錄區塊 -->
             <div id="view-history" class="hidden flex-1 flex flex-col relative z-10">
-                <h2 class="text-lg font-black text-[#181829] mb-3">我的中獎紀錄</h2>
+                <div class="flex justify-between items-end mb-3">
+                    <h2 class="text-lg font-black text-[#181829]">我的中獎紀錄</h2>
+                    <div id="history-user-info" class="text-xs text-[#b08d77] font-bold tracking-wider"></div>
+                </div>
                 <div class="bg-amber-50 text-amber-700 rounded-xl p-3 mb-4 text-[10px] font-bold shadow-inner border border-amber-100">
                     ⚠️ 獎項逾期失效，單次消費限用一項優惠，不可重複折抵。請由現場人員點擊核銷。
                 </div>
@@ -200,15 +197,12 @@
         
         <!-- 頁尾資訊 -->
         <div class="mt-6 text-center">
-            <div class="flex justify-center items-center gap-2 mb-2">
-                <span id="display-user-phone" class="text-[10px] text-gray-500 font-mono bg-white px-2 py-0.5 rounded-full shadow-sm border border-gray-100">User: ----</span>
-            </div>
+            <!-- 移除電話顯示，僅保留版權 -->
             <p onclick="openAdminModal()" class="text-[10px] text-gray-400 font-bold tracking-widest uppercase cursor-pointer hover:text-[#b08d77] mb-1">System By Corin</p>
             <p class="text-[9px] text-gray-400">原點數位科技 © 2026 All rights reserved.</p>
         </div>
     </div>
 
-    <!-- 查無會員提示框 -->
     <div id="not-found-modal" class="fixed inset-0 bg-black/60 z-[200] hidden items-center justify-center p-6 backdrop-blur-sm">
         <div class="bg-white rounded-[2rem] p-8 max-w-xs w-full text-center shadow-2xl border border-amber-100 relative overflow-hidden">
             <div class="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full blur-2xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
@@ -224,7 +218,6 @@
         </div>
     </div>
 
-    <!-- 今日次數已滿提示框 -->
     <div id="limit-modal" class="fixed inset-0 bg-black/60 z-[200] hidden items-center justify-center p-6 backdrop-blur-sm">
         <div class="bg-white rounded-[2rem] p-8 max-w-xs w-full text-center shadow-2xl border border-amber-100">
             <div class="w-16 h-16 bg-amber-50 text-[#b08d77] rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-inner">⏰</div>
@@ -234,9 +227,8 @@
         </div>
     </div>
 
-    <!-- 中獎結果展示覆蓋層 -->
     <div id="result-overlay" class="fixed inset-0 bg-white/95 z-[150] hidden flex-col items-center justify-center p-6 backdrop-blur-md">
-        <!-- SVG 浮水印 -->
+        <!-- SVG 精美浮水印 -->
         <div class="watermark-bg">
             <svg viewBox="0 0 150 140" class="w-full h-full opacity-30 grayscale">
                 <use href="#cr-logo-graphic" x="5" y="0"></use>
@@ -256,7 +248,6 @@
         </div>
     </div>
 
-    <!-- 二次確認彈窗 (共用) -->
     <div id="confirm-modal" class="fixed inset-0 bg-black/60 z-[250] hidden items-center justify-center p-6 backdrop-blur-sm">
         <div class="bg-white rounded-[2rem] p-8 max-w-xs w-full text-center shadow-2xl">
             <div id="confirm-icon" class="w-16 h-16 bg-amber-50 text-[#d97706] rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">⚠️</div>
@@ -269,7 +260,6 @@
         </div>
     </div>
 
-    <!-- 管理員驗證 -->
     <div id="admin-auth-modal" class="fixed inset-0 bg-black/80 z-[300] hidden items-center justify-center p-6 backdrop-blur-md">
         <div class="bg-white rounded-[2rem] p-8 max-w-xs w-full text-center shadow-2xl">
             <h3 class="text-xl font-black text-[#181829] mb-4">管理員驗證</h3>
@@ -281,7 +271,6 @@
         </div>
     </div>
 
-    <!-- 管理員全能後台 -->
     <div id="admin-dashboard" class="fixed inset-0 bg-gray-50 z-[250] hidden flex-col">
         <div class="bg-white px-4 py-3 border-b border-gray-200 flex justify-between items-center shadow-sm z-10">
             <h2 class="font-black text-[#181829] text-lg">全能管理後台</h2>
@@ -339,9 +328,13 @@
 
             <!-- 會員庫頁 -->
             <div id="adm-view-members" class="hidden space-y-4">
+                <div class="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100 mb-2">
+                    <h3 class="font-bold text-gray-800 text-sm">會員資料庫</h3>
+                    <div class="text-[10px] bg-[#b08d77] text-white px-3 py-1.5 rounded-md font-bold shadow-sm">總計: <span id="admin-member-count">0</span> 人</div>
+                </div>
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                     <div class="flex gap-2 mb-2">
-                        <input type="tel" id="new-member-phone" class="flex-1 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100 text-sm outline-none" placeholder="新會員手機 (10碼)" maxlength="10">
+                        <input type="tel" id="new-member-phone" class="flex-1 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100 text-sm outline-none" placeholder="新手機 (10碼)" maxlength="10">
                         <input type="text" id="new-member-name" class="flex-1 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100 text-sm outline-none" placeholder="姓名">
                     </div>
                     <button onclick="addMember()" class="w-full bg-[#181829] text-white py-2 rounded-lg text-sm font-bold">新增會員至資料庫</button>
@@ -373,26 +366,6 @@
         const MAX_DAILY_CHANCE = 3;
         const EXPIRY_DAYS = 7;
         
-        // 預設獎項 (當資料庫為空時自動載入)
-        const DEFAULT_PRIZE_POOL = [
-            { name: "1獎－當日當次消費 5 折 [以原價總額計算]", weight: 2, isHidden: false },
-            { name: "2獎－當日當次消費 7 折 [以原價總額計算]", weight: 4, isHidden: false },
-            { name: "3獎－當日當次消費 75 折 [以原價總額計算]", weight: 4, isHidden: false },
-            { name: "4獎－暗沉掰掰單部位三堂 $899 [原價1399]", weight: 30, isHidden: false },
-            { name: "5獎－腋下除毛一堂優惠價 $99 [限新客]", weight: 50, isHidden: false },
-            { name: "6獎－免費除毛專用乳液 50ml [價值239]", weight: 2, isHidden: false },
-            { name: "7獎－現折 100 元", weight: 70, isHidden: false },
-            { name: "8獎－現折 50 元", weight: 80, isHidden: false },
-            { name: "9獎－靚顏深層護膚課程 $899", weight: 40, isHidden: false },
-            { name: "10獎－睫毛管理 $699", weight: 40, isHidden: false },
-            { name: "儲值加碼金 $500", weight: 20, isHidden: false },
-            { name: "儲值加碼金 $600", weight: 15, isHidden: false },
-            { name: "儲值加碼金 $700", weight: 10, isHidden: false },
-            { name: "儲值加碼金 $800", weight: 8, isHidden: false },
-            { name: "儲值加碼金 $900", weight: 5, isHidden: false },
-            { name: "儲值加碼金 $1000", weight: 3, isHidden: false }
-        ];
-
         let app, auth, db;
         let state = {
             phone: '', name: '',
@@ -439,10 +412,10 @@
             if (snap.exists() && snap.data().prizepool && snap.data().prizepool.length > 0) {
                 state.prizePool = snap.data().prizepool;
             } else {
-                state.prizePool = [...DEFAULT_PRIZE_POOL];
-                await setDoc(docRef, { prizepool: state.prizePool }, { merge: true });
+                // 如果後台無資料，則載入空陣列
+                state.prizePool = []; 
             }
-            // 過濾並打亂順序
+            // 隨機打亂轉盤格子順序
             let active = state.prizePool.filter(p => !p.isHidden);
             state.displayPrizes = active.sort(() => Math.random() - 0.5);
         }
@@ -470,7 +443,6 @@
                 document.getElementById('login-view').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
                 document.getElementById('main-app').classList.add('flex');
-                document.getElementById('display-user-phone').innerText = `User: ${phone}`;
                 
                 initWheel();
                 updateUserUI();
@@ -497,7 +469,6 @@
                     state.todayPlayed++;
                 }
             });
-            // 根據日期排序 (新到舊)
             state.userHistory.sort((a, b) => b.winDate - a.winDate);
         }
 
@@ -511,6 +482,11 @@
                 dot.className = `w-1.5 h-1.5 rounded-full ${i < remain ? 'bg-[#b08d77]' : 'bg-gray-200'}`;
                 dots.appendChild(dot);
             }
+            
+            // 姓名與電話遮蔽顯示於我的紀錄右側
+            const nameMask = state.name ? (state.name.length >= 2 ? state.name[0] + '＊' + (state.name[2] || '') : state.name) : '未知';
+            const infoEl = document.getElementById('history-user-info');
+            if(infoEl) infoEl.innerText = `${nameMask} | ${state.phone}`;
             
             // 判斷是否達上限
             const btn = document.getElementById('btn-spin');
@@ -564,26 +540,18 @@
                 ctx.fill();
                 ctx.save();
                 
+                // 將畫布旋轉至該格的正中央
                 ctx.rotate(i * arc + arc / 2);
                 
-                // 雙色文字交錯
+                // 雙色文字交錯，並與雙軌線平行排版 (向外輻射)
                 ctx.fillStyle = i % 2 === 0 ? '#b08d77' : '#d97706';
                 ctx.font = '900 12px "Noto Sans TC", sans-serif';
-                ctx.textAlign = 'center';
+                ctx.textAlign = 'right';
                 ctx.textBaseline = 'middle';
                 
                 let text = state.displayPrizes[i].name;
-                let lines = [];
-                // 智慧斷行
-                for(let j=0; j<text.length; j+=6) { lines.push(text.substring(j, j+6)); }
-                
-                const lineHeight = 16;
-                const totalTextHeight = lines.length * lineHeight;
-                let startY = -(radius * 0.72) - (totalTextHeight / 2) + (lineHeight / 2);
-                
-                lines.forEach((line, idx) => {
-                    ctx.fillText(line, 0, startY + (idx * lineHeight));
-                });
+                // 設定 maxWidth 將過長文字完美縮放在格子內
+                ctx.fillText(text, radius - 15, 0, radius - 60);
                 
                 ctx.restore();
             }
@@ -616,14 +584,12 @@
             }
             
             const arc = (Math.PI * 2) / state.displayPrizes.length;
-            // 計算停止角度 (轉至少 5 圈)
             const spinAngle = (Math.PI * 2 * 5) + (Math.PI * 1.5) - (winIdx * arc) - (arc / 2);
             
             const startAngle = currentAngle;
             const duration = 4000;
             const startTime = performance.now();
             
-            // Ease-out 動畫函數
             const easeOut = (t) => 1 - Math.pow(1 - t, 4);
             
             function animateWheel(now) {
@@ -656,19 +622,19 @@
             
             showLoading();
             try {
-                // 1. 強制建立上層文件 (確保路徑存在避免報錯)
+                // 1. 強制建立個人上層文件
                 await setDoc(doc(db, 'artifacts', APP_ID, 'users', state.phone), { lastActive: now, name: state.name }, { merge: true });
                 
                 // 2. 寫入個人資料夾
                 const docRef = await addDoc(collection(db, 'artifacts', APP_ID, 'users', state.phone, 'prizes'), prizeRecord);
                 prizeRecord.id = docRef.id;
                 
-                // 3. 寫入全站日誌
+                // 3. 寫入全站日誌 (獨立區塊防報錯)
                 await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs'), {
                     ...prizeRecord,
                     phone: state.phone,
                     name: state.name,
-                    userId: state.phone // 以手機為ID
+                    userId: state.phone
                 });
                 
                 // 更新本地狀態
@@ -686,7 +652,7 @@
                 
             } catch(err) {
                 console.error("Write DB Error:", err);
-                showToast("連線存檔異常，請通知管理員");
+                showToast("存檔連線異常，但獎項已記錄於本地");
                 document.getElementById('btn-spin').classList.remove('opacity-50', 'pointer-events-none');
             }
             hideLoading();
@@ -695,7 +661,7 @@
         window.closeResult = () => {
             closeModal('result-overlay');
             if (state.todayPlayed >= MAX_DAILY_CHANCE) {
-                updateUserUI(); // 會自動跳出 limit-modal
+                updateUserUI(); // 自動跳出 limit-modal
             }
         };
 
@@ -742,17 +708,17 @@
                 // 1. 更新個人紀錄
                 await updateDoc(doc(db, 'artifacts', APP_ID, 'users', state.phone, 'prizes', prizeId), { isRedeemed: true, redeemTime: now });
                 
-                // 2. 尋找並更新全站日誌
+                // 2. 更新全站日誌
                 const logsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs');
                 const q = query(logsRef, where('phone', '==', state.phone));
                 const snap = await getDocs(q);
-                snap.forEach(async (d) => {
+                for (let d of snap.docs) {
                     if (d.data().winDate === state.userHistory.find(x => x.id === prizeId).winDate) {
                         await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs', d.id), { isRedeemed: true, redeemTime: now });
                     }
-                });
+                }
 
-                // 3. 更新本地狀態
+                // 更新本地狀態
                 const prize = state.userHistory.find(p => p.id === prizeId);
                 if (prize) { prize.isRedeemed = true; prize.redeemTime = now; }
                 
@@ -760,7 +726,7 @@
                 renderHistoryUI();
             } catch(err) {
                 console.error(err);
-                showToast("核銷失敗，請通知管理員。");
+                showToast("核銷連線失敗，請通知管理員。");
             }
             hideLoading();
         };
@@ -796,7 +762,7 @@
             if (tab === 'members') loadAdminMembers();
         };
 
-        // 1. 獎項管理
+        // 1. 獎項編輯
         function renderAdminPrizes() {
             const list = document.getElementById('admin-prize-list');
             list.innerHTML = '';
@@ -827,7 +793,6 @@
             showLoading();
             try {
                 await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'slot_config'), { prizepool: state.prizePool }, { merge: true });
-                // 更新當前轉盤顯示
                 state.displayPrizes = state.prizePool.filter(p => !p.isHidden).sort(() => Math.random() - 0.5);
                 if(canvas) drawWheel();
                 showToast("✅ 獎項儲存成功");
@@ -852,13 +817,12 @@
                     const isExp = now > data.expDate;
                     const isInvalid = data.isRedeemed || isExp;
                     
-                    if (!window.showAllLogs && isInvalid) return; // 隱藏無效的
+                    if (!window.showAllLogs && isInvalid) return; // 隱藏無效
                     
                     const nameMask = data.name ? (data.name.length >= 2 ? data.name[0] + '＊' + (data.name[2] || '') : data.name) : '未知';
                     
                     let actionHtml = '';
                     if (!isInvalid) {
-                        // 如果在手機管理，可以直接在此核銷，但會跳確認
                         actionHtml = `<button onclick="askConfirm('後台核銷確認', '確定要手動核銷 ${nameMask} 的獎項嗎？', () => adminRedeem('${docSnap.id}', '${data.phone}', '${data.winDate}'))" class="px-3 py-1 bg-emerald-500 text-white rounded text-[10px] font-bold">核銷</button>`;
                     } else if (data.isRedeemed) {
                         actionHtml = `<span class="text-[9px] text-emerald-500 font-bold border border-emerald-200 px-1 rounded">已核銷<br>${new Date(data.redeemTime).toLocaleDateString('zh-TW')}</span>`;
@@ -894,25 +858,22 @@
             showLoading();
             try {
                 const now = Date.now();
-                // 1. 改日誌
                 await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs', logId), { isRedeemed: true, redeemTime: now });
-                // 2. 嘗試改使用者紀錄
                 const qRef = collection(db, 'artifacts', APP_ID, 'users', phone, 'prizes');
                 const snap = await getDocs(qRef);
-                snap.forEach(async (d) => {
+                for (let d of snap.docs) {
                     if (d.data().winDate === winDate) {
                         await updateDoc(doc(db, 'artifacts', APP_ID, 'users', phone, 'prizes', d.id), { isRedeemed: true, redeemTime: now });
                     }
-                });
+                }
                 showToast("✅ 後台核銷成功");
                 loadAdminLogs();
-                // 若剛好是本機帳號，同步更新
                 if (phone === state.phone) loadUserStatus().then(updateUserUI);
             } catch(e) { console.error(e); showToast("核銷失敗"); }
             hideLoading();
         };
 
-        // 3. 玩家重置
+        // 3. 玩家重置 (分離查詢條件，避免索引報錯)
         async function loadTodayPlayers() {
             showLoading();
             const list = document.getElementById('today-players-list');
@@ -920,10 +881,10 @@
             try {
                 const todayStart = new Date(new Date().setHours(0,0,0,0)).getTime();
                 const logsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs');
+                // 單一條件搜尋避免 compound index
                 const q = query(logsRef, where('winDate', '>=', todayStart));
                 const snap = await getDocs(q);
                 
-                // 統計次數
                 let players = {};
                 snap.forEach(doc => {
                     const data = doc.data();
@@ -961,41 +922,51 @@
         window.executeReset = async (phone) => {
             showLoading();
             try {
-                // 原理：將該用戶今日的 slot_logs 的 winDate 改為昨日 (不影響獎項有效性，只影響今日次數判斷)
                 const todayStart = new Date(new Date().setHours(0,0,0,0)).getTime();
-                // 1. 改全站紀錄
+                
+                // 1. 改全站紀錄 (單獨搜尋避免報錯)
                 let logsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs');
-                let q = query(logsRef, where('phone', '==', phone), where('winDate', '>=', todayStart));
+                let q = query(logsRef, where('phone', '==', phone));
                 let snap = await getDocs(q);
-                snap.forEach(async (d) => { await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs', d.id), { winDate: d.data().winDate - 86400000 }); });
+                for (let d of snap.docs) {
+                    if (d.data().winDate >= todayStart) {
+                        await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs', d.id), { winDate: d.data().winDate - 86400000 });
+                    }
+                }
                 
                 // 2. 改個人紀錄
                 logsRef = collection(db, 'artifacts', APP_ID, 'users', phone, 'prizes');
-                q = query(logsRef, where('winDate', '>=', todayStart));
-                snap = await getDocs(q);
-                snap.forEach(async (d) => { await updateDoc(doc(db, 'artifacts', APP_ID, 'users', phone, 'prizes', d.id), { winDate: d.data().winDate - 86400000 }); });
+                snap = await getDocs(logsRef);
+                for (let d of snap.docs) {
+                    if (d.data().winDate >= todayStart) {
+                        await updateDoc(doc(db, 'artifacts', APP_ID, 'users', phone, 'prizes', d.id), { winDate: d.data().winDate - 86400000 });
+                    }
+                }
                 
                 showToast("✅ 次數已重置");
                 loadTodayPlayers();
                 if (phone === state.phone) loadUserStatus().then(updateUserUI);
-            } catch(e) { console.error(e); showToast("重置失敗"); }
+            } catch(e) { console.error(e); showToast("重置連線失敗"); }
             hideLoading();
         };
 
-        // 4. 會員庫
+        // 4. 會員庫 (同步並顯示總會員數)
         async function loadAdminMembers() {
             showLoading();
             const list = document.getElementById('admin-member-list');
             list.innerHTML = '';
             try {
                 const mRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'beauty_members');
-                const snap = await getDocs(query(mRef, limit(50)));
+                const snap = await getDocs(mRef); // 撈取所有會員
+                
+                document.getElementById('admin-member-count').innerText = snap.size;
+
                 snap.forEach(docSnap => {
                     const data = docSnap.data();
                     const div = document.createElement('div');
                     div.className = "flex justify-between items-center bg-white p-2 rounded border border-gray-100 text-xs";
                     div.innerHTML = `
-                        <div><span class="font-bold mr-2">${data.name}</span><span class="font-mono text-gray-400">${data.phone}</span></div>
+                        <div><span class="font-bold mr-2">${data.name || '無名'}</span><span class="font-mono text-gray-400">${data.phone}</span></div>
                         <button onclick="askConfirm('刪除確認','刪除會員後將無法登入，確定刪除？', () => deleteMember('${docSnap.id}'))" class="text-rose-400 font-bold px-2">刪除</button>
                     `;
                     list.appendChild(div);
