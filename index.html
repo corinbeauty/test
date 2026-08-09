@@ -55,11 +55,8 @@
         .wheel-canvas { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 10px 25px rgba(176, 141, 119, 0.2); border: 4px solid #fff; transition: transform cubic-bezier(0.17, 0.67, 0.12, 0.99); }
         .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 36px; height: 42px; background: #b08d77; clip-path: polygon(50% 100%, 0 0, 100% 0); z-index: 10; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
         
-        /* SVG LOGO 樣式 (極致還原版) */
+        /* SVG LOGO 樣式 */
         .cr-logo-svg { width: 100%; height: auto; display: block; }
-        /* 使用圖片中的淡金/棕色 */
-        .cr-path-light { fill: #dcbfa9; } 
-        .cr-path-dark { fill: #a8846c; }
         .cr-text { fill: #a8846c; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 300; letter-spacing: 0.4em; }
         
         /* 轉盤中央 LOGO 裝飾 */
@@ -77,32 +74,25 @@
             width: 150%; opacity: 0.08; pointer-events: none; z-index: 0;
         }
 
-        .btn-navy { background-color: #181829; color: white; transition: all 0.2s ease; }
-        .btn-navy:active { transform: scale(0.97); }
+        /* 統一主題按鈕顏色 (取代原本的 btn-navy) */
+        .btn-theme { background-color: #b08d77; color: white; transition: all 0.2s ease; }
+        .btn-theme:active { transform: scale(0.97); background-color: #9c7b66; }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center p-4 relative overflow-hidden">
 
-    <!-- 精準還原的 SVG LOGO 定義 -->
+    <!-- 精確繪製的端正 SVG LOGO 定義 -->
     <svg width="0" height="0" class="hidden">
         <defs>
             <g id="cr-logo-graphic">
-                <!-- C 的左側新月 (較淺色) -->
-                <!-- 利用貝茲曲線精準描繪上下收尖、中間豐滿的新月形狀 -->
-                <path d="M 60,18 C 25,18 10,65 10,65 C 10,65 25,112 60,112 C 40,95 35,35 60,18 Z" class="cr-path-light"/>
-                
-                <!-- C 的右下角斷尾與 R 的連接 (較淺色) -->
-                <path d="M 72,112 L 85,112 L 85,85 C 80,105 75,112 72,112 Z" class="cr-path-light"/>
-                <path d="M 72,18 L 85,18 L 85,45 C 80,25 75,18 72,18 Z" class="cr-path-light"/>
-
-                <!-- R 的主體 (深色) -->
-                <!-- 包含直柱與右側充滿張力的曲線 -->
-                <path d="M 85,18 C 115,18 125,45 125,45 C 125,45 115,55 95,65 C 105,70 120,80 135,112 C 110,112 100,85 95,85 L 85,85 L 85,112 C 75,112 75,112 75,112 L 85,112 Z M 85,30 L 85,60 C 95,60 102,50 102,45 C 102,35 95,30 85,30 Z" class="cr-path-dark"/>
-                <!-- R 的右下撇尖角，增加銳利度 -->
-                <path d="M 95,85 C 105,95 115,105 135,112 C 120,108 115,95 115,85 C 105,80 100,85 95,85 Z" class="cr-path-dark"/>
-                
-                <!-- R 的內部挖空 (確保透明度) -->
-                <path d="M 85,30 L 85,60 C 95,60 102,50 102,45 C 102,35 95,30 85,30 Z" fill="white" />
+                <!-- 左側 C 的主體月牙 -->
+                <path d="M 48,15 C 10,15 10,85 48,85 C 25,70 25,30 48,15 Z" fill="#dcbfa9" />
+                <!-- C 的頂部連接處 -->
+                <path d="M 48,15 L 58,15 C 55,25 51,35 48,35 Z" fill="#dcbfa9" />
+                <!-- C 的底部連接處 -->
+                <path d="M 48,85 L 58,85 C 55,75 51,65 48,65 Z" fill="#dcbfa9" />
+                <!-- 右側 R 的主體與挖空 (使用 evenodd 確保中間透明) -->
+                <path d="M 58,15 C 90,15 95,45 75,55 C 85,60 95,75 105,85 C 90,85 80,70 70,65 L 58,65 Z M 58,25 L 58,55 C 75,55 75,25 58,25 Z" fill-rule="evenodd" fill="#a8846c" />
             </g>
         </defs>
     </svg>
@@ -119,11 +109,11 @@
 
     <div id="login-view" class="w-full max-w-sm relative z-50 flex flex-col hidden">
         <div class="glow-card p-10 text-center flex flex-col items-center">
-            <!-- 帶入 SVG LOGO -->
-            <div class="w-40 mb-2">
-                <svg viewBox="0 0 150 140" class="cr-logo-svg">
+            <!-- 帶入 SVG LOGO，縮小為 w-28 使其更精緻 -->
+            <div class="w-28 mb-2">
+                <svg viewBox="0 0 115 105" class="cr-logo-svg">
                     <use href="#cr-logo-graphic" x="5" y="0"></use>
-                    <text x="75" y="135" text-anchor="middle" class="cr-text">HAIR REMOVAL</text>
+                    <text x="57" y="100" text-anchor="middle" class="cr-text" style="font-size: 10px;">HAIR REMOVAL</text>
                 </svg>
             </div>
             
@@ -138,7 +128,8 @@
                 <a href="https://check-balance-jbiy.vercel.app/" class="text-[#d97706] text-xs font-bold hover:underline underline-offset-4">我還不是會員？註冊</a>
             </div>
             
-            <button onclick="handleLogin()" class="w-full btn-navy py-4 rounded-xl font-bold text-lg tracking-widest shadow-lg">確認登入</button>
+            <!-- 按鈕替換為 btn-theme 統一主題色 -->
+            <button onclick="handleLogin()" class="w-full btn-theme py-4 rounded-xl font-bold text-lg tracking-widest shadow-lg">確認登入</button>
         </div>
         
         <div class="mt-8 text-center">
@@ -151,10 +142,8 @@
         
         <div class="bg-white/90 backdrop-blur-md rounded-[2rem] shadow-2xl p-6 border border-[#fdf6e3] flex flex-col flex-1 relative overflow-hidden">
             
-            <!-- 裝飾用背景光暈 -->
             <div class="absolute top-0 right-0 w-64 h-64 bg-amber-50 rounded-full blur-3xl -z-10 opacity-60 translate-x-1/3 -translate-y-1/3"></div>
             
-            <!-- 頂部資訊與切換 -->
             <div class="flex justify-between items-center mb-6 relative z-10">
                 <div class="flex bg-gray-50 p-1 rounded-xl border border-gray-100">
                     <button id="tab-game" onclick="switchMainTab('game')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-white shadow-sm text-[#b08d77]">幸運轉盤</button>
@@ -175,17 +164,17 @@
                     <div class="pointer"></div>
                     <canvas id="wheel-canvas" class="wheel-canvas"></canvas>
                     
-                    <!-- 轉盤中央 LOGO -->
                     <div class="wheel-center-logo">
-                        <svg viewBox="0 0 150 140" class="w-[85%] mt-1">
+                        <!-- 轉盤中心的 LOGO 縮小，讓版面更精緻 -->
+                        <svg viewBox="0 0 115 105" class="w-[60%] mt-1">
                             <use href="#cr-logo-graphic" x="5" y="0"></use>
-                            <text x="75" y="135" text-anchor="middle" class="cr-text" style="font-size: 16px;">HAIR REMOVAL</text>
+                            <text x="57" y="100" text-anchor="middle" class="cr-text" style="font-size: 11px;">HAIR REMOVAL</text>
                         </svg>
                     </div>
                 </div>
 
                 <div class="mt-auto w-full space-y-3 pb-2">
-                    <button id="btn-spin" onclick="startSpin()" class="w-full btn-navy py-4 rounded-2xl text-lg font-black shadow-xl tracking-widest relative overflow-hidden">
+                    <button id="btn-spin" onclick="startSpin()" class="w-full btn-theme py-4 rounded-2xl text-lg font-black shadow-xl tracking-widest relative overflow-hidden">
                         START 立即抽獎
                     </button>
                     <div class="text-center pt-2">
@@ -209,7 +198,6 @@
             
         </div>
         
-        <!-- 頁尾資訊 -->
         <div class="mt-6 text-center">
             <p onclick="openAdminModal()" class="text-[10px] text-gray-400 font-bold tracking-widest uppercase cursor-pointer hover:text-[#b08d77] mb-1">System By Corin</p>
             <p class="text-[9px] text-gray-400">原點數位科技 © 2026 All rights reserved.</p>
@@ -225,7 +213,7 @@
             <h3 class="text-xl font-black text-[#181829] mb-2">查無會員資料</h3>
             <p class="text-sm text-gray-500 mb-6 leading-relaxed">找不到該手機號碼，請確認是否輸入正確，或前往註冊專屬會員。</p>
             <div class="space-y-2">
-                <a href="https://check-balance-jbiy.vercel.app/" class="block w-full py-3 btn-navy text-white rounded-xl text-sm font-bold shadow-md">前往註冊會員</a>
+                <a href="https://check-balance-jbiy.vercel.app/" class="block w-full py-3 btn-theme rounded-xl text-sm font-bold shadow-md">前往註冊會員</a>
                 <button onclick="clearAndCloseLoginModal()" class="w-full py-3 bg-gray-50 text-gray-500 rounded-xl text-sm font-bold hover:bg-gray-100">重新輸入</button>
             </div>
         </div>
@@ -236,14 +224,14 @@
             <div class="w-16 h-16 bg-amber-50 text-[#b08d77] rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-inner">⏰</div>
             <h3 class="text-xl font-black text-[#181829] mb-2">今日次數已完成</h3>
             <p class="text-sm text-gray-500 mb-6 leading-relaxed">您今天的 <span class="font-bold text-[#b08d77]">3</span> 次抽獎機會已使用完畢，請明日再來玩！</p>
-            <button onclick="closeModal('limit-modal'); switchMainTab('history');" class="w-full py-3 btn-navy text-white rounded-xl text-sm font-bold shadow-md">查看我的紀錄</button>
+            <button onclick="closeModal('limit-modal'); switchMainTab('history');" class="w-full py-3 btn-theme rounded-xl text-sm font-bold shadow-md">查看我的紀錄</button>
         </div>
     </div>
 
     <div id="result-overlay" class="fixed inset-0 bg-white/95 z-[150] hidden flex-col items-center justify-center p-6 backdrop-blur-md">
-        <!-- SVG 精美浮水印 (採用純色提高辨識度) -->
+        <!-- SVG 精美浮水印 -->
         <div class="watermark-bg">
-            <svg viewBox="0 0 150 140" class="w-full h-full opacity-40">
+            <svg viewBox="0 0 115 105" class="w-full h-full opacity-40">
                 <use href="#cr-logo-graphic" x="5" y="0"></use>
             </svg>
         </div>
@@ -257,7 +245,7 @@
                 <p class="text-xs text-gray-500">有效期限：<span id="result-exp" class="font-mono text-rose-500 font-bold"></span></p>
             </div>
             
-            <button onclick="closeResult()" class="w-full py-4 btn-navy text-white rounded-2xl text-lg font-black shadow-xl tracking-widest">收下獎項</button>
+            <button onclick="closeResult()" class="w-full py-4 btn-theme rounded-2xl text-lg font-black shadow-xl tracking-widest">收下獎項</button>
         </div>
     </div>
 
@@ -268,7 +256,7 @@
             <p id="confirm-desc" class="text-sm text-gray-500 mb-6 leading-relaxed"></p>
             <div class="flex gap-2">
                 <button onclick="closeModal('confirm-modal')" class="flex-1 py-3 bg-gray-100 text-gray-500 rounded-xl text-sm font-bold">取消</button>
-                <button id="confirm-btn-action" class="flex-1 py-3 btn-navy text-white rounded-xl text-sm font-bold">確定執行</button>
+                <button id="confirm-btn-action" class="flex-1 py-3 btn-theme rounded-xl text-sm font-bold">確定執行</button>
             </div>
         </div>
     </div>
@@ -279,23 +267,21 @@
             <input type="password" id="admin-pass" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-4 text-center focus:border-[#b08d77] outline-none" placeholder="請輸入密碼">
             <div class="flex gap-2">
                 <button onclick="closeModal('admin-auth-modal')" class="flex-1 py-3 bg-gray-100 text-gray-500 rounded-xl font-bold">取消</button>
-                <button onclick="verifyAdmin()" class="flex-1 py-3 btn-navy rounded-xl font-bold">登入後台</button>
+                <button onclick="verifyAdmin()" class="flex-1 py-3 btn-theme rounded-xl font-bold">登入後台</button>
             </div>
         </div>
     </div>
 
     <div id="admin-dashboard" class="fixed inset-0 bg-gray-50 z-[250] hidden flex-col">
         <div class="bg-white px-4 py-3 border-b border-gray-200 flex justify-between items-center shadow-sm z-10">
-            <h2 class="font-black text-[#181829] text-lg">全能管理後台</h2>
-            <button onclick="closeModal('admin-dashboard')" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
+            <h2 class="font-black text-[#181829] text-lg">管理者後台</h2>
+            <button onclick="closeAdminDashboard()" class="text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
         </div>
         
-        <!-- 後台導覽列 -->
         <div class="flex bg-white border-b border-gray-200 text-xs font-bold overflow-x-auto hide-scroll">
             <button onclick="switchAdminTab('logs')" id="adm-tab-logs" class="flex-1 py-3 px-2 text-[#b08d77] border-b-2 border-[#b08d77]">即時統計</button>
             <button onclick="switchAdminTab('reset')" id="adm-tab-reset" class="flex-1 py-3 px-2 text-gray-400 border-b-2 border-transparent">玩家重置</button>
             <button onclick="switchAdminTab('members')" id="adm-tab-members" class="flex-1 py-3 px-2 text-gray-400 border-b-2 border-transparent">會員庫</button>
-            <!-- 獎項設定移至最後 -->
             <button onclick="switchAdminTab('prizes')" id="adm-tab-prizes" class="flex-1 py-3 px-2 text-gray-400 border-b-2 border-transparent">獎項設定</button>
         </div>
 
@@ -317,7 +303,7 @@
                     <p class="text-[10px] text-gray-400 mb-3">輸入電話號碼，將該會員今日次數歸零。</p>
                     <div class="flex gap-2">
                         <input type="tel" id="reset-phone" class="flex-1 bg-gray-50 border border-gray-200 px-3 py-2 rounded-lg text-sm text-center outline-none" placeholder="會員手機號碼" maxlength="10">
-                        <button onclick="manualResetUser()" class="btn-navy text-white px-4 py-2 rounded-lg text-sm font-bold">重置</button>
+                        <button onclick="manualResetUser()" class="btn-theme px-4 py-2 rounded-lg text-sm font-bold">重置</button>
                     </div>
                 </div>
                 <div class="border-t border-gray-200 pt-4">
@@ -337,7 +323,7 @@
                         <input type="tel" id="new-member-phone" class="flex-1 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100 text-sm outline-none" placeholder="新手機 (10碼)" maxlength="10">
                         <input type="text" id="new-member-name" class="flex-1 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100 text-sm outline-none" placeholder="姓名">
                     </div>
-                    <button onclick="addMember()" class="w-full btn-navy text-white py-2 rounded-lg text-sm font-bold">新增會員至資料庫</button>
+                    <button onclick="addMember()" class="w-full btn-theme py-2 rounded-lg text-sm font-bold">新增會員至資料庫</button>
                 </div>
                 <div id="admin-member-list" class="space-y-2"></div>
             </div>
@@ -349,23 +335,22 @@
                     <input type="text" id="new-prize-name" class="w-full px-3 py-2 rounded-lg border border-white text-sm mb-2 focus:outline-none" placeholder="輸入獎項名稱">
                     <div class="flex gap-2">
                         <input type="number" id="new-prize-weight" class="flex-1 px-3 py-2 rounded-lg border border-white text-sm focus:outline-none" placeholder="機率權重 (如: 10)">
-                        <button onclick="addPrize()" class="btn-navy text-white px-4 py-2 rounded-lg text-sm font-bold">新增</button>
+                        <button onclick="addPrize()" class="btn-theme px-4 py-2 rounded-lg text-sm font-bold">新增</button>
                     </div>
                 </div>
                 <div id="admin-prize-list" class="space-y-2"></div>
-                <button onclick="savePrizesToDB()" class="w-full py-4 btn-navy rounded-xl font-bold shadow-lg mt-4">儲存所有獎項設定</button>
+                <button onclick="savePrizesToDB()" class="w-full py-4 btn-theme rounded-xl font-bold shadow-lg mt-4">儲存所有獎項設定</button>
             </div>
 
         </div>
     </div>
 
-    <!-- 通用輕量提示 -->
-    <div id="toast-msg" class="fixed top-10 left-1/2 -translate-x-1/2 btn-navy text-white px-6 py-3 rounded-full text-sm font-bold shadow-2xl z-[999] transition-all duration-300 opacity-0 pointer-events-none translate-y-[-20px]"></div>
+    <div id="toast-msg" class="fixed top-10 left-1/2 -translate-x-1/2 btn-theme px-6 py-3 rounded-full text-sm font-bold shadow-2xl z-[999] transition-all duration-300 opacity-0 pointer-events-none translate-y-[-20px]"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCe0KE7va2H4-A6XECdzhTUCjhTeT6FOJM",
@@ -381,12 +366,7 @@
         const EXPIRY_DAYS = 7;
         
         let app, auth, db;
-        let state = {
-            phone: '', name: '',
-            prizePool: [], displayPrizes: [],
-            userHistory: [],
-            todayPlayed: 0
-        };
+        let state = { phone: '', name: '', prizePool: [], displayPrizes: [], userHistory: [], todayPlayed: 0 };
         let canvas, ctx, isSpinning = false, currentAngle = 0;
 
         // --- 工具與 UI 控制 ---
@@ -398,7 +378,6 @@
             t.style.opacity = '1'; t.style.transform = 'translate(-50%, 20px)';
             setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translate(-50%, -20px)'; }, 3000);
         };
-        const getTodayStr = () => new Date().toLocaleDateString('zh-TW', { timeZone: 'Asia/Taipei' });
         
         window.askConfirm = (title, desc, action) => {
             document.getElementById('confirm-title').innerText = title;
@@ -412,7 +391,11 @@
             closeModal('not-found-modal');
         }
 
-        // 監聽全域事件 (Escape, Enter)
+        window.closeAdminDashboard = () => {
+            document.getElementById('admin-dashboard').classList.add('hidden');
+            document.getElementById('admin-dashboard').classList.remove('flex');
+        };
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 const modals = ['not-found-modal', 'limit-modal', 'result-overlay', 'confirm-modal', 'admin-auth-modal', 'admin-dashboard'];
@@ -420,8 +403,7 @@
                     const el = document.getElementById(id);
                     if(el && (el.classList.contains('modal-active') || el.classList.contains('flex'))) {
                          if(id === 'admin-dashboard') {
-                             el.classList.add('hidden');
-                             el.classList.remove('flex');
+                             closeAdminDashboard();
                          } else {
                              closeModal(id);
                          }
@@ -432,11 +414,8 @@
                 if (!document.getElementById('login-view').classList.contains('hidden') && document.activeElement.id === 'login-phone') {
                     handleLogin();
                 } else if (!document.getElementById('view-game').classList.contains('hidden') && !isSpinning) {
-                     // 只有在遊戲畫面，且沒有打開 modal 時才觸發
                      const modalsOpen = document.querySelectorAll('.modal-active, #admin-dashboard:not(.hidden)').length > 0;
-                     if(!modalsOpen) {
-                         startSpin();
-                     }
+                     if(!modalsOpen) startSpin();
                 } else if (document.getElementById('admin-auth-modal').classList.contains('modal-active') && document.activeElement.id === 'admin-pass') {
                     verifyAdmin();
                 }
@@ -462,9 +441,8 @@
             if (snap.exists() && snap.data().prizepool && snap.data().prizepool.length > 0) {
                 state.prizePool = snap.data().prizepool;
             } else {
-                state.prizePool = []; 
+                state.prizePool = [];
             }
-            // 隨機打亂轉盤格子順序
             let active = state.prizePool.filter(p => !p.isHidden);
             state.displayPrizes = active.sort(() => Math.random() - 0.5);
         }
@@ -513,10 +491,7 @@
                 const data = doc.data();
                 data.id = doc.id;
                 state.userHistory.push(data);
-                // 檢查是否為今日
-                if (data.winDate >= todayStart) {
-                    state.todayPlayed++;
-                }
+                if (data.winDate >= todayStart) state.todayPlayed++;
             });
             state.userHistory.sort((a, b) => b.winDate - a.winDate);
         }
@@ -531,7 +506,6 @@
                 dots.appendChild(dot);
             }
             
-            // 顯示遮蔽姓名與全碼電話
             const nameMask = state.name ? (state.name.length >= 2 ? state.name[0] + '＊' + (state.name.substring(2) || '') : state.name) : '未知';
             const infoEl = document.getElementById('history-user-info');
             if(infoEl) infoEl.innerText = `${nameMask} | ${state.phone}`;
@@ -539,12 +513,12 @@
             const btn = document.getElementById('btn-spin');
             if (remain <= 0) {
                 btn.innerText = "今日次數已用完";
-                btn.classList.replace('btn-navy', 'bg-gray-300');
+                btn.classList.replace('btn-theme', 'bg-gray-300');
                 btn.classList.add('pointer-events-none');
                 document.getElementById('limit-modal').classList.add('modal-active');
             } else {
                 btn.innerText = "START 立即抽獎";
-                btn.classList.replace('bg-gray-300', 'btn-navy');
+                btn.classList.replace('bg-gray-300', 'btn-theme');
                 btn.classList.remove('pointer-events-none');
             }
             renderHistoryUI();
@@ -555,7 +529,6 @@
             document.getElementById('view-game').classList.toggle('hidden', !isGame);
             document.getElementById('view-history').classList.toggle('hidden', isGame);
             
-            // 更新按鈕樣式，選中時為白色背景+文字，未選中時透明
             document.getElementById('tab-game').className = isGame ? 'px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-white shadow-sm text-[#b08d77]' : 'px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-gray-600';
             document.getElementById('tab-history').className = !isGame ? 'px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-white shadow-sm text-[#b08d77]' : 'px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-gray-600';
         };
@@ -588,38 +561,40 @@
                 ctx.fill();
                 
                 ctx.save();
-                // 旋轉至該格中央
                 ctx.rotate(i * arc + arc / 2);
                 
-                // 設定雙色交錯字體
                 ctx.fillStyle = i % 2 === 0 ? '#b08d77' : '#d97706';
-                ctx.font = '900 12px "Noto Sans TC", sans-serif';
                 ctx.textAlign = 'right';
                 ctx.textBaseline = 'middle';
                 
                 const text = state.displayPrizes[i].name;
-                const maxLen = radius - 60; // 允許繪製的最大寬度
-                const rightEdge = radius - 15; // 文字最右邊的位置
+                const maxLen = radius - 55; 
+                const rightEdge = radius - 15; 
                 
-                // 自動斷行處理 (多行平行排列)
-                // 將文字依照長度拆分成 1~3 行
                 let lines = [];
-                if (text.length <= 8) {
+                if (text.length <= 6) {
                      lines.push(text);
-                } else if (text.length <= 16) {
-                     let mid = Math.floor(text.length / 2);
-                     // 尋找接近中間的空白或符號作為斷點，若無則硬切
-                     lines.push(text.substring(0, mid));
-                     lines.push(text.substring(mid));
+                } else if (text.length <= 12) {
+                     lines.push(text.substring(0, Math.ceil(text.length/2)));
+                     lines.push(text.substring(Math.ceil(text.length/2)));
+                } else if (text.length <= 18) {
+                     lines.push(text.substring(0, Math.ceil(text.length/3)));
+                     lines.push(text.substring(Math.ceil(text.length/3), Math.ceil(text.length*2/3)));
+                     lines.push(text.substring(Math.ceil(text.length*2/3)));
                 } else {
-                     let third = Math.floor(text.length / 3);
-                     lines.push(text.substring(0, third));
-                     lines.push(text.substring(third, third*2));
-                     lines.push(text.substring(third*2));
+                     lines.push(text.substring(0, Math.ceil(text.length/4)));
+                     lines.push(text.substring(Math.ceil(text.length/4), Math.ceil(text.length*2/4)));
+                     lines.push(text.substring(Math.ceil(text.length*2/4), Math.ceil(text.length*3/4)));
+                     lines.push(text.substring(Math.ceil(text.length*3/4)));
                 }
                 
-                const lineHeight = 16;
-                // 計算起始的 Y 座標，讓多行文字整體垂直置中
+                // 動態縮放字體大小，避免超過格子
+                let fontSize = 12;
+                if (lines.length >= 3) fontSize = 10;
+                if (lines.length >= 4 || text.length > 20) fontSize = 8.5;
+                
+                ctx.font = `900 ${fontSize}px "Noto Sans TC", sans-serif`;
+                const lineHeight = fontSize + 4;
                 let startY = -((lines.length - 1) * lineHeight) / 2;
                 
                 for(let j=0; j<lines.length; j++) {
@@ -629,7 +604,6 @@
                 ctx.restore();
             }
             
-            // 繪製分隔線
             for (let i = 0; i < state.displayPrizes.length; i++) {
                 ctx.beginPath();
                 ctx.strokeStyle = '#fdf6e3';
@@ -648,7 +622,6 @@
             isSpinning = true;
             document.getElementById('btn-spin').classList.add('opacity-50', 'pointer-events-none');
             
-            // 決定獎項
             const totalWeight = state.displayPrizes.reduce((sum, p) => sum + Number(p.weight), 0);
             let random = Math.random() * totalWeight, winIdx = 0;
             for (let i = 0; i < state.displayPrizes.length; i++) {
@@ -685,34 +658,25 @@
         async function handleWin(prize) {
             const now = Date.now();
             const exp = now + (EXPIRY_DAYS * 86400000);
-            const prizeRecord = {
-                prizeName: prize.name,
-                winDate: now,
-                expDate: exp,
-                isRedeemed: false,
-                redeemTime: null,
-                phone: state.phone,  // 確保全站紀錄需要
-                name: state.name
-            };
+            const prizeRecord = { prizeName: prize.name, winDate: now, expDate: exp, isRedeemed: false, redeemTime: null, phone: state.phone, name: state.name };
             
             showLoading();
             try {
                 // 1. 強制建立個人上層文件
                 await setDoc(doc(db, 'artifacts', APP_ID, 'users', state.phone), { lastActive: now, name: state.name }, { merge: true });
-                
                 // 2. 寫入個人資料夾
                 const userPrizeRef = await addDoc(collection(db, 'artifacts', APP_ID, 'users', state.phone, 'prizes'), prizeRecord);
                 
-                // 3. 寫入全站日誌 (附加上面生成的 ID 以利對照)
+                // 3. 獨立寫入全站日誌
                 prizeRecord.id = userPrizeRef.id;
-                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs', userPrizeRef.id), prizeRecord);
+                try {
+                    await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs', userPrizeRef.id), prizeRecord);
+                } catch(e) { console.warn("日誌寫入權限異常, 不影響主程序", e); }
                 
-                // 更新本地狀態
                 state.userHistory.unshift(prizeRecord);
                 state.todayPlayed++;
                 updateUserUI();
                 
-                // 顯示結果畫面
                 document.getElementById('result-prize-name').innerText = prize.name;
                 document.getElementById('result-time').innerText = new Date(now).toLocaleString('zh-TW');
                 document.getElementById('result-exp').innerText = new Date(exp).toLocaleDateString('zh-TW');
@@ -722,7 +686,7 @@
                 
             } catch(err) {
                 console.error("Write DB Error:", err);
-                showToast("存檔連線異常，但獎項已記錄於本地");
+                showToast("存檔連線異常，但獎項已記錄");
                 document.getElementById('btn-spin').classList.remove('opacity-50', 'pointer-events-none');
             }
             hideLoading();
@@ -730,9 +694,7 @@
 
         window.closeResult = () => {
             closeModal('result-overlay');
-            if (state.todayPlayed >= MAX_DAILY_CHANCE) {
-                updateUserUI(); 
-            }
+            if (state.todayPlayed >= MAX_DAILY_CHANCE) updateUserUI(); 
         };
 
         function renderHistoryUI() {
@@ -745,7 +707,6 @@
             }
             
             const now = Date.now();
-            
             state.userHistory.forEach(p => {
                 const isExp = now > p.expDate;
                 const isInvalid = p.isRedeemed || isExp;
@@ -775,26 +736,17 @@
             showLoading();
             try {
                 const now = Date.now();
-                // 1. 更新個人紀錄
                 await updateDoc(doc(db, 'artifacts', APP_ID, 'users', state.phone, 'prizes', prizeId), { isRedeemed: true, redeemTime: now });
-                
-                // 2. 嘗試更新全站日誌 (我們是用相同的 ID 儲存的)
                 try {
                      await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs', prizeId), { isRedeemed: true, redeemTime: now });
-                } catch (e) {
-                     console.log("全站日誌同步更新失敗或不存在，不影響個人核銷", e);
-                }
+                } catch (e) { console.log("全站日誌更新權限不足", e); }
 
-                // 更新本地狀態
                 const prize = state.userHistory.find(p => p.id === prizeId);
                 if (prize) { prize.isRedeemed = true; prize.redeemTime = now; }
                 
                 showToast("✅ 獎項已成功核銷！");
                 renderHistoryUI();
-            } catch(err) {
-                console.error(err);
-                showToast("核銷連線失敗，請通知管理員。");
-            }
+            } catch(err) { console.error(err); showToast("核銷失敗，請確認權限。"); }
             hideLoading();
         };
 
@@ -809,7 +761,6 @@
                 closeModal('admin-auth-modal');
                 document.getElementById('admin-dashboard').classList.add('flex');
                 document.getElementById('admin-dashboard').classList.remove('hidden');
-                // 預設開啟「即時統計」
                 switchAdminTab('logs');
             } else {
                 showToast("❌ 密碼錯誤");
@@ -817,27 +768,27 @@
         };
 
         window.switchAdminTab = (tab) => {
-            ['prizes', 'logs', 'reset', 'members'].forEach(t => {
+            ['logs', 'reset', 'members', 'prizes'].forEach(t => {
                 document.getElementById(`adm-view-${t}`).classList.add('hidden');
                 document.getElementById(`adm-tab-${t}`).className = 'flex-1 py-3 px-2 text-gray-400 border-b-2 border-transparent';
             });
             document.getElementById(`adm-view-${tab}`).classList.remove('hidden');
             document.getElementById(`adm-tab-${tab}`).className = 'flex-1 py-3 px-2 text-[#b08d77] border-b-2 border-[#b08d77]';
             
-            if (tab === 'prizes') renderAdminPrizes();
             if (tab === 'logs') { window.showAllLogs = false; loadAdminLogs(); }
             if (tab === 'reset') loadTodayPlayers();
             if (tab === 'members') loadAdminMembers();
+            if (tab === 'prizes') renderAdminPrizes();
         };
 
         window.loadAllLogs = () => { window.showAllLogs = true; loadAdminLogs(); };
+        
         async function loadAdminLogs() {
             showLoading();
             const list = document.getElementById('admin-log-list');
             list.innerHTML = '';
             try {
                 const logsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs');
-                // 簡單查詢，不使用複合條件避免 Index 錯誤
                 const snap = await getDocs(logsRef);
                 const now = Date.now();
                 let logs = [];
@@ -848,21 +799,19 @@
                      logs.push(data);
                 });
                 
-                // 在記憶體中排序 (依抽獎時間降序)
                 logs.sort((a,b) => b.winDate - a.winDate);
                 
-                // 只取前 100 筆渲染
                 logs.slice(0, 100).forEach(data => {
                     const isExp = now > data.expDate;
                     const isInvalid = data.isRedeemed || isExp;
-                    
-                    if (!window.showAllLogs && isInvalid) return; // 預設隱藏無效
+                    if (!window.showAllLogs && isInvalid) return; 
                     
                     const nameMask = data.name ? (data.name.length >= 2 ? data.name[0] + '＊' + (data.name.substring(2) || '') : data.name) : '未知';
                     
                     let actionHtml = '';
                     if (!isInvalid) {
-                        actionHtml = `<button onclick="askConfirm('後台核銷確認', '確定要手動核銷 ${nameMask} 的獎項嗎？', () => adminRedeem('${data.id}', '${data.phone}'))" class="px-3 py-1 bg-emerald-500 text-white rounded text-[10px] font-bold">核銷</button>`;
+                        // 使用 Wrapper 函數避免字串跳脫問題
+                        actionHtml = `<button onclick="window.promptAdminRedeem('${data.id}', '${data.phone}', '${nameMask}')" class="px-3 py-1 bg-emerald-500 text-white rounded text-[10px] font-bold">核銷</button>`;
                     } else if (data.isRedeemed) {
                         actionHtml = `<span class="text-[9px] text-emerald-500 font-bold border border-emerald-200 px-1 rounded">已核銷<br>${new Date(data.redeemTime).toLocaleDateString('zh-TW')}</span>`;
                     } else {
@@ -880,36 +829,32 @@
                             <div class="text-[11px] font-bold text-[#b08d77]">${data.prizeName}</div>
                             <div class="text-[9px] text-gray-400">${new Date(data.winDate).toLocaleString('zh-TW')}</div>
                         </div>
-                        <div class="text-right shrink-0 ml-2 text-center">
-                            ${actionHtml}
-                        </div>
+                        <div class="text-right shrink-0 ml-2 text-center">${actionHtml}</div>
                     `;
                     list.appendChild(div);
                 });
                 
                 if (list.innerHTML === '') list.innerHTML = '<div class="text-center text-sm text-gray-400 py-4">目前沒有符合的紀錄</div>';
-                
             } catch(e) { console.error(e); }
             hideLoading();
         }
+
+        // 安全的核銷 Wrapper 函數
+        window.promptAdminRedeem = (id, phone, name) => {
+            askConfirm('後台核銷確認', `確定要手動核銷 ${name} 的獎項嗎？`, () => adminRedeem(id, phone));
+        };
 
         window.adminRedeem = async (logId, phone) => {
             showLoading();
             try {
                 const now = Date.now();
-                // 1. 更新全站日誌
                 await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs', logId), { isRedeemed: true, redeemTime: now });
-                
-                // 2. 更新個人紀錄 (ID相同)
                 try {
                     await updateDoc(doc(db, 'artifacts', APP_ID, 'users', phone, 'prizes', logId), { isRedeemed: true, redeemTime: now });
-                } catch(e) {
-                    console.log("個人紀錄同步更新失敗，可能因為已被刪除", e);
-                }
-                
+                } catch(e) { console.log(e); }
                 showToast("✅ 後台核銷成功");
-                loadAdminLogs(); // 重新載入列表
-                if (phone === state.phone) loadUserStatus().then(updateUserUI); // 如果操作的是自己，同步更新前端
+                loadAdminLogs(); 
+                if (phone === state.phone) loadUserStatus().then(updateUserUI); 
             } catch(e) { console.error(e); showToast("核銷失敗"); }
             hideLoading();
         };
@@ -921,8 +866,6 @@
             try {
                 const todayStart = new Date(new Date().setHours(0,0,0,0)).getTime();
                 const logsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs');
-                
-                // 抓取全部資料在客戶端過濾，避免複合查詢的 Index 問題
                 const snap = await getDocs(logsRef);
                 
                 let players = {};
@@ -946,7 +889,7 @@
                                 <div class="text-xs font-bold text-[#181829]">${nameMask} <span class="text-[10px] text-gray-400 font-mono ml-1">${phone}</span></div>
                                 <div class="text-[10px] text-gray-500 mt-1">今日已玩: <span class="font-bold text-[#b08d77] text-xs">${info.count}</span> 次</div>
                             </div>
-                            <button onclick="askConfirm('重置次數確認', '確定要將 ${phone} 今天的次數歸零嗎？(原獲獎紀錄不會消失，只是讓他能重抽)', () => executeReset('${phone}'))" class="px-4 py-1.5 btn-navy text-white rounded-lg text-xs font-bold">重置</button>
+                            <button onclick="window.promptExecuteReset('${phone}')" class="px-4 py-1.5 btn-theme rounded-lg text-xs font-bold">重置</button>
                         `;
                         list.appendChild(div);
                     }
@@ -958,16 +901,21 @@
         window.manualResetUser = () => {
             const p = document.getElementById('reset-phone').value.trim();
             if(!p || p.length !== 10) return showToast("請輸入完整電話");
-            askConfirm('重置次數確認', `確定要將 ${p} 今天的次數歸零嗎？`, () => executeReset(p));
+            window.promptExecuteReset(p);
+        };
+
+        // 安全的重置 Wrapper 函數
+        window.promptExecuteReset = (phone) => {
+            askConfirm('重置次數確認', `確定要將 ${phone} 今天的次數歸零嗎？(原紀錄不會消失)`, () => executeReset(phone));
         };
 
         window.executeReset = async (phone) => {
             showLoading();
             try {
                 const todayStart = new Date(new Date().setHours(0,0,0,0)).getTime();
-                const offset = 86400000; // 減去一天，讓系統誤以為是昨天抽的
+                const offset = 86400000; 
                 
-                // 1. 先抓出所有日誌，在客戶端過濾後再更新 (避免 Where 條件造成的報錯)
+                // 為了避免複合索引報錯，抓取全部再篩選
                 const logsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs');
                 const logSnap = await getDocs(logsRef);
                 for(let d of logSnap.docs) {
@@ -977,7 +925,6 @@
                      }
                 }
 
-                // 2. 同樣方式更新使用者的 prizes
                 const userRef = collection(db, 'artifacts', APP_ID, 'users', phone, 'prizes');
                 const userSnap = await getDocs(userRef);
                 for(let d of userSnap.docs) {
@@ -987,7 +934,7 @@
                      }
                 }
                 
-                showToast("✅ 次數已重置");
+                showToast("✅ 次數已成功重置");
                 loadTodayPlayers();
                 if (phone === state.phone) loadUserStatus().then(updateUserUI);
             } catch(e) { console.error(e); showToast("重置連線失敗"); }
@@ -1010,7 +957,7 @@
                     div.className = "flex justify-between items-center bg-white p-2 rounded border border-gray-100 text-xs";
                     div.innerHTML = `
                         <div><span class="font-bold mr-2">${data.name || '無名'}</span><span class="font-mono text-gray-400">${data.phone}</span></div>
-                        <button onclick="askConfirm('刪除確認','刪除會員後將無法登入，確定刪除？', () => deleteMember('${docSnap.id}'))" class="text-rose-400 font-bold px-2">刪除</button>
+                        <button onclick="askConfirm('刪除確認','確定刪除此會員？', () => deleteMember('${docSnap.id}'))" class="text-rose-400 font-bold px-2">刪除</button>
                     `;
                     list.appendChild(div);
                 });
@@ -1035,11 +982,10 @@
         window.deleteMember = async (id) => {
             showLoading();
             try {
-                // 使用 fetch 直接呼叫 REST API 刪除 (確保能繞過某些權限問題)
                 await fetch(`https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/artifacts/${APP_ID}/public/data/beauty_members/${id}`, { method: 'DELETE' });
                 showToast("🗑️ 已刪除");
                 loadAdminMembers();
-            } catch(e) { console.error(e); showToast("刪除失敗 (請檢查權限)"); }
+            } catch(e) { console.error(e); showToast("刪除失敗"); }
             hideLoading();
         };
 
@@ -1059,6 +1005,7 @@
                 list.appendChild(div);
             });
         }
+        
         window.updatePrizeField = (idx, field, val) => { state.prizePool[idx][field] = val; };
         window.removePrize = (idx) => { state.prizePool.splice(idx, 1); renderAdminPrizes(); };
         window.addPrize = () => {
@@ -1080,7 +1027,6 @@
             hideLoading();
         };
 
-        // 啟動系統
         window.onload = initSystem;
     </script>
 </body>
