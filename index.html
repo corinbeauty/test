@@ -374,12 +374,11 @@
         <div class="mt-4 pt-4 border-t border-gray-50 shrink-0">
             <div class="flex justify-between items-center mb-3">
                 <p class="text-[9px] text-gray-400 font-medium tracking-tight">每日 23:59 自動重置抽獎次數</p>
-                <span onclick="openAdminDashboard()" class="text-[9px] text-pink-600/50 font-bold cursor-pointer hover:text-pink-600 transition-colors bg-pink-50 px-2 py-0.5 rounded uppercase tracking-wider">管理員專區</span>
             </div>
             <div class="text-center space-y-1">
                 <p class="text-[9px] text-gray-300 tracking-wide">建議使用手機瀏覽以獲得最佳操作體驗</p>
-                <p class="text-[10px] text-gray-400 font-bold tracking-widest uppercase">System By Corin</p>
-                <p class="text-[8px] text-gray-300/60 font-mono tracking-tighter">v28.5.Wheel.DB</p>
+                <p onclick="openAdminDashboard()" class="text-[10px] text-gray-400 font-bold tracking-widest uppercase cursor-pointer hover:text-pink-400 transition-colors">System By Corin</p>
+                <p class="text-[8px] text-gray-300/60 font-mono tracking-tighter">v28.6.Wheel.DB</p>
             </div>
         </div>
     </div>
@@ -1122,7 +1121,7 @@
 
         window.showMsg = (text) => { document.getElementById('msg-text').innerText = text; document.getElementById('msg-modal').classList.add('modal-active'); };
         window.closeModal = (id) => { document.getElementById(id).classList.remove('modal-active'); };
-        window.handleReservation = () => { window.open("https://lin.ee/EeqKZ4u", "_blank"); };
+        window.handleReservation = () => { window.open("https://liff.line.me/2010909434-eVswjkpc", "_blank"); };
 
         function startTimer() {
             const el = document.getElementById('countdown-timer');
