@@ -15,8 +15,8 @@
         body { 
             font-family: 'Noto Sans TC', sans-serif; 
             -webkit-tap-highlight-color: transparent; 
-            background-color: #fdf8f5; /* 更柔和的高級背景色 */
-            background-image: radial-gradient(#fce7f3 1px, transparent 1px);
+            background-color: #fffbeb; /* 鵝黃色背景 */
+            background-image: radial-gradient(#fde68a 1px, transparent 1px);
             background-size: 20px 20px;
         }
         
@@ -40,8 +40,8 @@
         }
 
         .loading-spinner {
-            border: 3px solid rgba(236, 72, 153, 0.1);
-            border-top: 3px solid #d0af95; /* 配合LOGO的香檳金色 */
+            border: 3px solid rgba(245, 158, 11, 0.1);
+            border-top: 3px solid #f59e0b; /* 鵝黃/琥珀色 */
             border-radius: 50%;
             width: 32px;
             height: 32px;
@@ -49,12 +49,12 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* 中獎資訊浮水印背景 */
+        /* 中獎資訊浮水印背景 (鵝黃系) */
         .result-bg-watermark {
             background-color: rgba(255, 255, 255, 0.95);
             background-image:
                 url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 200 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg transform='translate(10, 0)' opacity='0.04'%3E%3Cpath d='M 85,25 A 40,40 0 1,0 85,95 A 30,30 0 1,1 85,25 Z' fill='%23d0af95'/%3E%3Cpath d='M 85,25 C 100,25 100,25 100,25 C 95,55 95,65 100,95 C 85,95 85,95 85,95 C 90,65 90,55 85,25 Z' fill='%23ac8468'/%3E%3Cpath d='M 100,25 C 140,25 140,60 110,60 C 120,60 120,35 100,35 Z' fill='%23ac8468'/%3E%3Cpath d='M 110,60 C 125,60 135,80 155,95 C 135,95 125,90 115,80 C 105,95 90,95 85,95 C 100,90 100,70 110,60 Z' fill='%23ac8468'/%3E%3C/g%3E%3C/svg%3E"),
-                repeating-linear-gradient(45deg, rgba(208, 175, 149, 0.04) 0px, rgba(208, 175, 149, 0.04) 1px, transparent 1px, transparent 6px);
+                repeating-linear-gradient(45deg, rgba(245, 158, 11, 0.04) 0px, rgba(245, 158, 11, 0.04) 1px, transparent 1px, transparent 6px);
             background-size: 120px 120px, auto;
             background-position: center center, 0 0;
             backdrop-filter: blur(8px);
@@ -72,10 +72,10 @@
             height: 320px;
             margin: 0 auto;
             border-radius: 50%;
-            box-shadow: 0 10px 25px rgba(219, 39, 119, 0.15), inset 0 0 15px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.15), inset 0 0 15px rgba(0,0,0,0.05);
             background: #fff;
             padding: 8px;
-            border: 4px solid #fdf2f8;
+            border: 4px solid #fef3c7; /* 淡黃色外框 */
             transition: all 0.5s ease;
         }
         
@@ -98,14 +98,14 @@
             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
         }
 
-        /* 按鈕立體效果 */
+        /* 按鈕立體效果 (鵝黃系) */
         .btn-3d {
-            box-shadow: 0 6px 0 #be185d;
+            box-shadow: 0 6px 0 #b45309; /* 深琥珀色陰影 */
             transition: all 0.1s;
         }
         .btn-3d:active:not(:disabled) {
             transform: translateY(6px);
-            box-shadow: 0 0px 0 #be185d;
+            box-shadow: 0 0px 0 #b45309;
         }
         .btn-3d:disabled {
             opacity: 0.5;
@@ -120,17 +120,13 @@
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 
-    <!-- 純程式碼手繪的 CR 香檳金 LOGO (隱藏定義，後續透過 use 標籤重複使用) -->
+    <!-- 純程式碼手繪的 CR 香檳金 LOGO -->
     <svg style="display: none;">
         <symbol id="drawn-logo" viewBox="0 0 200 120">
             <g transform="translate(10, 0)">
-                <!-- 完美曲線的 C -->
                 <path d="M 85,25 A 40,40 0 1,0 85,95 A 30,30 0 1,1 85,25 Z" fill="#d0af95"/>
-                <!-- R 的優雅直柱 -->
                 <path d="M 85,25 C 100,25 100,25 100,25 C 95,55 95,65 100,95 C 85,95 85,95 85,95 C 90,65 90,55 85,25 Z" fill="#ac8468"/>
-                <!-- R 的頂部迴圈 -->
                 <path d="M 100,25 C 140,25 140,60 110,60 C 120,60 120,35 100,35 Z" fill="#ac8468"/>
-                <!-- R 的柔和勾腳 -->
                 <path d="M 110,60 C 125,60 135,80 155,95 C 135,95 125,90 115,80 C 105,95 90,95 85,95 C 100,90 100,70 110,60 Z" fill="#ac8468"/>
             </g>
             <text x="100" y="112" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="8" font-weight="400" letter-spacing="5" text-anchor="middle" fill="#ac8468">HAIR REMOVAL</text>
@@ -141,21 +137,21 @@
     <div id="status-overlay" class="fixed inset-0 bg-white z-[100] hidden flex-col items-center justify-center p-6 text-center">
         <div id="loading-ui">
             <div class="loading-spinner mx-auto mb-4"></div>
-            <p class="text-pink-600 font-medium italic">驗證會員資料庫中...</p>
+            <p class="text-amber-600 font-medium italic">驗證會員資料庫中...</p>
         </div>
         <div id="error-ui" class="hidden">
             <div class="text-red-500 text-4xl mb-4">⚠️</div>
             <h2 class="text-lg font-bold text-gray-800 mb-2">連線發生錯誤</h2>
             <p id="error-message" class="text-sm text-gray-600 mb-6 px-4"></p>
-            <button onclick="location.reload()" class="bg-pink-600 text-white px-8 py-2 rounded-full text-sm font-bold shadow-lg">重新整理</button>
+            <button onclick="location.reload()" class="bg-amber-500 text-white px-8 py-2 rounded-full text-sm font-bold shadow-lg">重新整理</button>
         </div>
     </div>
 
     <!-- 會員專屬驗證彈窗 (預設顯示) -->
     <div id="member-gate-modal" class="fixed inset-0 bg-white/95 z-[90] flex flex-col items-center justify-center p-6 backdrop-blur-md">
-        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl border border-pink-50 relative overflow-hidden">
-            <div class="absolute -top-10 -right-10 w-32 h-32 bg-amber-50 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
-            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-pink-50 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl border border-amber-50 relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-yellow-50 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-amber-100 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
             
             <div class="relative z-10">
                 <!-- 手繪 LOGO -->
@@ -164,17 +160,20 @@
                 </div>
                 
                 <h3 class="text-2xl font-black text-gray-800 mb-2">幸運轉轉樂</h3>
-                <p class="text-gray-500 mb-8 font-bold text-sm">此為 Corin Beauty 會員專屬活動</p>
+                <p class="text-gray-500 mb-6 font-bold text-sm">此為 Corin Beauty 會員專屬活動</p>
                 
-                <div class="space-y-4">
-                    <input type="tel" id="member-phone" placeholder="請輸入電話號碼" class="w-full border-2 border-gray-100 rounded-xl px-4 py-4 text-center focus:border-pink-400 outline-none font-bold text-lg tracking-wider bg-gray-50/50" maxlength="10">
-                    <button id="btn-verify" onclick="verifyMember()" class="w-full py-4 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-2xl font-black shadow-lg active:scale-95 transition-transform mt-2">確認登入</button>
+                <div class="space-y-3">
+                    <input type="tel" id="member-phone" placeholder="請輸入電話號碼" class="w-full border-2 border-gray-100 rounded-xl px-4 py-4 text-center focus:border-amber-400 outline-none font-bold text-lg tracking-wider bg-gray-50/50" maxlength="10">
+                    <div class="text-right">
+                        <a href="https://check-balance-jbiy.vercel.app/" class="text-xs text-amber-600 font-bold hover:text-amber-700 underline decoration-amber-300">我還不是會員？註冊</a>
+                    </div>
+                    <button id="btn-verify" onclick="verifyMember()" class="w-full py-4 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-2xl font-black shadow-lg active:scale-95 transition-transform mt-1">確認登入</button>
                 </div>
             </div>
         </div>
         
         <div class="mt-8 text-center space-y-1.5">
-            <p onclick="openAdminDashboard()" class="text-[10px] text-gray-300 font-bold tracking-widest uppercase cursor-pointer hover:text-gray-500 transition-colors">System By Corin</p>
+            <p onclick="openAdminDashboard()" class="text-[10px] text-gray-300 font-bold tracking-widest uppercase cursor-pointer hover:text-amber-500 transition-colors">System By Corin</p>
             <p class="text-[10px] text-gray-400">原點數位科技 © 2026 All rights reserved.</p>
         </div>
     </div>
@@ -186,8 +185,8 @@
             <h3 class="text-xl font-black text-gray-800 mb-2">查無會員資料</h3>
             <p class="text-gray-500 text-sm mb-6 leading-relaxed">我們在會員庫中找不到這支電話號碼，請先前往註冊會員，完成後即可參與活動喔！</p>
             <div class="flex flex-col gap-3">
-                <button onclick="redirectToRegister()" class="w-full py-4 bg-gray-800 text-white rounded-2xl font-black shadow-lg">立即前往註冊</button>
-                <button onclick="closeModal('member-not-found-modal'); document.getElementById('member-gate-modal').classList.remove('hidden');" class="w-full py-3 bg-white text-gray-400 font-bold hover:text-gray-600 transition-colors">重新輸入電話</button>
+                <button onclick="redirectToRegister()" class="w-full py-4 bg-amber-500 text-white rounded-2xl font-black shadow-lg">立即前往註冊</button>
+                <button onclick="closeModal('member-not-found-modal'); document.getElementById('member-gate-modal').classList.remove('hidden');" class="w-full py-3 bg-white text-gray-400 font-bold hover:text-gray-600 transition-colors border border-gray-100 rounded-2xl">重新輸入電話</button>
             </div>
         </div>
     </div>
@@ -195,10 +194,10 @@
     <!-- 今日次數已達上限精美提示框 -->
     <div id="limit-modal" class="fixed inset-0 bg-black/60 z-[160] hidden items-center justify-center p-6 backdrop-blur-sm">
         <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden">
-            <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🌙</div>
+            <div class="w-16 h-16 bg-yellow-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🌙</div>
             <h3 class="text-xl font-black text-gray-800 mb-2">今日次數已完成</h3>
             <p class="text-gray-500 text-sm mb-6 leading-relaxed">您今日的 3 次抽獎機會已使用完畢，<br>請明日再來玩！</p>
-            <button onclick="enterHistoryView()" class="w-full py-4 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-2xl font-black shadow-lg">查看我的獎項</button>
+            <button onclick="enterHistoryView()" class="w-full py-4 bg-gradient-to-r from-amber-400 to-amber-500 text-white rounded-2xl font-black shadow-lg">查看我的獎項</button>
         </div>
     </div>
 
@@ -206,7 +205,7 @@
     <div id="admin-auth-modal" class="fixed inset-0 bg-black/80 z-[120] hidden items-center justify-center p-6 backdrop-blur-md">
         <div class="bg-white rounded-[2rem] p-8 max-w-xs w-full text-center shadow-2xl">
             <h3 class="text-xl font-black text-gray-800 mb-4">管理員專區</h3>
-            <input type="password" id="admin-pass" class="w-full border-2 border-gray-100 rounded-xl px-4 py-3 mb-4 text-center focus:border-gray-400 outline-none tracking-widest font-mono" placeholder="輸入管理密碼">
+            <input type="password" id="admin-pass" class="w-full border-2 border-gray-100 rounded-xl px-4 py-3 mb-4 text-center focus:border-amber-400 outline-none tracking-widest font-mono" placeholder="輸入管理密碼">
             <div class="flex gap-2">
                 <button onclick="closeModal('admin-auth-modal')" class="flex-1 py-3 bg-gray-100 text-gray-400 rounded-xl font-bold">取消</button>
                 <button onclick="verifyAdmin()" class="flex-1 py-3 bg-gray-800 text-white rounded-xl font-bold">進入後台</button>
@@ -262,12 +261,12 @@
                     <h3 class="font-black text-gray-800 mb-2 text-center">重置指定玩家今日次數</h3>
                     <p class="text-sm text-gray-500 mb-6 text-center">輸入會員手機號碼，清除其今日已抽獎次數，讓該玩家可重新遊玩 3 次。</p>
                     
-                    <input type="tel" id="reset-phone-input" class="w-full border-2 border-gray-100 rounded-xl px-4 py-3 mb-4 text-center focus:border-rose-400 outline-none font-bold" placeholder="輸入手機號碼" maxlength="10">
-                    <button onclick="adminResetTargetUser()" class="w-full py-4 bg-rose-500 text-white rounded-2xl font-black shadow-lg">立即重置</button>
+                    <input type="tel" id="reset-phone-input" class="w-full border-2 border-gray-100 rounded-xl px-4 py-3 mb-4 text-center focus:border-amber-400 outline-none font-bold" placeholder="請輸入手機號碼" maxlength="10">
+                    <button onclick="adminResetTargetUser()" class="w-full py-4 bg-orange-500 text-white rounded-2xl font-black shadow-lg">立即重置</button>
                 </div>
             </div>
 
-            <!-- 獎項分頁 -->
+            <!-- 獎項分頁 (支援編輯文字與隱藏) -->
             <div id="admin-page-prizes" class="hidden space-y-4">
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                     <h3 class="font-bold text-gray-800 mb-3 text-sm">新增獎項 (自動加入轉盤)</h3>
@@ -278,7 +277,10 @@
                     </div>
                 </div>
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-                    <h3 class="font-bold text-gray-800 mb-3 text-sm">目前轉盤獎項機率配比</h3>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-gray-800 text-sm">獎項編輯與機率</h3>
+                        <span class="text-[10px] text-gray-400">勾選即可隱藏</span>
+                    </div>
                     <div id="prize-manage-list" class="space-y-2 max-h-[40vh] overflow-y-auto pr-1"></div>
                 </div>
                 <button id="btn-save-admin" onclick="saveAndClosePrizeAdmin()" class="w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold shadow-lg">同步儲存設定</button>
@@ -331,7 +333,7 @@
         <!-- 遊戲頁面 -->
         <div id="page-game" class="flex-1 flex flex-col">
             <!-- 醒目提醒 -->
-            <div class="bg-rose-500 text-white rounded-2xl p-3 my-4 shadow-md border-b-4 border-rose-600">
+            <div class="bg-orange-500 text-white rounded-2xl p-3 my-4 shadow-md border-b-4 border-orange-600">
                 <div class="flex items-center gap-2 font-black text-[11px] mb-1.5"><span>⚠️ 重要提醒</span></div>
                 <div class="text-[10px] font-bold space-y-1">
                     <p class="flex items-start gap-1.5 leading-tight"><span class="shrink-0">•</span> 獎項逾期失效，建議獲獎後「截圖保存」。</p>
@@ -343,11 +345,11 @@
                 
                 <!-- 精美轉盤區域 -->
                 <div class="relative w-full flex justify-center items-center py-2">
-                    <!-- 頂部指針 -->
+                    <!-- 頂部指針 (配合鵝黃色系) -->
                     <svg class="wheel-pointer" viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20 50L0 20C0 8.95431 8.95431 0 20 0C31.0457 0 40 8.95431 40 20L20 50Z" fill="#be185d"/>
-                        <path d="M20 45L4 20C4 11.1634 11.1634 4 20 4C28.8366 4 36 11.1634 36 20L20 45Z" fill="#ec4899"/>
-                        <circle cx="20" cy="16" r="6" fill="#fbcfe8"/>
+                        <path d="M20 50L0 20C0 8.95431 8.95431 0 20 0C31.0457 0 40 8.95431 40 20L20 50Z" fill="#b45309"/>
+                        <path d="M20 45L4 20C4 11.1634 11.1634 4 20 4C28.8366 4 36 11.1634 36 20L20 45Z" fill="#f59e0b"/>
+                        <circle cx="20" cy="16" r="6" fill="#fef3c7"/>
                     </svg>
 
                     <div id="wheel-container" class="wheel-container">
@@ -364,17 +366,17 @@
                         <div id="prize-result-overlay" class="absolute inset-0 z-30 flex flex-col items-center justify-center text-center p-4 result-bg-watermark opacity-0 pointer-events-none transition-opacity duration-500 rounded-full border-4 border-white shadow-2xl scale-95 transform">
                             
                             <!-- 浮水印手繪 LOGO -->
-                            <div class="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none z-0">
-                                <svg class="w-40 h-40"><use href="#drawn-logo"></use></svg>
+                            <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none z-0">
+                                <svg class="w-48 h-48"><use href="#drawn-logo"></use></svg>
                             </div>
 
                             <div class="result-content-z flex flex-col items-center justify-center w-full">
-                                <div id="top-prize-banner" class="hidden text-[10px] font-bold text-yellow-600 mb-1.5 uppercase tracking-widest animate-bounce bg-yellow-50 px-2 py-0.5 rounded-full border border-yellow-200">🌟 BIG WINNER 🌟</div>
-                                <div id="normal-prize-banner" class="text-[11px] font-bold text-gray-600 mb-1.5 uppercase tracking-wide bg-gray-50 px-2 py-0.5 rounded-full border border-gray-200">Congratulations</div>
+                                <div id="top-prize-banner" class="hidden text-[10px] font-bold text-yellow-700 mb-1.5 uppercase tracking-widest animate-bounce bg-yellow-100 px-2 py-0.5 rounded-full border border-yellow-300">🌟 BIG WINNER 🌟</div>
+                                <div id="normal-prize-banner" class="text-[11px] font-bold text-amber-600 mb-1.5 uppercase tracking-wide bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">Congratulations</div>
                                 <div id="prize-name" class="text-[15px] font-black text-gray-900 leading-snug mb-3 px-1 drop-shadow-sm line-clamp-3"></div>
                                 <div class="bg-white/90 backdrop-blur-md rounded-xl border border-gray-200/80 w-full max-w-[200px] p-2 shadow-sm">
                                     <div id="verification-time" class="text-[9px] text-gray-500 font-mono truncate"></div>
-                                    <div id="expiry-date" class="text-[10px] text-rose-500 font-bold mt-1 border-t border-gray-100/50 pt-1"></div>
+                                    <div id="expiry-date" class="text-[10px] text-orange-500 font-bold mt-1 border-t border-gray-100/50 pt-1"></div>
                                 </div>
                             </div>
                         </div>
@@ -386,13 +388,13 @@
                     <button id="btn-spin" onclick="startSpin()" class="w-full btn-3d py-4 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-2xl text-lg font-black tracking-wide flex items-center justify-center gap-2">
                         <span>🎡</span> 啟動轉盤 (剩餘 <span id="remaining-count">0</span> 次)
                     </button>
-                    <button id="btn-reset-spin" onclick="resetWheelUI()" class="w-full hidden btn-3d py-4 bg-pink-600 text-white rounded-2xl text-lg font-black tracking-wide flex items-center justify-center gap-2 mt-0">
+                    <button id="btn-reset-spin" onclick="resetWheelUI()" class="w-full hidden btn-3d py-4 bg-amber-500 text-white rounded-2xl text-lg font-black tracking-wide flex items-center justify-center gap-2 mt-0">
                         再次抽獎 (剩餘 <span id="remaining-count-next">0</span> 次)
                     </button>
                 </div>
             </div>
 
-            <!-- 次數用盡遮罩 (Locked) - 在進入主畫面後才耗盡時顯示 -->
+            <!-- 次數用盡遮罩 (Locked) -->
             <div id="locked-overlay" class="hidden flex-1 flex flex-col items-center justify-center text-center py-6 bg-gray-50 rounded-3xl mb-6 border border-dashed border-gray-200">
                 <div class="text-5xl mb-4 text-gray-300">🌙</div>
                 <h3 class="text-gray-800 font-black text-xl mb-1">今日抽獎已結束</h3>
@@ -420,9 +422,9 @@
             </div>
 
             <div class="flex gap-2 mb-4 shrink-0">
-                <div class="flex-1 bg-emerald-50 border border-emerald-100 rounded-xl p-2 text-center">
-                    <div id="count-valid" class="text-emerald-600 font-black text-lg leading-tight">0</div>
-                    <div class="text-[9px] text-emerald-500 font-bold uppercase">有效/未使用</div>
+                <div class="flex-1 bg-amber-50 border border-amber-100 rounded-xl p-2 text-center">
+                    <div id="count-valid" class="text-amber-600 font-black text-lg leading-tight">0</div>
+                    <div class="text-[9px] text-amber-500 font-bold uppercase">有效/未使用</div>
                 </div>
                 <div class="flex-1 bg-gray-50 border border-gray-100 rounded-xl p-2 text-center">
                     <div id="count-invalid" class="text-gray-400 font-black text-lg leading-tight">0</div>
@@ -485,24 +487,24 @@
         let memberPhone = ''; 
         let memberName = ''; 
 
-        // 預設獎項池
+        // 預設獎項池 (新增 hidden 屬性)
         const DEFAULT_PRIZE_POOL = [
-            { name: "1獎－當日當次消費 5 折 [以原價總額計算]", weight: 2 },
-            { name: "2獎－當日當次消費 7 折 [以原價總額計算]", weight: 4 },
-            { name: "3獎－當日當次消費 75 折 [以原價總額計算]", weight: 4 },
-            { name: "4獎－暗沉掰掰單部位三堂 $899 [原價1399]", weight: 30 },
-            { name: "5獎－腋下除毛優惠價 $99 [限新客]", weight: 50 },
-            { name: "6獎－免費除毛專用乳液 50ml [價值239]", weight: 2 },
-            { name: "7獎－現折 100 元", weight: 70 },
-            { name: "8獎－現折 50 元", weight: 80 },
-            { name: "9獎－靚顏深層護膚課程 $899", weight: 40 },
-            { name: "10獎－睫毛管理 $699", weight: 40 },
-            { name: "儲值加碼金 $500", weight: 20 },
-            { name: "儲值加碼金 $600", weight: 15 },
-            { name: "儲值加碼金 $700", weight: 10 },
-            { name: "儲值加碼金 $800", weight: 8 },
-            { name: "儲值加碼金 $900", weight: 5 },
-            { name: "儲值加碼金 $1000", weight: 3 }
+            { name: "1獎－當日當次消費 5 折 [以原價總額計算]", weight: 2, hidden: false },
+            { name: "2獎－當日當次消費 7 折 [以原價總額計算]", weight: 4, hidden: false },
+            { name: "3獎－當日當次消費 75 折 [以原價總額計算]", weight: 4, hidden: false },
+            { name: "4獎－暗沉掰掰單部位三堂 $899 [原價1399]", weight: 30, hidden: false },
+            { name: "5獎－腋下除毛優惠價 $99 [限新客]", weight: 50, hidden: false },
+            { name: "6獎－免費除毛專用乳液 50ml [價值239]", weight: 2, hidden: false },
+            { name: "7獎－現折 100 元", weight: 70, hidden: false },
+            { name: "8獎－現折 50 元", weight: 80, hidden: false },
+            { name: "9獎－靚顏深層護膚課程 $899", weight: 40, hidden: false },
+            { name: "10獎－睫毛管理 $699", weight: 40, hidden: false },
+            { name: "儲值加碼金 $500", weight: 20, hidden: false },
+            { name: "儲值加碼金 $600", weight: 15, hidden: false },
+            { name: "儲值加碼金 $700", weight: 10, hidden: false },
+            { name: "儲值加碼金 $800", weight: 8, hidden: false },
+            { name: "儲值加碼金 $900", weight: 5, hidden: false },
+            { name: "儲值加碼金 $1000", weight: 3, hidden: false }
         ];
 
         let state = {
@@ -516,9 +518,9 @@
         let currentRotation = 0; 
         const canvasSize = 300; 
 
-        // 轉盤配色表 (交錯使用)
-        const WHEEL_COLORS = ['#fdf2f8', '#fce7f3', '#fbcfe8', '#ffffff', '#fff1f2', '#ffe4e6'];
-        const TEXT_COLORS = ['#be185d', '#db2777', '#9d174d', '#e11d48', '#9f1239'];
+        // 轉盤配色表 (鵝黃系)
+        const WHEEL_COLORS = ['#fffbeb', '#fef3c7', '#fde68a', '#ffffff', '#fff8f1', '#fef08a'];
+        const TEXT_COLORS = ['#92400e', '#b45309', '#78350f', '#d97706', '#9a3412'];
 
         async function initApp() {
             // 強制每次重整都要重新登入
@@ -565,7 +567,7 @@
                     // 以電話做為唯一識別 UID
                     userId = `user_${phone}`; 
                     
-                    await loadUserProfileData(); // 此處會獲取今日已玩次數 state.count
+                    await loadUserProfileData(); 
                     
                     document.getElementById('history-user-info').innerText = maskName(memberName);
                     document.getElementById('history-user-phone').innerText = memberPhone;
@@ -586,9 +588,8 @@
                         document.getElementById('main-card').classList.remove('hidden');
                     }
                 } else {
-                    document.getElementById('member-gate-modal').classList.add('hidden');
-                    document.getElementById('member-not-found-modal').classList.remove('hidden');
-                    document.getElementById('member-not-found-modal').classList.add('flex');
+                    // 自動跳轉至註冊 (若需彈窗引導也可保留)
+                    redirectToRegister();
                 }
             } catch (e) {
                 console.error("Verification error:", e);
@@ -600,7 +601,6 @@
         };
 
         window.enterHistoryView = () => {
-            // 從次數上限彈窗進入歷史紀錄
             document.getElementById('limit-modal').classList.remove('flex', 'modal-active');
             document.getElementById('limit-modal').classList.add('hidden');
             
@@ -612,7 +612,6 @@
             switchTab('history');
         };
 
-        // 姓名遮蔽邏輯：中間第2字米掉 (王小明 -> 王*明, 陳大 -> 陳*)
         function maskName(name) {
             if (!name) return '未知';
             if (name.length <= 1) return name;
@@ -699,7 +698,7 @@
                 const maxDots = Math.max(3, totalMax); 
                 for(let i=0; i<maxDots; i++) {
                     const dot = document.createElement('div');
-                    dot.className = `w-1.5 h-1.5 rounded-full ${i < (totalMax - remaining) ? 'bg-gray-200' : (i < totalMax ? 'bg-gray-800' : 'hidden')}`;
+                    dot.className = `w-1.5 h-1.5 rounded-full ${i < (totalMax - remaining) ? 'bg-amber-100' : (i < totalMax ? 'bg-gray-800' : 'hidden')}`;
                     dots.appendChild(dot);
                 }
             }
@@ -717,7 +716,7 @@
 
         let wheelCanvas, wheelCtx;
         function initWheelCanvas() {
-            if(wheelCanvas) return; // 避免重複初始化
+            if(wheelCanvas) return; 
             wheelCanvas = document.getElementById('wheel-canvas');
             wheelCtx = wheelCanvas.getContext('2d', { alpha: false });
             const scale = window.devicePixelRatio || 2;
@@ -726,7 +725,6 @@
             wheelCtx.scale(scale, scale);
         }
 
-        // 文字換行函數：支援多排顯示
         function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
             let words = text.split(''); 
             let line = '';
@@ -737,7 +735,6 @@
                 lines.push(parts[0] + '－');
                 words = parts[1].split('');
             } else if (text.includes(' ')) {
-                // 若有空格也可以作為斷行參考
                 const parts = text.split(' ');
                 if(parts.length > 1) {
                     lines.push(parts[0]);
@@ -758,7 +755,6 @@
             }
             lines.push(line);
             
-            // 縮放並允許最多顯示 3 行
             if(lines.length > 3) {
                 lines = lines.slice(0, 3);
                 lines[2] = lines[2].substring(0, lines[2].length - 1) + '..';
@@ -777,7 +773,9 @@
             const cx = canvasSize / 2;
             const cy = canvasSize / 2;
             const radius = cx - 10;
-            const slices = state.prizePool.length;
+            
+            const visiblePrizes = state.prizePool.filter(p => !p.hidden);
+            const slices = visiblePrizes.length || 1; // 避免 0
             const arc = (2 * Math.PI) / slices;
 
             wheelCtx.fillStyle = '#ffffff';
@@ -793,7 +791,7 @@
                 wheelCtx.fill();
                 
                 wheelCtx.lineWidth = 1.5;
-                wheelCtx.strokeStyle = '#fbcfe8';
+                wheelCtx.strokeStyle = '#fde68a';
                 wheelCtx.stroke();
 
                 wheelCtx.save();
@@ -805,9 +803,8 @@
                 wheelCtx.textAlign = 'right';
                 wheelCtx.textBaseline = 'middle';
                 
-                // 更小的字體以塞入格子
                 wheelCtx.font = 'bold 8.5px "Noto Sans TC", sans-serif';
-                const text = state.prizePool[i].name;
+                const text = visiblePrizes[i] ? visiblePrizes[i].name : '';
                 wrapText(wheelCtx, text, radius - 18, 0, radius - 60, 11); 
                 
                 wheelCtx.restore();
@@ -816,7 +813,7 @@
             wheelCtx.beginPath();
             wheelCtx.arc(cx, cy, radius, 0, 2 * Math.PI, false);
             wheelCtx.lineWidth = 4;
-            wheelCtx.strokeStyle = '#fbcfe8';
+            wheelCtx.strokeStyle = '#fde68a';
             wheelCtx.stroke();
             
             for(let i = 0; i < slices * 2; i++) {
@@ -825,30 +822,32 @@
                 const dotY = cy + Math.sin(dotAngle) * (radius - 5);
                 wheelCtx.beginPath();
                 wheelCtx.arc(dotX, dotY, 2, 0, 2 * Math.PI);
-                wheelCtx.fillStyle = '#f9a8d4';
+                wheelCtx.fillStyle = '#f59e0b';
                 wheelCtx.fill();
             }
         }
 
-        // 更平滑且稍微慢一點的轉動緩動函數
         function easeOutCirc(x) { return Math.sqrt(1 - Math.pow(x - 1, 2)); }
 
         window.startSpin = async () => {
             if (isSpinning) return;
             if (state.count >= INITIAL_CHANCES) { updateUI(); return; }
 
+            const visiblePrizes = state.prizePool.filter(p => !p.hidden);
+            if (visiblePrizes.length === 0) return showMsg("尚未設定獎項，請聯繫管理員");
+
             isSpinning = true;
             document.getElementById('btn-spin').disabled = true;
             document.getElementById('prize-result-overlay').style.opacity = '0';
             document.getElementById('wheel-container').classList.remove('scale-105', 'shadow-2xl');
             
-            const { prizeName, prizeIndex } = preparePrize();
+            const { prizeName, prizeIndex } = preparePrize(visiblePrizes);
             
-            const slices = state.prizePool.length;
+            const slices = visiblePrizes.length;
             const arc = (2 * Math.PI) / slices;
             
             const targetBaseRotation = (-Math.PI / 2) - (prizeIndex * arc + arc / 2);
-            const extraSpins = 10 * 2 * Math.PI; // 增加圈數
+            const extraSpins = 10 * 2 * Math.PI; 
             
             let targetRotation = extraSpins + targetBaseRotation;
             let remainder = currentRotation % (2 * Math.PI);
@@ -857,7 +856,7 @@
                 targetRotation += 2 * Math.PI;
             }
 
-            const duration = 7500; // 時間拉長，讓轉動變慢變優雅
+            const duration = 7500; 
             const startRotation = currentRotation;
             const startTime = performance.now();
 
@@ -878,19 +877,19 @@
             requestAnimationFrame(animate);
         };
 
-        function preparePrize() {
-            const totalWeight = state.prizePool.reduce((sum, p) => sum + Number(p.weight), 0);
+        function preparePrize(visiblePrizes) {
+            const totalWeight = visiblePrizes.reduce((sum, p) => sum + Number(p.weight), 0);
             let random = Math.random() * totalWeight;
             let prizeIndex = 0;
-            let prizeName = state.prizePool[0].name;
+            let prizeName = visiblePrizes[0].name;
             
-            for (let i = 0; i < state.prizePool.length; i++) { 
-                if (random < state.prizePool[i].weight) { 
-                    prizeName = state.prizePool[i].name; 
+            for (let i = 0; i < visiblePrizes.length; i++) { 
+                if (random < visiblePrizes[i].weight) { 
+                    prizeName = visiblePrizes[i].name; 
                     prizeIndex = i;
                     break; 
                 } 
-                random -= state.prizePool[i].weight; 
+                random -= visiblePrizes[i].weight; 
             }
             
             const now = Date.now(), exp = now + (EXPIRY_DAYS * 86400000);
@@ -917,14 +916,14 @@
                 document.getElementById('top-prize-banner').classList.remove('hidden');
                 document.getElementById('normal-prize-banner').classList.add('hidden');
                 
-                const end = Date.now() + 3000, colors = ['#d0af95', '#ac8468', '#fbcfe8', '#ffffff'];
+                const end = Date.now() + 3000, colors = ['#f59e0b', '#fbbf24', '#fef3c7', '#ffffff'];
                 (function frame() {
                     confetti({ particleCount: 5, angle: 60, spread: 65, origin: { x: 0 }, colors: colors });
                     confetti({ particleCount: 5, angle: 120, spread: 65, origin: { x: 1 }, colors: colors });
                     if (Date.now() < end) requestAnimationFrame(frame);
                 }());
             } else { 
-                confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 }, colors: ['#d0af95', '#ac8468', '#fbcfe8'] }); 
+                confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 }, colors: ['#f59e0b', '#fbbf24', '#fef3c7'] }); 
                 document.getElementById('top-prize-banner').classList.add('hidden');
                 document.getElementById('normal-prize-banner').classList.remove('hidden');
             }
@@ -936,11 +935,11 @@
             
             try {
                 if(db && userId) {
-                    // 1. 寫入個人獎項庫
+                    // 強制寫入個人資料庫
                     const docRef = await addDoc(collection(db, 'artifacts', APP_ID, 'users', userId, 'prizes'), prizeObj);
                     prizeObj.id = docRef.id;
                     
-                    // 2. 寫入全域日誌供後台查詢
+                    // 強制寫入全站日誌
                     await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs'), {
                         name: memberName,
                         phone: memberPhone,
@@ -948,6 +947,7 @@
                         timestamp: prizeObj.winDate,
                         countUsed: state.count
                     });
+                    console.log("寫入成功");
                 }
             } catch(e) {
                 console.error("Save prize error", e);
@@ -998,7 +998,7 @@
                     html += `<div class="p-4 rounded-2xl border mb-3 transition-all ${p.isRedeemed || isExp ? 'bg-gray-50 border-gray-100 opacity-70' : 'bg-white border-gray-200 shadow-sm'}">
                         <div class="flex justify-between items-start mb-1">
                             <span class="text-[9px] text-gray-400 font-mono">ID: ${p.id ? p.id.substring(0,8) : '---'}</span>
-                            <span class="text-[10px] font-bold ${p.isRedeemed ? 'text-gray-400' : (isExp ? 'text-rose-400' : 'text-emerald-500')}">${p.isRedeemed ? '已使用' : (isExp ? '已逾期' : '有效')}</span>
+                            <span class="text-[10px] font-bold ${p.isRedeemed ? 'text-gray-400' : (isExp ? 'text-orange-400' : 'text-amber-500')}">${p.isRedeemed ? '已使用' : (isExp ? '已逾期' : '有效')}</span>
                         </div>
                         <div class="font-bold text-gray-800 text-sm mb-2">${p.name}</div>
                         <div class="flex justify-between items-end">
@@ -1025,7 +1025,6 @@
             };
         };
 
-        // ADMIN PANEL
         window.openAdminDashboard = () => {
             document.getElementById('admin-pass').value = "";
             document.getElementById('admin-auth-modal').classList.add('modal-active');
@@ -1068,7 +1067,6 @@
             if (tab === 'members') loadMembersAdmin();
         };
 
-        // 讀取全站抽獎紀錄
         window.loadGlobalStats = async () => {
             const tbody = document.getElementById('stats-table-body');
             tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400 font-bold">資料抓取中...</td></tr>';
@@ -1078,7 +1076,7 @@
                 const snap = await getDocs(q);
                 let logs = snap.docs.map(d => d.data());
                 
-                logs.sort((a,b) => b.timestamp - a.timestamp); // 最新在前
+                logs.sort((a,b) => b.timestamp - a.timestamp); 
                 
                 if (logs.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400">目前尚無抽獎紀錄</td></tr>';
@@ -1096,18 +1094,17 @@
                         <td class="p-3 text-[10px] text-gray-400 font-mono">${timeStr}</td>
                         <td class="p-3 text-[11px] font-bold text-gray-700">${maskName(log.name)}</td>
                         <td class="p-3 text-[11px] font-mono text-gray-500">${log.phone}</td>
-                        <td class="p-3 text-[11px] text-center text-rose-500 font-bold">${log.countUsed}</td>
+                        <td class="p-3 text-[11px] text-center text-orange-500 font-bold">${log.countUsed}</td>
                         <td class="p-3 text-[11px] text-gray-800 font-medium truncate max-w-[120px]" title="${log.prizeName}">${log.prizeName}</td>
                     `;
                     tbody.appendChild(tr);
                 });
             } catch(e) {
                 console.error("Load stats error", e);
-                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-rose-400">無法讀取資料</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-orange-400">無法讀取資料</td></tr>';
             }
         };
 
-        // 依電話號碼重置指定玩家次數
         window.adminResetTargetUser = async () => {
             const phone = document.getElementById('reset-phone-input').value.trim();
             if(!phone || phone.length < 8) return showMsg("請輸入完整的電話號碼");
@@ -1120,7 +1117,6 @@
                 if(snap.exists()) {
                     await updateDoc(profileRef, { count: 0 });
                     
-                    // 若剛好是當前登入裝置的帳號，順便更新畫面
                     if (userId === targetUserId) {
                         state.count = 0;
                         resetWheelUI();
@@ -1138,27 +1134,29 @@
             }
         };
 
-        // 獎項管理區塊
         function renderPrizeManageList() {
             const container = document.getElementById('prize-manage-list');
             container.innerHTML = '';
             state.prizePool.forEach((p, index) => {
                 const div = document.createElement('div');
-                div.className = "flex items-center gap-2 bg-gray-50 p-2 rounded-xl";
+                div.className = "flex items-center gap-1 bg-gray-50 p-2 rounded-xl mb-1";
                 div.innerHTML = `
-                    <span class="flex-1 text-[11px] font-bold truncate text-gray-700">${p.name}</span>
-                    <input type="number" onchange="updatePrizeWeight(${index}, this.value)" value="${p.weight}" class="w-12 text-center border-b border-gray-300 text-[11px] bg-transparent outline-none font-bold text-gray-800">
-                    <button onclick="deletePrize(${index})" class="text-rose-400 font-bold px-2 hover:bg-rose-100 rounded">✕</button>
+                    <input type="checkbox" onchange="updatePrizeHidden(${index}, this.checked)" ${p.hidden ? 'checked' : ''} class="w-4 h-4 text-amber-500 rounded border-gray-300 focus:ring-amber-500 cursor-pointer" title="打勾隱藏不顯示">
+                    <input type="text" onchange="updatePrizeName(${index}, this.value)" value="${p.name}" class="flex-1 text-[11px] font-bold text-gray-700 bg-transparent border-b border-gray-200 outline-none px-1" placeholder="獎項名稱">
+                    <input type="number" onchange="updatePrizeWeight(${index}, this.value)" value="${p.weight}" class="w-10 text-center border-b border-gray-200 text-[11px] bg-transparent outline-none font-bold text-gray-800" title="機率權重">
+                    <button onclick="deletePrize(${index})" class="text-orange-400 font-bold px-2 hover:bg-orange-100 rounded">✕</button>
                 `;
                 container.appendChild(div);
             });
         }
+        window.updatePrizeName = (idx, val) => { state.prizePool[idx].name = val; };
         window.updatePrizeWeight = (idx, val) => { state.prizePool[idx].weight = Number(val); };
+        window.updatePrizeHidden = (idx, val) => { state.prizePool[idx].hidden = val; };
         window.deletePrize = (idx) => { if(state.prizePool.length <= 1) return showMsg("至少需保留一個獎項"); state.prizePool.splice(idx, 1); renderPrizeManageList(); };
         window.addPrizeToPool = () => {
             const name = document.getElementById('new-prize-name').value, weight = document.getElementById('new-prize-weight').value;
             if(!name || !weight) return showMsg("請輸入完整名稱與權重");
-            state.prizePool.push({ name, weight: Number(weight) });
+            state.prizePool.push({ name, weight: Number(weight), hidden: false });
             document.getElementById('new-prize-name').value = ''; document.getElementById('new-prize-weight').value = '';
             renderPrizeManageList();
         };
@@ -1168,12 +1166,11 @@
             try {
                 if(db) await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'slot_config'), { prizePool: state.prizePool }, { merge: true });
                 if(wheelCtx) drawWheel(currentRotation); 
-                showMsg("✅ 雲端獎項機率已成功同步");
+                showMsg("✅ 雲端獎項設定已成功同步");
             } catch(e) { console.error(e); showMsg("❌ 儲存失敗"); } 
             finally { btn.innerHTML = `同步儲存設定`; }
         };
 
-        // 會員庫管理邏輯
         window.loadMembersAdmin = async () => {
             const tbody = document.getElementById('members-table-body');
             tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-400 font-bold">資料抓取中...</td></tr>';
@@ -1196,14 +1193,14 @@
                         <td class="p-3 text-[11px] font-bold text-gray-700">${m.name}</td>
                         <td class="p-3 text-[11px] font-mono text-gray-500">${m.phone}</td>
                         <td class="p-3 text-right">
-                            <button onclick="deleteMemberAdmin('${m.id}')" class="text-rose-400 hover:text-rose-600 font-bold px-2 py-1 bg-rose-50 rounded">刪除</button>
+                            <button onclick="deleteMemberAdmin('${m.id}')" class="text-orange-400 hover:text-orange-600 font-bold px-2 py-1 bg-orange-50 rounded">刪除</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
                 });
             } catch(e) {
                 console.error("Load members error", e);
-                tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-rose-400">無法讀取資料</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-orange-400">無法讀取資料</td></tr>';
             }
         };
 
