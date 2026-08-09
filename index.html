@@ -423,6 +423,26 @@
         const MAX_SPINS_PER_DAY = 3;
         const EXPIRY_DAYS = 7;
         
+        // 預設獎項池 (當雲端無資料時自動載入並寫入)
+        const DEFAULT_PRIZE_POOL = [
+            { name: "1獎－當日當次消費 5 折 [以原價總額計算]", weight: 2, isHidden: false },
+            { name: "2獎－當日當次消費 7 折 [以原價總額計算]", weight: 4, isHidden: false },
+            { name: "3獎－當日當次消費 75 折 [以原價總額計算]", weight: 4, isHidden: false },
+            { name: "4獎－暗沉掰掰單部位三堂 $899 [原價1399]", weight: 30, isHidden: false },
+            { name: "5獎－腋下除毛一堂優惠價 $99 [限新客]", weight: 50, isHidden: false },
+            { name: "6獎－免費除毛專用乳液 50ml [價值239]", weight: 2, isHidden: false },
+            { name: "7獎－現折 100 元", weight: 70, isHidden: false },
+            { name: "8獎－現折 50 元", weight: 80, isHidden: false },
+            { name: "9獎－靚顏深層護膚課程 $899", weight: 40, isHidden: false },
+            { name: "10獎－睫毛管理 $699", weight: 40, isHidden: false },
+            { name: "儲值加碼金 $500", weight: 20, isHidden: false },
+            { name: "儲值加碼金 $600", weight: 15, isHidden: false },
+            { name: "儲值加碼金 $700", weight: 10, isHidden: false },
+            { name: "儲值加碼金 $800", weight: 8, isHidden: false },
+            { name: "儲值加碼金 $900", weight: 5, isHidden: false },
+            { name: "儲值加碼金 $1000", weight: 3, isHidden: false }
+        ];
+
         let state = {
             userPhone: null,
             userName: null,
@@ -492,10 +512,12 @@
                 const configSnap = await getDoc(configRef);
                 
                 // 優先讀取 prizepool 欄位 (相容舊版 pool 欄位)
-                if(configSnap.exists()) {
-                    state.prizePool = configSnap.data().prizepool || configSnap.data().pool || [];
+                if(configSnap.exists() && (configSnap.data().prizepool || configSnap.data().pool)) {
+                    state.prizePool = configSnap.data().prizepool || configSnap.data().pool;
                 } else {
-                    state.prizePool = []; 
+                    // 若雲端尚未有資料，則自動載入預設獎項並同步寫入雲端
+                    state.prizePool = JSON.parse(JSON.stringify(DEFAULT_PRIZE_POOL)); 
+                    await setDoc(configRef, { prizepool: state.prizePool, pool: state.prizePool }, { merge: true });
                 }
                 
                 // 隨機打亂轉盤格子順序
