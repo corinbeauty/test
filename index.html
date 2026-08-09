@@ -178,7 +178,7 @@
         </div>
     </div>
 
-    <!-- 查無會員提示方框 -->
+    <!-- 查無會員精美提示方框 -->
     <div id="member-not-found-modal" class="fixed inset-0 bg-black/60 z-[160] hidden items-center justify-center p-6 backdrop-blur-sm">
         <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden">
             <div class="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🥺</div>
@@ -547,26 +547,20 @@
                 
                 await signInAnonymously(auth);
 
+                // 使用與您提供的集點卡完全相同的查詢路徑
                 const membersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'beauty_members');
                 const qPhone = query(membersRef, where('phone', '==', phone));
                 const snap = await getDocs(qPhone);
                 
-                let isMember = false;
-                
                 if (!snap.empty) {
-                    isMember = true;
+                    // 會員驗證成功
                     memberName = snap.docs[0].data().name || '會員';
                     memberPhone = phone;
-                }
-
-                if (isMember) {
+                    userId = `user_${phone}`; 
+                    
                     document.getElementById('status-overlay').classList.remove('hidden');
                     
                     await loadGlobalConfig();
-                    
-                    // 以電話做為唯一識別 UID
-                    userId = `user_${phone}`; 
-                    
                     await loadUserProfileData(); 
                     
                     document.getElementById('history-user-info').innerText = maskName(memberName);
@@ -588,8 +582,11 @@
                         document.getElementById('main-card').classList.remove('hidden');
                     }
                 } else {
-                    // 自動跳轉至註冊 (若需彈窗引導也可保留)
-                    redirectToRegister();
+                    // 查無會員，顯示精美提示框
+                    document.getElementById('status-overlay').classList.add('hidden');
+                    document.getElementById('member-gate-modal').classList.add('hidden');
+                    document.getElementById('member-not-found-modal').classList.remove('hidden');
+                    document.getElementById('member-not-found-modal').classList.add('flex');
                 }
             } catch (e) {
                 console.error("Verification error:", e);
@@ -621,7 +618,8 @@
 
         async function loadGlobalConfig() {
             try {
-                const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'slot_config');
+                // 明確對齊您要求的路徑: artifacts/{APP_ID}/public/slot_config
+                const configRef = doc(db, 'artifacts', APP_ID, 'public', 'slot_config');
                 const snap = await getDoc(configRef);
                 if (snap.exists() && snap.data().prizePool && snap.data().prizePool.length > 0) {
                     state.prizePool = snap.data().prizePool;
@@ -638,7 +636,8 @@
         async function loadUserProfileData() {
             if(!userId || !db) return;
             try {
-                const profileRef = doc(db, 'artifacts', APP_ID, 'users', userId, 'profile');
+                // 明確對齊您要求的路徑: artifacts/{APP_ID}/users/{userId}
+                const profileRef = doc(db, 'artifacts', APP_ID, 'users', userId);
                 const profileSnap = await getDoc(profileRef);
                 const today = new Date().toDateString();
 
@@ -656,6 +655,7 @@
                     await saveProfileData();
                 }
 
+                // 讀取個人的獎項庫: artifacts/{APP_ID}/users/{userId}/prizes
                 const prizesQuery = query(collection(db, 'artifacts', APP_ID, 'users', userId, 'prizes'));
                 const prizesSnap = await getDocs(prizesQuery);
                 state.prizes = prizesSnap.docs.map(d => ({ ...d.data(), id: d.id }));
@@ -666,7 +666,8 @@
         async function saveProfileData() {
             if(!userId || !db) return;
             try {
-                await setDoc(doc(db, 'artifacts', APP_ID, 'users', userId, 'profile'), {
+                // 強制寫入上層文件，確保在 Firebase Console 中能夠被看見
+                await setDoc(doc(db, 'artifacts', APP_ID, 'users', userId), {
                     name: memberName,
                     phone: memberPhone,
                     count: state.count,
@@ -935,11 +936,18 @@
             
             try {
                 if(db && userId) {
-                    // 強制寫入個人資料庫
+                    // 1. 強制寫入上層文件，確保在 Firebase Console 中資料夾不會被隱藏
+                    await setDoc(doc(db, 'artifacts', APP_ID, 'users', userId), {
+                        name: memberName,
+                        phone: memberPhone,
+                        updatedAt: Date.now()
+                    }, { merge: true });
+
+                    // 2. 精準寫入個人的獎項資料夾: artifacts/{APP_ID}/users/{userId}/prizes
                     const docRef = await addDoc(collection(db, 'artifacts', APP_ID, 'users', userId, 'prizes'), prizeObj);
                     prizeObj.id = docRef.id;
                     
-                    // 強制寫入全站日誌
+                    // 3. 精準寫入全站日誌: artifacts/{APP_ID}/public/data/slot_logs
                     await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs'), {
                         name: memberName,
                         phone: memberPhone,
@@ -947,7 +955,7 @@
                         timestamp: prizeObj.winDate,
                         countUsed: state.count
                     });
-                    console.log("寫入成功");
+                    console.log("資料庫寫入成功");
                 }
             } catch(e) {
                 console.error("Save prize error", e);
@@ -1019,6 +1027,7 @@
             document.getElementById('confirm-redeem-btn').onclick = async () => { 
                 p.isRedeemed = true; 
                 try {
+                    // 同步寫入已兌換狀態
                     if(db && userId && id) await updateDoc(doc(db, 'artifacts', APP_ID, 'users', userId, 'prizes', id), { isRedeemed: true });
                 } catch(e){ console.error(e) }
                 renderHistory(); closeModal('redeem-confirm-modal'); 
@@ -1072,6 +1081,7 @@
             tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400 font-bold">資料抓取中...</td></tr>';
             try {
                 if(!db) throw new Error("DB not ready");
+                // 明確對齊路徑: artifacts/{APP_ID}/public/data/slot_logs
                 const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs'));
                 const snap = await getDocs(q);
                 let logs = snap.docs.map(d => d.data());
@@ -1111,7 +1121,8 @@
             
             try {
                 const targetUserId = `user_${phone}`;
-                const profileRef = doc(db, 'artifacts', APP_ID, 'users', targetUserId, 'profile');
+                // 明確對齊路徑: artifacts/{APP_ID}/users/{userId}
+                const profileRef = doc(db, 'artifacts', APP_ID, 'users', targetUserId);
                 const snap = await getDoc(profileRef);
                 
                 if(snap.exists()) {
@@ -1164,7 +1175,8 @@
             const btn = document.getElementById('btn-save-admin');
             btn.innerHTML = `<div class="loading-spinner w-5 h-5 border-white border-t-transparent mx-auto"></div>`;
             try {
-                if(db) await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'slot_config'), { prizePool: state.prizePool }, { merge: true });
+                // 明確對齊路徑: artifacts/{APP_ID}/public/slot_config
+                if(db) await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'slot_config'), { prizePool: state.prizePool }, { merge: true });
                 if(wheelCtx) drawWheel(currentRotation); 
                 showMsg("✅ 雲端獎項設定已成功同步");
             } catch(e) { console.error(e); showMsg("❌ 儲存失敗"); } 
