@@ -161,7 +161,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="bg-gradient-to-br from-pink-50 to-pink-100 p-5 rounded-2xl border border-pink-200 shadow-sm relative overflow-hidden">
                         <div class="text-pink-600 text-sm font-medium mb-1">本金餘額</div>
                         <div id="valBalance" class="text-3xl font-bold text-stone-800 relative z-10">$0</div>
@@ -181,6 +181,11 @@
                             立即兌換
                         </button>
                         <i class="ph ph-star absolute -bottom-4 -right-2 text-6xl text-amber-600/10 z-0"></i>
+                    </div>
+                    <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 p-5 rounded-2xl border border-cyan-200 shadow-sm relative overflow-hidden">
+                        <div class="text-cyan-600 text-sm font-medium mb-1">暗沉拜拜剩餘</div>
+                        <div class="text-3xl font-bold text-stone-800 relative z-10"><span id="valBrightening">0</span> <span class="text-lg font-normal text-stone-500">堂</span></div>
+                        <i class="ph ph-magic-wand absolute -bottom-4 -right-2 text-6xl text-cyan-600/10 z-0"></i>
                     </div>
                 </div>
 
@@ -749,8 +754,14 @@
                             <input type="number" id="txPoints" class="w-full p-3 border border-stone-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none" placeholder="0" />
                         </div>
                         
-                        <!-- 補單日期選擇 -->
-                        <div class="col-span-2">
+                        <!-- 新增暗沉拜拜堂數輸入 -->
+                        <div class="col-span-2 sm:col-span-1">
+                            <label class="block text-sm font-medium text-stone-700 mb-1 text-cyan-700 font-bold"><i class="ph ph-magic-wand"></i> 暗沉拜拜 (新增/使用)</label>
+                            <input type="number" id="txBrightening" class="w-full p-3 border border-cyan-200 bg-cyan-50/30 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none" placeholder="正數新增，負數使用" />
+                        </div>
+                        
+                        <!-- 補單日期選擇 (新增) -->
+                        <div class="col-span-2 sm:col-span-1">
                             <label class="block text-sm font-medium text-stone-700 mb-1 text-blue-600 flex items-center gap-1">
                                 <i class="ph ph-calendar-plus text-lg"></i> 補單日期時間 <span class="text-xs text-stone-400 font-normal ml-1">(若為當下結帳請留空)</span>
                             </label>
@@ -867,9 +878,15 @@
                         <input type="number" id="adjBonus" class="w-full p-3 border border-stone-200 rounded-xl outline-none focus:border-red-500" placeholder="0" />
                     </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">點數異動</label>
-                    <input type="number" id="adjPoints" class="w-full p-3 border border-stone-200 rounded-xl outline-none focus:border-red-500" placeholder="0" />
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-stone-700 mb-1">點數異動</label>
+                        <input type="number" id="adjPoints" class="w-full p-3 border border-stone-200 rounded-xl outline-none focus:border-red-500" placeholder="0" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-stone-700 mb-1">暗沉拜拜堂數異動</label>
+                        <input type="number" id="adjBrightening" class="w-full p-3 border border-stone-200 rounded-xl outline-none focus:border-red-500" placeholder="0" />
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-stone-700 mb-1">備註/調整原因 <span class="text-red-500">*</span></label>
@@ -953,6 +970,10 @@
                         <label class="block text-xs text-stone-500 mb-1">加碼贈送金</label>
                         <input type="number" id="editTxBonus" class="w-full p-3 border border-stone-200 rounded-xl outline-none" placeholder="0" />
                     </div>
+                </div>
+                <div>
+                    <label class="block text-xs text-stone-500 mb-1">暗沉拜拜堂數異動</label>
+                    <input type="number" id="editTxBrightening" class="w-full p-3 border border-stone-200 rounded-xl outline-none" placeholder="0" />
                 </div>
                 <div>
                     <label class="block text-xs text-stone-500 mb-1">操作美容師</label>
@@ -1095,6 +1116,7 @@
                     <li><b>本金餘額</b> 或 <b>儲值本金</b> (選填數字)</li>
                     <li><b>贈送金餘額</b> 或 <b>贈送金</b> (選填數字)</li>
                     <li><b>滿額點數</b> 或 <b>點數</b> (選填數字)</li>
+                    <li><b>暗沉拜拜</b> 或 <b>暗沉拜拜堂數</b> (選填數字)</li>
                 </ul>
             </div>
 
@@ -1353,10 +1375,10 @@
             currentReportTxs = [];
             
             const fieldsToClear = [
-                'txConsumeTotal', 'txAmount', 'txBonus', 'txPoints', 'txShortfallPaid', 'txRemark', 'txCustomDate',
+                'txConsumeTotal', 'txAmount', 'txBonus', 'txPoints', 'txBrightening', 'txShortfallPaid', 'txRemark', 'txCustomDate',
                 'consultName', 'consultPhone', 'consultYear', 'consultMonth', 'consultDay', 'consultReferrerPhone',
                 'newMemName', 'newMemPhone', 'newMemBirthday', 'newMemArea',
-                'adjAmount', 'adjBonus', 'adjPoints', 'adjRemark',
+                'adjAmount', 'adjBonus', 'adjPoints', 'adjBrightening', 'adjRemark',
                 'expAmount', 'expRemark',
                 'loginUser', 'loginPwd'
             ];
@@ -1924,6 +1946,7 @@
             document.getElementById('valBalance').textContent = `$${formatNumber(selectedMember.balance)}`;
             document.getElementById('valBonus').textContent = `$${formatNumber(selectedMember.bonusBalance)}`;
             document.getElementById('valPoints').textContent = selectedMember.points || 0;
+            document.getElementById('valBrightening').textContent = selectedMember.brighteningSessions || 0;
             
             const btnConvert = document.getElementById('btnConvertPoints');
             if ((selectedMember.points || 0) >= 5 && loggedInBeautician) {
@@ -2188,6 +2211,7 @@
             const newBalance = (selectedMember.balance || 0) + (payload.amountChange || 0);
             const newBonus = (selectedMember.bonusBalance || 0) + (payload.bonusChange || 0);
             const newPoints = (selectedMember.points || 0) + (payload.pointsChange || 0);
+            const newBrightening = (selectedMember.brighteningSessions || 0) + (payload.brighteningChange || 0);
 
             const txDoc = {
                 memberId: selectedMember.id,
@@ -2197,6 +2221,7 @@
                 amountChange: payload.amountChange || 0,
                 bonusChange: payload.bonusChange || 0,
                 pointsChange: payload.pointsChange || 0,
+                brighteningChange: payload.brighteningChange || 0,
                 remark: payload.remark || '',
                 signature: payload.signature || null,
                 timestamp: payload.timestamp || new Date().getTime(),
@@ -2205,14 +2230,19 @@
                 newBalance: newBalance,
                 newBonus: newBonus,
                 operator: loggedInBeautician || '系統',
-                audited: false, 
+                audited: false, // 新增核對狀態
                 payMethod: payload.payMethod || '現金',
                 shortfallPaid: payload.shortfallPaid || 0,
                 referrerPhone: selectedMember.referrerPhone || ''
             };
 
             await robustAddDoc('beauty_transactions', txDoc);
-            await robustUpdateMember(selectedMember.id, { balance: newBalance, bonusBalance: newBonus, points: newPoints });
+            await robustUpdateMember(selectedMember.id, { 
+                balance: newBalance, 
+                bonusBalance: newBonus, 
+                points: newPoints,
+                brighteningSessions: newBrightening
+            });
         }
 
         document.getElementById('btnSubmitTx').addEventListener('click', async () => {
@@ -2222,6 +2252,7 @@
             const depositPrincipal = parseFloat(document.getElementById('txAmount').value) || 0;
             const depositBonus = parseFloat(document.getElementById('txBonus').value) || 0;
             const pointsChange = parseFloat(document.getElementById('txPoints').value) || 0;
+            const brighteningChange = parseFloat(document.getElementById('txBrightening').value) || 0;
             const payMethod = document.getElementById('txPaymentMethod').value;
             const noSignatureMode = document.getElementById('chkNoConsumeOnlyDeposit').checked;
             const shortfallPaid = parseFloat(document.getElementById('txShortfallPaid').value) || 0;
@@ -2266,11 +2297,13 @@
             if (consumeTotal > 0) finalRemark += `[服務消費] 總額: $${formatNumber(consumeTotal)}`;
             if (depositPrincipal > 0) finalRemark += (finalRemark?'，':'') + `[儲值入帳] 本金: $${formatNumber(depositPrincipal)} 支付方式: ${payMethod}`;
             if (shortfall > 0) finalRemark += `，${payMethod}補差額: $${formatNumber(shortfall)}`;
+            if (brighteningChange > 0) finalRemark += (finalRemark?'，':'') + `[暗沉拜拜] 新增 ${brighteningChange} 堂`;
+            if (brighteningChange < 0) finalRemark += (finalRemark?'，':'') + `[暗沉拜拜] 使用 ${Math.abs(brighteningChange)} 堂`;
 
             if (customRemark) {
                 finalRemark = finalRemark ? `${finalRemark} | 備註: ${customRemark}` : `[0元結帳] ${customRemark}`;
             } else if (!finalRemark) {
-                finalRemark = '純金額異動'; 
+                finalRemark = '純金額/堂數異動'; 
             }
 
             setProcessing('btnSubmitTx', '處理中...');
@@ -2282,8 +2315,9 @@
                     amountChange: netAmountChange,
                     bonusChange: netBonusChange,
                     pointsChange: pointsChange,
+                    brighteningChange: brighteningChange,
                     signature: noSignatureMode ? null : txPad.getData(),
-                    remark: finalRemark || '純金額異動',
+                    remark: finalRemark || '純金額/堂數異動',
                     payMethod: payMethod,
                     shortfallPaid: shortfallPaid,
                     timestamp: finalTimestamp
@@ -2309,6 +2343,7 @@
                     amountChange: parseFloat(document.getElementById('adjAmount').value || 0),
                     bonusChange: parseFloat(document.getElementById('adjBonus').value || 0),
                     pointsChange: parseFloat(document.getElementById('adjPoints').value || 0),
+                    brighteningChange: parseFloat(document.getElementById('adjBrightening').value || 0),
                     remark: `[系統調整] ${remark}`,
                     payMethod: '系統調整',
                     shortfallPaid: 0
@@ -2317,6 +2352,7 @@
                 document.getElementById('adjAmount').value = '';
                 document.getElementById('adjBonus').value = '';
                 document.getElementById('adjPoints').value = '';
+                document.getElementById('adjBrightening').value = '';
                 document.getElementById('adjRemark').value = '';
                 closeModal('modalAdjustForm');
             } catch(e) {
@@ -2590,6 +2626,7 @@
             document.getElementById('editTxConsume').value = consumeAmt;
             document.getElementById('editTxDeposit').value = depositAmt;
             document.getElementById('editTxBonus').value = parseFloat(tx.bonusChange || 0);
+            document.getElementById('editTxBrightening').value = parseFloat(tx.brighteningChange || 0);
             document.getElementById('editTxRemark').value = tx.remark || '';
 
             const opSelect = document.getElementById('editTxOperator');
@@ -2613,6 +2650,7 @@
             const newConsume = parseFloat(document.getElementById('editTxConsume').value) || 0;
             const newDeposit = parseFloat(document.getElementById('editTxDeposit').value) || 0;
             const newBonus = parseFloat(document.getElementById('editTxBonus').value) || 0;
+            const newBrightening = parseFloat(document.getElementById('editTxBrightening').value) || 0;
             const newOperator = document.getElementById('editTxOperator').value;
             const newRemark = document.getElementById('editTxRemark').value.trim();
 
@@ -2620,15 +2658,19 @@
             let oldDeposit = parseFloat(tx.depositAmount || 0);
             if (tx.consumeAmount === undefined && tx.amountChange < 0) oldConsume = Math.abs(tx.amountChange);
             if (tx.depositAmount === undefined && tx.amountChange > 0) oldDeposit = tx.amountChange;
+            const oldBonus = parseFloat(tx.bonusChange || 0);
+            const oldBrightening = parseFloat(tx.brighteningChange || 0);
 
             const consumeDiff = newConsume - oldConsume;
             const depositDiff = newDeposit - oldDeposit;
-            const bonusDiff = newBonus - parseFloat(tx.bonusChange || 0);
+            const bonusDiff = newBonus - oldBonus;
+            const brighteningDiff = newBrightening - oldBrightening;
 
             const netAmountDiff = depositDiff - consumeDiff;
 
             const updatedBalance = (selectedMember.balance || 0) + netAmountDiff;
             const updatedBonus = (selectedMember.bonusBalance || 0) + bonusDiff;
+            const updatedBrightening = (selectedMember.brighteningSessions || 0) + brighteningDiff;
 
             setProcessing('btnSaveEditTx', '儲存中...');
             try {
@@ -2638,6 +2680,7 @@
                     depositAmount: newDeposit,
                     amountChange: netAmountDiff,
                     bonusChange: newBonus,
+                    brighteningChange: newBrightening,
                     operator: newOperator,
                     remark: newRemark,
                     newBalance: tx.previousBalance + netAmountDiff,
@@ -2647,7 +2690,8 @@
                 const memberRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'beauty_members', selectedMember.id);
                 await updateDoc(memberRef, {
                     balance: updatedBalance,
-                    bonusBalance: updatedBonus
+                    bonusBalance: updatedBonus,
+                    brighteningSessions: updatedBrightening
                 });
 
                 closeModal('modalEditTx');
@@ -3489,6 +3533,7 @@
                                 balance: parseFloat(row['本金餘額'] || row['儲值本金'] || 0) || 0,
                                 bonusBalance: parseFloat(row['贈送金餘額'] || row['贈送金'] || 0) || 0,
                                 points: parseInt(row['滿額點數'] || row['點數'] || 0) || 0,
+                                brighteningSessions: parseInt(row['暗沉拜拜'] || row['暗沉拜拜堂數'] || 0) || 0,
                                 referrerPhone: row['推薦人電話'] || row['推薦人'] || '',
                                 referredTotalConsume: 0,
                                 rewardGrantedTotal: 0,
@@ -3573,6 +3618,7 @@
             document.getElementById('txAmount').value = '';
             document.getElementById('txBonus').value = '';
             document.getElementById('txPoints').value = '';
+            document.getElementById('txBrightening').value = '';
             document.getElementById('txShortfallPaid').value = '';
             document.getElementById('txRemark').value = '';
             document.getElementById('txCustomDate').value = '';
