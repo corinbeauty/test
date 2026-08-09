@@ -3,705 +3,722 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Corin Beauty - 幸運轉轉樂</title>
     
-    <title>Corin Beauty - 官方轉轉樂活動</title>
-    <meta name="description" content="參與 Corin Beauty 官方抽獎活動，獲取專屬美肌優惠。立即轉出您的好運，體驗專業美容護理。">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
     <style>
+        /* 載入基本與 LOGO 專用字體 */
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+        
         body { 
             font-family: 'Noto Sans TC', sans-serif; 
             -webkit-tap-highlight-color: transparent; 
-            background-color: #fffbeb; /* 鵝黃色背景 */
-            background-image: radial-gradient(#fde68a 1px, transparent 1px);
-            background-size: 20px 20px;
+            /* 圖片中的淺灰/米白背景色 */
+            background-color: #f5f6f8;
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
         .modal-active { display: flex !important; animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
-        .big-win-glow {
-            animation: bigWinGlow 1.5s infinite alternate;
-        }
-        @keyframes bigWinGlow {
-            from { box-shadow: 0 0 10px #fbbf24; transform: scale(1); }
-            to { box-shadow: 0 0 40px #f59e0b, 0 0 60px rgba(245, 158, 11, 0.4); transform: scale(1.02); }
-        }
-        
-        .prize-text-anim {
-            animation: prizePop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes prizePop {
-            0% { transform: scale(0.5); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+
+        /* 卡片柔和鵝黃暈染背景 (還原圖片光影效果) */
+        .card-glow {
+            background: 
+                radial-gradient(circle at 10% 90%, rgba(254, 243, 199, 0.4) 0%, transparent 40%),
+                radial-gradient(circle at 90% 10%, rgba(254, 243, 199, 0.4) 0%, transparent 40%),
+                #ffffff;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
         }
 
-        .loading-spinner {
-            border: 3px solid rgba(245, 158, 11, 0.1);
-            border-top: 3px solid #f59e0b; /* 鵝黃/琥珀色 */
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* 中獎資訊浮水印背景 (鵝黃系) */
-        .result-bg-watermark {
-            background-color: rgba(255, 255, 255, 0.95);
-            background-image:
-                url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 200 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg transform='translate(10, 0)' opacity='0.04'%3E%3Cpath d='M 85,25 A 40,40 0 1,0 85,95 A 30,30 0 1,1 85,25 Z' fill='%23d0af95'/%3E%3Cpath d='M 85,25 C 100,25 100,25 100,25 C 95,55 95,65 100,95 C 85,95 85,95 85,95 C 90,65 90,55 85,25 Z' fill='%23ac8468'/%3E%3Cpath d='M 100,25 C 140,25 140,60 110,60 C 120,60 120,35 100,35 Z' fill='%23ac8468'/%3E%3Cpath d='M 110,60 C 125,60 135,80 155,95 C 135,95 125,90 115,80 C 105,95 90,95 85,95 C 100,90 100,70 110,60 Z' fill='%23ac8468'/%3E%3C/g%3E%3C/svg%3E"),
-                repeating-linear-gradient(45deg, rgba(245, 158, 11, 0.04) 0px, rgba(245, 158, 11, 0.04) 1px, transparent 1px, transparent 6px);
-            background-size: 120px 120px, auto;
-            background-position: center center, 0 0;
-            backdrop-filter: blur(8px);
+        /* 轉盤容器與動畫 */
+        .spinner-container {
             position: relative;
-        }
-        .result-content-z {
-            position: relative;
-            z-index: 10;
-        }
-
-        /* 轉盤專屬樣式 */
-        .wheel-container {
-            position: relative;
-            width: 320px;
-            height: 320px;
+            width: 100%;
+            max-width: 320px;
+            aspect-ratio: 1/1;
             margin: 0 auto;
-            border-radius: 50%;
-            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.15), inset 0 0 15px rgba(0,0,0,0.05);
-            background: #fff;
-            padding: 8px;
-            border: 4px solid #fef3c7; /* 淡黃色外框 */
-            transition: all 0.5s ease;
         }
-        
+
         #wheel-canvas {
-            border-radius: 50%;
             width: 100%;
             height: 100%;
-            display: block;
+            border-radius: 50%;
+            /* 轉盤外框改為配合海軍藍主題的淡色系 */
+            box-shadow: 0 0 0 6px #ffffff, 0 0 0 8px #e2e8f0, 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 6s cubic-bezier(0.2, 0.8, 0.1, 1);
         }
 
-        /* 轉盤指針 */
+        /* 頂部指針 (深海軍藍) */
         .wheel-pointer {
             position: absolute;
             top: -15px;
             left: 50%;
             transform: translateX(-50%);
-            width: 40px;
-            height: 50px;
+            width: 32px;
+            height: 42px;
+            background: #181829;
+            clip-path: polygon(50% 100%, 0 0, 100% 0);
             z-index: 10;
             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
         }
 
-        /* 按鈕立體效果 (鵝黃系) */
-        .btn-3d {
-            box-shadow: 0 6px 0 #b45309; /* 深琥珀色陰影 */
-            transition: all 0.1s;
-        }
-        .btn-3d:active:not(:disabled) {
-            transform: translateY(6px);
-            box-shadow: 0 0px 0 #b45309;
-        }
-        .btn-3d:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            box-shadow: none;
-            transform: translateY(6px);
+        /* 轉盤中心遮罩與 DOM LOGO */
+        .wheel-center-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30%;
+            height: 30%;
+            background: #ffffff;
+            border-radius: 50%;
+            border: 3px solid #f1f5f9;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05), 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
 
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* 浮水印特效 */
+        .glass-watermark {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.06;
+            pointer-events: none;
+            z-index: 0;
+            transform: scale(1.6) rotate(-10deg);
+        }
+
+        /* 隱藏預設的主畫面外層 wrapper，用於排版切換 */
+        .view-wrapper {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            flex-grow: 1;
+            padding: 1rem;
+        }
+        .view-wrapper.active {
+            display: flex;
+        }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body>
 
-    <!-- 純程式碼手繪的 CR 香檳金 LOGO -->
-    <svg style="display: none;">
-        <symbol id="drawn-logo" viewBox="0 0 200 120">
-            <g transform="translate(10, 0)">
-                <path d="M 85,25 A 40,40 0 1,0 85,95 A 30,30 0 1,1 85,25 Z" fill="#d0af95"/>
-                <path d="M 85,25 C 100,25 100,25 100,25 C 95,55 95,65 100,95 C 85,95 85,95 85,95 C 90,65 90,55 85,25 Z" fill="#ac8468"/>
-                <path d="M 100,25 C 140,25 140,60 110,60 C 120,60 120,35 100,35 Z" fill="#ac8468"/>
-                <path d="M 110,60 C 125,60 135,80 155,95 C 135,95 125,90 115,80 C 105,95 90,95 85,95 C 100,90 100,70 110,60 Z" fill="#ac8468"/>
+    <!-- 全站共用純手工 SVG 向量 LOGO (神還原新LOGO_3.png) -->
+    <template id="cr-logo-svg">
+        <svg viewBox="0 0 240 180" xmlns="http://www.w3.org/2000/svg" class="w-full h-full">
+            <g transform="translate(15, 10)">
+                <!-- C 的左側獨立彎月 (淺香檳金 #d9bcab) -->
+                <path d="M 65 25 C 10 25 10 115 65 115 C 40 100 40 40 65 25 Z" fill="#d9bcab"/>
+                <!-- C 的右側柱體 (淺香檳金 #d9bcab) -->
+                <path d="M 70 25 C 90 25 90 40 90 55 L 90 115 L 75 115 C 90 115 90 95 90 85 L 90 25 Z" fill="#d9bcab"/>
+                
+                <!-- R 的左側柱體 (深褐金 #b08d77) -->
+                <path d="M 125 25 C 105 25 105 40 105 55 L 105 115 L 125 115 C 105 115 105 95 105 85 L 105 25 Z" fill="#b08d77"/>
+                <!-- R 的右側圓弧與優雅外踢腿 (深褐金 #b08d77) -->
+                <path d="M 105 25 L 155 25 C 180 25 185 45 170 65 C 160 78 150 72 135 68 C 150 68 165 85 195 115 L 165 115 C 145 95 130 78 115 78 L 105 78 Z M 115 38 L 115 62 L 135 62 C 150 62 150 38 135 38 Z" fill-rule="evenodd" fill="#b08d77"/>
+                
+                <!-- 底部文字 -->
+                <text x="100" y="150" text-anchor="middle" font-family="'Montserrat', sans-serif" font-size="10" font-weight="400" fill="#b08d77" letter-spacing="0.4em">HAIR REMOVAL</text>
             </g>
-            <text x="100" y="112" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="8" font-weight="400" letter-spacing="5" text-anchor="middle" fill="#ac8468">HAIR REMOVAL</text>
-        </symbol>
-    </svg>
+        </svg>
+    </template>
 
-    <!-- 狀態遮罩層 (系統載入) -->
-    <div id="status-overlay" class="fixed inset-0 bg-white z-[100] hidden flex-col items-center justify-center p-6 text-center">
+    <!-- 讀取狀態遮罩 -->
+    <div id="status-overlay" class="fixed inset-0 bg-[#f5f6f8]/90 backdrop-blur-sm z-[200] flex flex-col items-center justify-center p-6 text-center transition-opacity duration-300">
         <div id="loading-ui">
-            <div class="loading-spinner mx-auto mb-4"></div>
-            <p class="text-amber-600 font-medium italic">驗證會員資料庫中...</p>
-        </div>
-        <div id="error-ui" class="hidden">
-            <div class="text-red-500 text-4xl mb-4">⚠️</div>
-            <h2 class="text-lg font-bold text-gray-800 mb-2">連線發生錯誤</h2>
-            <p id="error-message" class="text-sm text-gray-600 mb-6 px-4"></p>
-            <button onclick="location.reload()" class="bg-amber-500 text-white px-8 py-2 rounded-full text-sm font-bold shadow-lg">重新整理</button>
+            <i class="ph ph-spinner-gap animate-spin text-5xl text-[#181829] mb-4 mx-auto"></i>
+            <p class="text-[#181829] font-bold tracking-widest text-sm">連線至 Corin Beauty...</p>
         </div>
     </div>
 
-    <!-- 會員專屬驗證彈窗 (預設顯示) -->
-    <div id="member-gate-modal" class="fixed inset-0 bg-white/95 z-[90] flex flex-col items-center justify-center p-6 backdrop-blur-md">
-        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl border border-amber-50 relative overflow-hidden">
-            <div class="absolute -top-10 -right-10 w-32 h-32 bg-yellow-50 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
-            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-amber-100 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+    <!-- ============================================== -->
+    <!-- VIEW: 會員登入畫面 (完美還原圖片排版與配色)      -->
+    <!-- ============================================== -->
+    <div id="view-login-wrapper" class="view-wrapper active">
+        <div class="w-full max-w-md mx-auto">
+            <!-- 登入白底發光卡片 -->
+            <div class="card-glow p-10 rounded-[2.5rem] flex-col relative z-10 mb-8 w-full border border-white/60">
+                <div class="text-center mb-6 z-10 relative">
+                    <!-- LOGO -->
+                    <div id="login-logo-container" class="w-32 h-24 mx-auto mb-2 object-contain"></div>
+                    <!-- 標題與副標題 -->
+                    <h2 class="text-[28px] font-black text-[#1a1a2e] tracking-wide mb-2 mt-2">幸運轉轉樂</h2>
+                    <p class="text-[15px] text-gray-500 font-bold">此為 Corin Beauty 會員專屬活動</p>
+                </div>
+                
+                <div class="z-10 relative mt-6">
+                    <!-- 輸入框 (淺灰藍底色，無外框) -->
+                    <input type="tel" id="input-phone" class="w-full bg-[#edf2f7] p-5 rounded-[1.25rem] focus:ring-2 focus:ring-[#d9bcab] outline-none text-center text-xl font-bold tracking-widest transition-all placeholder-gray-400 text-[#1a1a2e]" placeholder="請輸入手機號碼" maxlength="10">
+                    
+                    <!-- 註冊連結 (靠右對齊，橘金色) -->
+                    <div class="text-right mt-3 mb-8 pr-1">
+                        <button onclick="window.location.href='https://check-balance-jbiy.vercel.app/'" class="text-sm text-[#d97706] font-bold hover:text-amber-500 transition-colors underline underline-offset-4 decoration-2">我還不是會員？註冊</button>
+                    </div>
+                    
+                    <!-- 登入按鈕 (深海軍藍) -->
+                    <button id="btn-login" class="w-full py-4 bg-[#181829] text-white font-black rounded-2xl shadow-lg hover:bg-gray-800 active:scale-95 transition-all text-[19px] tracking-widest">
+                        確認登入
+                    </button>
+                </div>
+            </div>
+
+            <!-- 卡片外部的 Footer 文字 -->
+            <div class="text-center z-10 relative">
+                <p onclick="openAdmin()" class="text-[13px] text-gray-400 font-bold tracking-[0.15em] uppercase cursor-pointer hover:text-gray-600 transition-colors mb-1">System By Corin</p>
+                <p class="text-[11px] text-gray-400 font-medium tracking-wide">原點數位科技 © 2026 All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 查無會員彈窗 (精美方框版) -->
+    <div id="not-found-modal" class="fixed inset-0 bg-black/60 z-[150] hidden items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white rounded-[2rem] p-8 max-w-xs w-full text-center shadow-2xl relative overflow-hidden border border-gray-100">
+            <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-400 text-3xl">
+                <i class="ph-fill ph-user-circle-minus"></i>
+            </div>
+            <h3 class="text-xl font-black text-[#1a1a2e] mb-2">查無會員資料</h3>
+            <p class="text-sm text-gray-500 mb-6 leading-relaxed">我們找不到這支手機號碼的會員紀錄，請確認是否輸入正確，或前往註冊新會員。</p>
+            <div class="flex flex-col gap-3">
+                <button onclick="window.location.href='https://check-balance-jbiy.vercel.app/'" class="w-full py-3.5 bg-[#d97706] text-white rounded-xl text-sm font-bold shadow-md">前往註冊會員</button>
+                <button onclick="closeModal('not-found-modal')" class="w-full py-3.5 bg-gray-100 text-gray-500 rounded-xl text-sm font-bold">重新輸入</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 今日次數已滿彈窗 -->
+    <div id="limit-modal" class="fixed inset-0 bg-black/60 z-[150] hidden items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white rounded-[2rem] p-8 max-w-xs w-full text-center shadow-2xl relative overflow-hidden border border-gray-100">
+            <div class="text-5xl mb-4 animate-bounce">✨</div>
+            <h3 class="text-xl font-black text-[#1a1a2e] mb-2">今日次數已完成</h3>
+            <p class="text-sm text-gray-500 mb-6 leading-relaxed">您已用完今日 3 次幸運抽獎機會，請明日再來玩！</p>
+            <button onclick="closeModal('limit-modal'); switchTab('history');" class="w-full py-4 bg-[#181829] text-white rounded-xl text-sm font-bold shadow-md">
+                查看我的獎項
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- VIEW: 主遊戲畫面 (風格同步深色主題)               -->
+    <!-- ============================================== -->
+    <div id="view-game-wrapper" class="view-wrapper">
+        <div class="w-full max-w-md mx-auto card-glow rounded-[2.5rem] shadow-2xl flex flex-col min-h-[640px] border border-white/60 overflow-hidden relative">
+            
+            <!-- 頂部切換與次數 -->
+            <div class="flex justify-between items-center p-6 pb-2 relative z-10">
+                <div class="flex bg-[#edf2f7] p-1 rounded-xl border border-white">
+                    <button id="tab-game" onclick="switchTab('game')" class="px-4 py-2 rounded-lg text-xs font-black transition-all bg-white shadow-sm text-[#181829]">幸運轉盤</button>
+                    <button id="tab-history" onclick="switchTab('history')" class="px-4 py-2 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-gray-600">中獎紀錄</button>
+                </div>
+                <div class="flex items-center gap-1.5 bg-[#edf2f7] px-3 py-1.5 rounded-full border border-white">
+                    <i class="ph-fill ph-ticket text-[#181829]"></i>
+                    <div id="chance-dots" class="flex gap-1"></div>
+                </div>
+            </div>
+
+            <!-- 轉盤遊戲區塊 -->
+            <div id="page-game" class="flex-1 flex flex-col p-6 pt-2 relative z-10">
+                <div class="text-center mb-6">
+                    <p class="text-sm font-bold text-gray-500">點擊下方按鈕啟動轉盤，贏取專屬優惠</p>
+                </div>
+
+                <!-- 轉盤本體 -->
+                <div class="spinner-container mb-8">
+                    <!-- 深色指針 -->
+                    <div class="wheel-pointer"></div>
+                    <canvas id="wheel-canvas" width="400" height="400"></canvas>
+                    <!-- 轉盤中心 LOGO -->
+                    <div class="wheel-center-overlay" id="wheel-center-logo"></div>
+                </div>
+
+                <div id="footer-controls" class="mt-auto space-y-4">
+                    <!-- 深海軍藍抽獎按鈕 -->
+                    <button id="btn-spin" class="w-full py-4 bg-[#181829] text-white rounded-2xl text-lg font-black shadow-lg shadow-gray-400/30 active:scale-95 transition-all transform hover:-translate-y-1 tracking-wider">
+                        START 立即抽獎
+                    </button>
+                </div>
+                
+                <div class="text-center pt-4 border-t border-gray-100 mt-4">
+                    <button onclick="window.open('https://liff.line.me/2010909434-eVswjkpc', '_blank')" class="text-[#d97706] font-black text-sm hover:underline decoration-2 underline-offset-4 flex items-center justify-center gap-1 mx-auto">
+                        <i class="ph-fill ph-calendar-plus text-lg"></i> 手刀預約專屬課程
+                    </button>
+                </div>
+            </div>
+
+            <!-- 中獎紀錄區塊 -->
+            <div id="page-history" class="hidden flex-1 flex flex-col p-6 pt-2 relative z-10">
+                <div class="flex justify-between items-end mb-4">
+                    <h2 class="text-xl font-black text-[#1a1a2e]">我的獎勵</h2>
+                    <div class="text-[11px] text-gray-500 font-bold" id="history-user-info"></div>
+                </div>
+                
+                <div class="flex gap-2 mb-4">
+                    <div class="flex-1 bg-white border border-gray-100 shadow-sm rounded-xl p-3 text-center">
+                        <div id="count-valid" class="text-[#d9bcab] font-black text-xl leading-tight">0</div>
+                        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">有效/未使用</div>
+                    </div>
+                    <div class="flex-1 bg-[#edf2f7] border border-gray-100 rounded-xl p-3 text-center">
+                        <div id="count-invalid" class="text-gray-400 font-black text-xl leading-tight">0</div>
+                        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">無效/已使用</div>
+                    </div>
+                </div>
+                
+                <div id="history-list" class="flex-1 overflow-y-auto space-y-4 pr-1 no-scrollbar pb-10"></div>
+            </div>
+
+            <!-- 底部版權區塊 -->
+            <div class="bg-[#f8f9fa] p-3 text-center relative z-10 border-t border-gray-100 mt-auto">
+                <p class="text-[10px] text-gray-400 font-medium tracking-tight mb-1">重置：每日 23:59 自動重置次數 (每日 3 次)</p>
+                <p onclick="openAdmin()" class="text-[10px] text-gray-300 font-bold tracking-[0.2em] uppercase cursor-pointer hover:text-gray-500 transition-colors">System By Corin</p>
+                <p class="text-[9px] text-gray-300 font-medium mt-0.5 tracking-wide">原點數位科技 © 2026 All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 抽中獎項結果彈窗 (含浮水印) -->
+    <div id="result-modal" class="fixed inset-0 bg-black/80 z-[160] hidden items-center justify-center p-6 backdrop-blur-md">
+        <!-- 保持抽獎結果為精美的白色/淡鵝黃卡片 -->
+        <div class="bg-gradient-to-br from-white to-[#fffbeb] rounded-[2.5rem] p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden border border-white">
+            <!-- 高質感背景浮水印 -->
+            <div class="glass-watermark" id="result-watermark-logo"></div>
             
             <div class="relative z-10">
-                <!-- 手繪 LOGO -->
-                <div class="w-32 h-20 mx-auto mb-2">
-                    <svg class="w-full h-full"><use href="#drawn-logo"></use></svg>
+                <div class="text-6xl mb-4 animate-bounce drop-shadow-md">🎁</div>
+                <h3 class="text-sm font-black text-[#d97706] mb-1 tracking-widest uppercase">Congratulations</h3>
+                <h2 class="text-2xl font-black text-[#1a1a2e] mb-4 leading-snug" id="result-prize-name"></h2>
+                
+                <div class="bg-white/90 backdrop-blur-sm rounded-xl p-3 border border-gray-100 mb-6 text-left inline-block w-full shadow-sm">
+                    <p class="text-xs text-gray-600 mb-1 flex items-center gap-1.5"><i class="ph-fill ph-clock text-[#d9bcab]"></i> 獲得時間：<span id="result-time" class="font-mono text-gray-800 font-bold"></span></p>
+                    <p class="text-xs text-rose-500 font-bold flex items-center gap-1.5"><i class="ph-fill ph-warning-circle"></i> 有效期限：<span id="result-exp"></span></p>
                 </div>
                 
-                <h3 class="text-2xl font-black text-gray-800 mb-2">幸運轉轉樂</h3>
-                <p class="text-gray-500 mb-6 font-bold text-sm">此為 Corin Beauty 會員專屬活動</p>
-                
-                <div class="space-y-3">
-                    <input type="tel" id="member-phone" placeholder="請輸入電話號碼" class="w-full border-2 border-gray-100 rounded-xl px-4 py-4 text-center focus:border-amber-400 outline-none font-bold text-lg tracking-wider bg-gray-50/50" maxlength="10">
-                    <div class="text-right">
-                        <a href="https://check-balance-jbiy.vercel.app/" class="text-xs text-amber-600 font-bold hover:text-amber-700 underline decoration-amber-300">我還不是會員？註冊</a>
-                    </div>
-                    <button id="btn-verify" onclick="verifyMember()" class="w-full py-4 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-2xl font-black shadow-lg active:scale-95 transition-transform mt-1">確認登入</button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="mt-8 text-center space-y-1.5">
-            <p onclick="openAdminDashboard()" class="text-[10px] text-gray-300 font-bold tracking-widest uppercase cursor-pointer hover:text-amber-500 transition-colors">System By Corin</p>
-            <p class="text-[10px] text-gray-400">原點數位科技 © 2026 All rights reserved.</p>
-        </div>
-    </div>
-
-    <!-- 查無會員精美提示方框 -->
-    <div id="member-not-found-modal" class="fixed inset-0 bg-black/60 z-[160] hidden items-center justify-center p-6 backdrop-blur-sm">
-        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden">
-            <div class="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🥺</div>
-            <h3 class="text-xl font-black text-gray-800 mb-2">查無會員資料</h3>
-            <p class="text-gray-500 text-sm mb-6 leading-relaxed">我們在會員庫中找不到這支電話號碼，請先前往註冊會員，完成後即可參與活動喔！</p>
-            <div class="flex flex-col gap-3">
-                <button onclick="redirectToRegister()" class="w-full py-4 bg-amber-500 text-white rounded-2xl font-black shadow-lg">立即前往註冊</button>
-                <button onclick="closeModal('member-not-found-modal'); document.getElementById('member-gate-modal').classList.remove('hidden');" class="w-full py-3 bg-white text-gray-400 font-bold hover:text-gray-600 transition-colors border border-gray-100 rounded-2xl">重新輸入電話</button>
+                <!-- 領取按鈕同樣使用海軍藍 -->
+                <button onclick="closeModal('result-modal')" class="w-full py-4 bg-[#181829] text-white rounded-2xl font-black shadow-lg hover:bg-gray-800 transition-colors tracking-widest">
+                    太棒了，收下獎勵！
+                </button>
+                <p class="text-[10px] text-gray-400 mt-3 font-bold">獎項已同步存入您的中獎紀錄</p>
             </div>
         </div>
     </div>
 
-    <!-- 今日次數已達上限精美提示框 -->
-    <div id="limit-modal" class="fixed inset-0 bg-black/60 z-[160] hidden items-center justify-center p-6 backdrop-blur-sm">
-        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden">
-            <div class="w-16 h-16 bg-yellow-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🌙</div>
-            <h3 class="text-xl font-black text-gray-800 mb-2">今日次數已完成</h3>
-            <p class="text-gray-500 text-sm mb-6 leading-relaxed">您今日的 3 次抽獎機會已使用完畢，<br>請明日再來玩！</p>
-            <button onclick="enterHistoryView()" class="w-full py-4 bg-gradient-to-r from-amber-400 to-amber-500 text-white rounded-2xl font-black shadow-lg">查看我的獎項</button>
-        </div>
-    </div>
-
-    <!-- 統一管理員密碼驗證彈窗 -->
-    <div id="admin-auth-modal" class="fixed inset-0 bg-black/80 z-[120] hidden items-center justify-center p-6 backdrop-blur-md">
+    <!-- 系統管理員登入彈窗 -->
+    <div id="admin-login-modal" class="fixed inset-0 bg-black/80 z-[200] hidden items-center justify-center p-6 backdrop-blur-md">
         <div class="bg-white rounded-[2rem] p-8 max-w-xs w-full text-center shadow-2xl">
-            <h3 class="text-xl font-black text-gray-800 mb-4">管理員專區</h3>
-            <input type="password" id="admin-pass" class="w-full border-2 border-gray-100 rounded-xl px-4 py-3 mb-4 text-center focus:border-amber-400 outline-none tracking-widest font-mono" placeholder="輸入管理密碼">
+            <h3 class="text-xl font-black text-[#1a1a2e] mb-4">系統管理員驗證</h3>
+            <input type="password" id="admin-pass" class="w-full border-2 border-gray-100 bg-[#edf2f7] rounded-xl px-4 py-3 mb-4 text-center focus:border-gray-300 outline-none" placeholder="輸入管理員密碼">
             <div class="flex gap-2">
-                <button onclick="closeModal('admin-auth-modal')" class="flex-1 py-3 bg-gray-100 text-gray-400 rounded-xl font-bold">取消</button>
-                <button onclick="verifyAdmin()" class="flex-1 py-3 bg-gray-800 text-white rounded-xl font-bold">進入後台</button>
+                <button onclick="closeModal('admin-login-modal')" class="flex-1 py-3 bg-gray-100 text-gray-500 rounded-xl font-bold">取消</button>
+                <button onclick="verifyAdmin()" class="flex-1 py-3 bg-[#181829] text-white rounded-xl font-bold">登入</button>
             </div>
         </div>
     </div>
 
-    <!-- 管理員專區儀表板 -->
-    <div id="admin-dashboard-modal" class="fixed inset-0 bg-gray-50 z-[130] hidden flex-col">
-        <div class="bg-white shadow-sm flex items-center justify-between p-4 px-6 border-b border-gray-100">
-            <h2 class="text-xl font-black text-gray-800">管理員專區</h2>
-            <button onclick="closeModal('admin-dashboard-modal')" class="text-gray-400 text-3xl font-light">&times;</button>
-        </div>
-        
-        <div class="flex p-4 gap-1 bg-white overflow-x-auto no-scrollbar">
-            <button onclick="switchAdminTab('stats')" id="tab-admin-stats" class="whitespace-nowrap px-3 py-2 text-xs font-bold rounded-lg bg-gray-100 text-gray-800">抽獎統計</button>
-            <button onclick="switchAdminTab('users')" id="tab-admin-users" class="whitespace-nowrap px-3 py-2 text-xs font-bold rounded-lg text-gray-400">玩家重置</button>
-            <button onclick="switchAdminTab('prizes')" id="tab-admin-prizes" class="whitespace-nowrap px-3 py-2 text-xs font-bold rounded-lg text-gray-400">獎項機率</button>
-            <button onclick="switchAdminTab('members')" id="tab-admin-members" class="whitespace-nowrap px-3 py-2 text-xs font-bold rounded-lg text-gray-400">會員庫</button>
-        </div>
+    <!-- 系統管理員儀表板 (保留全部強大功能) -->
+    <div id="admin-dashboard-modal" class="fixed inset-0 bg-black/80 z-[190] hidden items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white rounded-[2rem] max-w-md w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-gray-100">
+            <div class="bg-[#f8f9fa] p-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-lg font-black text-[#1a1a2e]"><i class="ph-fill ph-shield-check text-[#d9bcab]"></i> 管理員控制台</h3>
+                <button onclick="closeModal('admin-dashboard-modal')" class="text-gray-400 hover:text-gray-600"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            
+            <div class="flex border-b border-gray-100 bg-white">
+                <button onclick="switchAdminTab('stats')" id="tab-admin-stats" class="flex-1 py-3 text-xs font-bold text-[#181829] border-b-2 border-[#181829]">抽獎動態</button>
+                <button onclick="switchAdminTab('resets')" id="tab-admin-resets" class="flex-1 py-3 text-xs font-bold text-gray-400 border-b-2 border-transparent">玩家重置區</button>
+                <button onclick="switchAdminTab('prizes')" id="tab-admin-prizes" class="flex-1 py-3 text-xs font-bold text-gray-400 border-b-2 border-transparent">獎項編輯</button>
+            </div>
 
-        <div class="flex-1 overflow-y-auto p-4 relative" id="admin-content-area">
-            <!-- 統計分頁 -->
-            <div id="admin-page-stats" class="space-y-4">
-                <div class="flex justify-between items-end mb-2">
-                    <h3 class="font-bold text-gray-800">全站抽獎紀錄 (即時)</h3>
-                    <button onclick="loadGlobalStats()" class="text-xs bg-gray-200 px-3 py-1 rounded font-bold text-gray-600">重新整理</button>
+            <!-- 即時動態區 (含二次核銷) -->
+            <div id="admin-page-stats" class="flex-1 overflow-y-auto p-4 bg-gray-50/50">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-xs font-bold text-gray-500">僅顯示有效未兌換獎項</span>
+                    <button onclick="loadAdminLogs(true)" class="text-[10px] bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300">載入全部(含失效)</button>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="max-h-[65vh] overflow-y-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-gray-50 text-gray-600 sticky top-0 z-10">
-                                <tr>
-                                    <th class="p-3 font-bold">時間</th>
-                                    <th class="p-3 font-bold">姓名</th>
-                                    <th class="p-3 font-bold">電話</th>
-                                    <th class="p-3 font-bold">第幾次</th>
-                                    <th class="p-3 font-bold min-w-[120px]">抽中獎項</th>
-                                </tr>
-                            </thead>
-                            <tbody id="stats-table-body" class="divide-y divide-gray-50 text-gray-600 font-medium">
-                                <tr><td colspan="5" class="p-4 text-center text-gray-400">載入中...</td></tr>
-                            </tbody>
-                        </table>
+                <div id="admin-logs-list" class="space-y-3"></div>
+            </div>
+
+            <!-- 玩家重置區 (自動列出今日名單與二次確認) -->
+            <div id="admin-page-resets" class="hidden flex-1 overflow-y-auto p-4 bg-gray-50/50">
+                <p class="text-xs text-[#d97706] font-bold mb-3">今日有抽獎之會員列表：</p>
+                <div id="admin-today-players-list" class="space-y-3"></div>
+                <div class="mt-6 pt-4 border-t border-gray-200">
+                    <p class="text-xs text-gray-500 font-bold mb-2">手動指定號碼重置：</p>
+                    <div class="flex gap-2">
+                        <input type="tel" id="admin-reset-phone" class="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-gray-400" placeholder="輸入會員號碼" maxlength="10">
+                        <button onclick="manualResetPlayer()" class="bg-[#181829] text-white px-4 py-2 rounded-xl text-sm font-bold">重置</button>
                     </div>
                 </div>
             </div>
 
-            <!-- 玩家重置分頁 -->
-            <div id="admin-page-users" class="hidden space-y-4">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="text-4xl mb-4 text-center">🔄</div>
-                    <h3 class="font-black text-gray-800 mb-2 text-center">重置指定玩家今日次數</h3>
-                    <p class="text-sm text-gray-500 mb-6 text-center">輸入會員手機號碼，清除其今日已抽獎次數，讓該玩家可重新遊玩 3 次。</p>
-                    
-                    <input type="tel" id="reset-phone-input" class="w-full border-2 border-gray-100 rounded-xl px-4 py-3 mb-4 text-center focus:border-amber-400 outline-none font-bold" placeholder="請輸入手機號碼" maxlength="10">
-                    <button onclick="adminResetTargetUser()" class="w-full py-4 bg-orange-500 text-white rounded-2xl font-black shadow-lg">立即重置</button>
-                </div>
-            </div>
-
-            <!-- 獎項分頁 (支援編輯文字與隱藏) -->
-            <div id="admin-page-prizes" class="hidden space-y-4">
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-gray-800 mb-3 text-sm">新增獎項 (自動加入轉盤)</h3>
+            <!-- 獎項編輯區 (含文字編輯與隱藏功能) -->
+            <div id="admin-page-prizes" class="hidden flex-1 overflow-y-auto p-4">
+                <div class="bg-[#f8f9fa] p-3 rounded-xl mb-4 border border-gray-100">
                     <div class="flex gap-2 mb-2">
-                        <input type="text" id="new-prize-name" class="flex-[2] px-3 py-2 rounded-lg border border-gray-100 text-sm bg-gray-50" placeholder="獎項名稱">
-                        <input type="number" id="new-prize-weight" class="flex-1 px-3 py-2 rounded-lg border border-gray-100 text-sm bg-gray-50" placeholder="權重">
-                        <button onclick="addPrizeToPool()" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md">新增</button>
+                        <input type="text" id="new-prize-name" class="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none" placeholder="新獎項名稱">
+                        <input type="number" id="new-prize-weight" class="w-16 px-2 py-2 rounded-lg border border-gray-200 text-sm text-center focus:outline-none" placeholder="權重">
+                        <button onclick="addPrize()" class="bg-[#181829] text-white px-3 py-2 rounded-lg text-sm font-bold">新增</button>
                     </div>
+                    <p class="text-[10px] text-gray-500 font-bold">※ 權重數字越大，中獎機率越高。勾選隱藏則不會出現在轉盤上。</p>
                 </div>
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="font-bold text-gray-800 text-sm">獎項編輯與機率</h3>
-                        <span class="text-[10px] text-gray-400">勾選即可隱藏</span>
-                    </div>
-                    <div id="prize-manage-list" class="space-y-2 max-h-[40vh] overflow-y-auto pr-1"></div>
-                </div>
-                <button id="btn-save-admin" onclick="saveAndClosePrizeAdmin()" class="w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold shadow-lg">同步儲存設定</button>
-            </div>
-
-            <!-- 會員庫管理分頁 -->
-            <div id="admin-page-members" class="hidden space-y-4">
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-gray-800 mb-3 text-sm">手動新增會員</h3>
-                    <div class="flex gap-2 mb-2">
-                        <input type="text" id="new-member-name" class="flex-1 px-3 py-2 rounded-lg border border-gray-100 text-sm bg-gray-50" placeholder="姓名">
-                        <input type="tel" id="new-member-phone" class="flex-[2] px-3 py-2 rounded-lg border border-gray-100 text-sm bg-gray-50" placeholder="手機號碼" maxlength="10">
-                        <button onclick="addMemberAdmin()" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md">新增</button>
-                    </div>
-                </div>
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="max-h-[45vh] overflow-y-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-gray-50 text-gray-600 sticky top-0 z-10">
-                                <tr>
-                                    <th class="p-3 font-bold">姓名</th>
-                                    <th class="p-3 font-bold">電話</th>
-                                    <th class="p-3 font-bold text-right">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="members-table-body" class="divide-y divide-gray-50 text-gray-600 font-medium">
-                                <tr><td colspan="3" class="p-4 text-center text-gray-400">載入中...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div id="admin-prize-list" class="space-y-2"></div>
+                <div class="mt-4">
+                    <button onclick="savePrizesToDB()" class="w-full py-3 bg-[#181829] text-white rounded-xl font-bold shadow-md">儲存獎項設定至雲端</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 主卡片 -->
-    <div id="main-card" class="bg-white rounded-[2.5rem] shadow-2xl p-6 w-full max-w-sm border border-gray-100 flex flex-col min-h-[620px] relative hidden">
-        
-        <div class="flex justify-between items-center mb-2">
-            <div class="flex bg-gray-100 p-1 rounded-xl">
-                <button id="tab-game" onclick="switchTab('game')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-white shadow-sm text-gray-800">幸運轉盤</button>
-                <button id="tab-history" onclick="switchTab('history')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-gray-600">中獎紀錄</button>
-            </div>
-            <div class="flex items-center space-x-1">
-                <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Chance</span>
-                <div id="chance-dots" class="flex space-x-1"></div>
-            </div>
-        </div>
-
-        <!-- 遊戲頁面 -->
-        <div id="page-game" class="flex-1 flex flex-col">
-            <!-- 醒目提醒 -->
-            <div class="bg-orange-500 text-white rounded-2xl p-3 my-4 shadow-md border-b-4 border-orange-600">
-                <div class="flex items-center gap-2 font-black text-[11px] mb-1.5"><span>⚠️ 重要提醒</span></div>
-                <div class="text-[10px] font-bold space-y-1">
-                    <p class="flex items-start gap-1.5 leading-tight"><span class="shrink-0">•</span> 獎項逾期失效，建議獲獎後「截圖保存」。</p>
-                    <p class="flex items-start gap-1.5 leading-tight"><span class="shrink-0">•</span> 單次消費限用一項優惠，不可重複折抵。</p>
-                </div>
-            </div>
-
-            <div id="game-area" class="flex flex-col mb-4 relative flex-1 justify-center">
-                
-                <!-- 精美轉盤區域 -->
-                <div class="relative w-full flex justify-center items-center py-2">
-                    <!-- 頂部指針 (配合鵝黃色系) -->
-                    <svg class="wheel-pointer" viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20 50L0 20C0 8.95431 8.95431 0 20 0C31.0457 0 40 8.95431 40 20L20 50Z" fill="#b45309"/>
-                        <path d="M20 45L4 20C4 11.1634 11.1634 4 20 4C28.8366 4 36 11.1634 36 20L20 45Z" fill="#f59e0b"/>
-                        <circle cx="20" cy="16" r="6" fill="#fef3c7"/>
-                    </svg>
-
-                    <div id="wheel-container" class="wheel-container">
-                        <canvas id="wheel-canvas"></canvas>
-                        
-                        <!-- 轉盤中心的裝飾圓餅 (使用手繪 LOGO) -->
-                        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white rounded-full shadow-lg border-2 border-gray-100 flex items-center justify-center z-20">
-                            <div class="w-12 h-12 flex items-center justify-center overflow-hidden">
-                                <svg class="w-full h-full"><use href="#drawn-logo"></use></svg>
-                            </div>
-                        </div>
-
-                        <!-- 抽獎結果覆蓋層 -->
-                        <div id="prize-result-overlay" class="absolute inset-0 z-30 flex flex-col items-center justify-center text-center p-4 result-bg-watermark opacity-0 pointer-events-none transition-opacity duration-500 rounded-full border-4 border-white shadow-2xl scale-95 transform">
-                            
-                            <!-- 浮水印手繪 LOGO -->
-                            <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none z-0">
-                                <svg class="w-48 h-48"><use href="#drawn-logo"></use></svg>
-                            </div>
-
-                            <div class="result-content-z flex flex-col items-center justify-center w-full">
-                                <div id="top-prize-banner" class="hidden text-[10px] font-bold text-yellow-700 mb-1.5 uppercase tracking-widest animate-bounce bg-yellow-100 px-2 py-0.5 rounded-full border border-yellow-300">🌟 BIG WINNER 🌟</div>
-                                <div id="normal-prize-banner" class="text-[11px] font-bold text-amber-600 mb-1.5 uppercase tracking-wide bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">Congratulations</div>
-                                <div id="prize-name" class="text-[15px] font-black text-gray-900 leading-snug mb-3 px-1 drop-shadow-sm line-clamp-3"></div>
-                                <div class="bg-white/90 backdrop-blur-md rounded-xl border border-gray-200/80 w-full max-w-[200px] p-2 shadow-sm">
-                                    <div id="verification-time" class="text-[9px] text-gray-500 font-mono truncate"></div>
-                                    <div id="expiry-date" class="text-[10px] text-orange-500 font-bold mt-1 border-t border-gray-100/50 pt-1"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 抽獎按鈕 -->
-                <div class="mt-6 z-40 relative">
-                    <button id="btn-spin" onclick="startSpin()" class="w-full btn-3d py-4 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-2xl text-lg font-black tracking-wide flex items-center justify-center gap-2">
-                        <span>🎡</span> 啟動轉盤 (剩餘 <span id="remaining-count">0</span> 次)
-                    </button>
-                    <button id="btn-reset-spin" onclick="resetWheelUI()" class="w-full hidden btn-3d py-4 bg-amber-500 text-white rounded-2xl text-lg font-black tracking-wide flex items-center justify-center gap-2 mt-0">
-                        再次抽獎 (剩餘 <span id="remaining-count-next">0</span> 次)
-                    </button>
-                </div>
-            </div>
-
-            <!-- 次數用盡遮罩 (Locked) -->
-            <div id="locked-overlay" class="hidden flex-1 flex flex-col items-center justify-center text-center py-6 bg-gray-50 rounded-3xl mb-6 border border-dashed border-gray-200">
-                <div class="text-5xl mb-4 text-gray-300">🌙</div>
-                <h3 class="text-gray-800 font-black text-xl mb-1">今日抽獎已結束</h3>
-                <p class="text-gray-500 text-sm mb-6">每人每日擁有 <span class="text-gray-800 font-bold">3</span> 次機會</p>
-                <div class="px-6 py-2 bg-white rounded-full border border-gray-100 shadow-sm">
-                    <div id="countdown-timer" class="text-xs font-mono font-bold text-gray-500 uppercase">重置：</div>
-                </div>
-            </div>
-
-            <div id="footer-controls" class="mt-auto pt-2 text-center pb-2 border-t border-gray-100">
-                <button onclick="handleReservation()" class="text-gray-600 font-bold text-sm hover:text-gray-900 transition-colors mt-2">手刀預約專屬課程 ➔</button>
-            </div>
-        </div>
-
-        <!-- 紀錄頁面 -->
-        <div id="page-history" class="hidden flex-1 flex flex-col h-[520px]">
-            <h2 class="text-lg font-black text-gray-800 mb-2">我的獎項紀錄</h2>
-            
-            <div class="flex items-center text-[10px] text-gray-500 mb-3 bg-gray-50 p-2.5 rounded-xl shrink-0 justify-between border border-gray-100">
-                <div class="flex items-center gap-2">
-                    <div class="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm">👤</div>
-                    <span id="history-user-info" class="font-bold text-gray-700 tracking-wide">載入中...</span>
-                </div>
-                <span class="font-mono text-gray-400 bg-white px-2 py-1 rounded-md shadow-sm" id="history-user-phone">----</span>
-            </div>
-
-            <div class="flex gap-2 mb-4 shrink-0">
-                <div class="flex-1 bg-amber-50 border border-amber-100 rounded-xl p-2 text-center">
-                    <div id="count-valid" class="text-amber-600 font-black text-lg leading-tight">0</div>
-                    <div class="text-[9px] text-amber-500 font-bold uppercase">有效/未使用</div>
-                </div>
-                <div class="flex-1 bg-gray-50 border border-gray-100 rounded-xl p-2 text-center">
-                    <div id="count-invalid" class="text-gray-400 font-black text-lg leading-tight">0</div>
-                    <div class="text-[9px] text-gray-400 font-bold uppercase">無效/已使用</div>
-                </div>
-            </div>
-            
-            <div id="history-list" class="flex-1 overflow-y-auto space-y-4 pr-1 no-scrollbar"></div>
-        </div>
-        
-        <div class="mt-4 pt-4 border-t border-gray-50 text-center space-y-1.5 shrink-0">
-            <p onclick="openAdminDashboard()" class="text-[10px] text-gray-300 font-bold tracking-widest uppercase cursor-pointer hover:text-gray-500 transition-colors">System By Corin</p>
-            <p class="text-[10px] text-gray-400">原點數位科技 © 2026 All rights reserved.</p>
+    <!-- 系統通用提示與確認視窗 -->
+    <div id="msg-modal" class="fixed inset-0 bg-black/60 z-[300] hidden items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-6 max-w-xs w-full text-center shadow-2xl border border-gray-100">
+            <p id="msg-text" class="text-[#1a1a2e] font-bold mb-6 text-sm"></p>
+            <button onclick="closeModal('msg-modal')" class="w-full py-3 bg-[#181829] text-white rounded-xl font-bold tracking-widest">我知道了</button>
         </div>
     </div>
     
-    <!-- 一般提示訊息彈窗 -->
-    <div id="msg-modal" class="fixed inset-0 bg-black/40 z-[150] hidden items-center justify-center p-6 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl p-6 max-w-xs w-full text-center shadow-2xl">
-            <p id="msg-text" class="text-gray-800 font-bold mb-6"></p>
-            <button onclick="closeModal('msg-modal')" class="w-full py-3 bg-gray-800 text-white rounded-xl font-bold">我知道了</button>
-        </div>
-    </div>
-
-    <!-- 兌換確認彈窗 -->
-    <div id="redeem-confirm-modal" class="fixed inset-0 bg-black/60 z-[140] hidden items-center justify-center p-6 backdrop-blur-sm">
-        <div class="bg-white rounded-[2rem] p-8 max-w-xs w-full text-center shadow-2xl">
-            <div class="w-16 h-16 bg-gray-50 text-gray-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🎫</div>
-            <h3 class="text-xl font-black text-gray-800 mb-2">確認兌換？</h3>
-            <p class="text-sm text-gray-500 mb-6 leading-relaxed">請確認您已在櫃檯現場，點擊後獎項將標註為已兌換且無法恢復。</p>
+    <div id="confirm-action-modal" class="fixed inset-0 bg-black/60 z-[250] hidden items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-6 max-w-xs w-full text-center shadow-2xl border border-gray-100">
+            <div class="text-rose-500 text-4xl mb-2"><i class="ph-fill ph-warning-circle"></i></div>
+            <h3 id="confirm-title" class="text-lg font-black text-[#1a1a2e] mb-2">確認執行？</h3>
+            <p id="confirm-text" class="text-xs text-gray-500 mb-6 font-bold"></p>
             <div class="flex gap-2">
-                <button onclick="closeModal('redeem-confirm-modal')" class="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl text-sm font-bold">取消</button>
-                <button id="confirm-redeem-btn" class="flex-1 py-4 bg-gray-800 text-white rounded-2xl text-sm font-bold">確定兌換</button>
+                <button onclick="closeModal('confirm-action-modal')" class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm">取消</button>
+                <button id="btn-confirm-action" class="flex-1 py-3 bg-rose-500 text-white rounded-xl font-bold text-sm shadow-md">確認執行</button>
             </div>
         </div>
     </div>
 
+    <!-- Firebase Script & Logic -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 連線至指定的會員資料庫
+        // 連接至真實的 check-balance-13da9
         const firebaseConfig = {
             apiKey: "AIzaSyCe0KE7va2H4-A6XECdzhTUCjhTeT6FOJM",
             authDomain: "check-balance-13da9.firebaseapp.com",
-            projectId: "check-balance-13da9",
-            storageBucket: "check-balance-13da9.firebasestorage.app",
-            messagingSenderId: "827416952029",
-            appId: "1:827416952029:web:e18ac89b984c8351e36f34"
+            projectId: "check-balance-13da9"
         };
 
-        const APP_ID = 'check-balance-13da9'; 
-        const INITIAL_CHANCES = 3; 
-        const EXPIRY_DAYS = 7;
-        const ADMIN_PASS = "7310168888"; 
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const APP_ID = "check-balance-13da9";
         
-        let db, auth;
-        let userId = null; 
-        let memberPhone = ''; 
-        let memberName = ''; 
-
-        // 預設獎項池 (新增 hidden 屬性)
-        const DEFAULT_PRIZE_POOL = [
-            { name: "1獎－當日當次消費 5 折 [以原價總額計算]", weight: 2, hidden: false },
-            { name: "2獎－當日當次消費 7 折 [以原價總額計算]", weight: 4, hidden: false },
-            { name: "3獎－當日當次消費 75 折 [以原價總額計算]", weight: 4, hidden: false },
-            { name: "4獎－暗沉掰掰單部位三堂 $899 [原價1399]", weight: 30, hidden: false },
-            { name: "5獎－腋下除毛優惠價 $99 [限新客]", weight: 50, hidden: false },
-            { name: "6獎－免費除毛專用乳液 50ml [價值239]", weight: 2, hidden: false },
-            { name: "7獎－現折 100 元", weight: 70, hidden: false },
-            { name: "8獎－現折 50 元", weight: 80, hidden: false },
-            { name: "9獎－靚顏深層護膚課程 $899", weight: 40, hidden: false },
-            { name: "10獎－睫毛管理 $699", weight: 40, hidden: false },
-            { name: "儲值加碼金 $500", weight: 20, hidden: false },
-            { name: "儲值加碼金 $600", weight: 15, hidden: false },
-            { name: "儲值加碼金 $700", weight: 10, hidden: false },
-            { name: "儲值加碼金 $800", weight: 8, hidden: false },
-            { name: "儲值加碼金 $900", weight: 5, hidden: false },
-            { name: "儲值加碼金 $1000", weight: 3, hidden: false }
-        ];
-
+        const MAX_SPINS_PER_DAY = 3;
+        const EXPIRY_DAYS = 7;
+        
         let state = {
-            count: 0,
-            lastPlayedDate: '',
-            prizes: [],
-            prizePool: [] 
+            userPhone: null,
+            userName: null,
+            spinsUsedToday: 0,
+            prizePool: [],
+            userPrizes: []
         };
-
-        let isSpinning = false; 
-        let currentRotation = 0; 
-        const canvasSize = 300; 
-
-        // 轉盤配色表 (鵝黃系)
-        const WHEEL_COLORS = ['#fffbeb', '#fef3c7', '#fde68a', '#ffffff', '#fff8f1', '#fef08a'];
-        const TEXT_COLORS = ['#92400e', '#b45309', '#78350f', '#d97706', '#9a3412'];
+        
+        let canvas, ctx, currentWheelAngle = 0;
 
         async function initApp() {
-            // 強制每次重整都要重新登入
-            document.getElementById('member-gate-modal').classList.remove('hidden');
-        }
-
-        window.redirectToRegister = () => { window.location.href = 'https://check-balance-jbiy.vercel.app/'; };
-
-        window.verifyMember = async () => {
-            const phone = document.getElementById('member-phone').value.trim();
-            if (phone.length < 8) { showMsg("請輸入完整的手機號碼！"); return; }
-            
-            const btn = document.getElementById('btn-verify');
-            const ogText = btn.innerHTML;
-            btn.innerHTML = `<div class="loading-spinner w-5 h-5 border-white border-t-transparent mx-auto"></div>`;
-            btn.disabled = true;
-
             try {
-                if (!db) {
-                    var app = initializeApp(firebaseConfig);
-                    auth = getAuth(app);
-                    db = getFirestore(app);
-                }
-                
                 await signInAnonymously(auth);
-
-                // 使用與您提供的集點卡完全相同的查詢路徑
-                const membersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'beauty_members');
-                const qPhone = query(membersRef, where('phone', '==', phone));
-                const snap = await getDocs(qPhone);
+                injectSVG();
                 
-                if (!snap.empty) {
-                    // 會員驗證成功
-                    memberName = snap.docs[0].data().name || '會員';
-                    memberPhone = phone;
-                    userId = `user_${phone}`; 
-                    
-                    document.getElementById('status-overlay').classList.remove('hidden');
-                    
-                    await loadGlobalConfig();
-                    await loadUserProfileData(); 
-                    
-                    document.getElementById('history-user-info').innerText = maskName(memberName);
-                    document.getElementById('history-user-phone').innerText = memberPhone;
-                    
-                    document.getElementById('status-overlay').classList.add('hidden');
-                    document.getElementById('member-gate-modal').classList.add('hidden');
-
-                    // 檢查次數，若已滿3次，彈出精美對話框攔截
-                    if (state.count >= INITIAL_CHANCES) {
-                        document.getElementById('limit-modal').classList.remove('hidden');
-                        document.getElementById('limit-modal').classList.add('flex');
-                    } else {
-                        // 正常進入遊戲
-                        updateUI();
-                        initWheelCanvas();
-                        drawWheel(0);
-                        startTimer();
-                        document.getElementById('main-card').classList.remove('hidden');
-                    }
-                } else {
-                    // 查無會員，顯示精美提示框
-                    document.getElementById('status-overlay').classList.add('hidden');
-                    document.getElementById('member-gate-modal').classList.add('hidden');
-                    document.getElementById('member-not-found-modal').classList.remove('hidden');
-                    document.getElementById('member-not-found-modal').classList.add('flex');
-                }
-            } catch (e) {
-                console.error("Verification error:", e);
-                showMsg("伺服器連線異常，請重新整理後再試");
-            } finally {
-                btn.innerHTML = ogText;
-                btn.disabled = false;
-            }
-        };
-
-        window.enterHistoryView = () => {
-            document.getElementById('limit-modal').classList.remove('flex', 'modal-active');
-            document.getElementById('limit-modal').classList.add('hidden');
-            
-            updateUI();
-            initWheelCanvas();
-            drawWheel(0);
-            startTimer();
-            document.getElementById('main-card').classList.remove('hidden');
-            switchTab('history');
-        };
-
-        function maskName(name) {
-            if (!name) return '未知';
-            if (name.length <= 1) return name;
-            if (name.length === 2) return name[0] + '*';
-            return name[0] + '*' + name.substring(2);
-        }
-
-        async function loadGlobalConfig() {
-            try {
-                // 明確對齊您要求的路徑: artifacts/{APP_ID}/public/slot_config
-                const configRef = doc(db, 'artifacts', APP_ID, 'public', 'slot_config');
-                const snap = await getDoc(configRef);
-                if (snap.exists() && snap.data().prizePool && snap.data().prizePool.length > 0) {
-                    state.prizePool = snap.data().prizePool;
-                } else {
-                    state.prizePool = [...DEFAULT_PRIZE_POOL];
-                    await setDoc(configRef, { prizePool: state.prizePool }, { merge: true });
-                }
-            } catch(e) {
-                console.warn("Load config error", e);
-                state.prizePool = [...DEFAULT_PRIZE_POOL];
+                // 強制每次重整頁面都必須重新登入
+                document.getElementById('status-overlay').classList.add('hidden');
+                document.getElementById('view-login-wrapper').classList.add('active');
+                document.getElementById('view-game-wrapper').classList.remove('active');
+                
+                document.getElementById('btn-login').onclick = handleLogin;
+            } catch (err) {
+                console.error(err);
+                alert("系統連線異常，請重新整理頁面。");
             }
         }
+        
+        function injectSVG() {
+            const tmpl = document.getElementById('cr-logo-svg').innerHTML;
+            document.getElementById('login-logo-container').innerHTML = tmpl;
+            document.getElementById('wheel-center-logo').innerHTML = tmpl;
+            document.getElementById('result-watermark-logo').innerHTML = tmpl;
+        }
 
-        async function loadUserProfileData() {
-            if(!userId || !db) return;
+        async function handleLogin() {
+            const phone = document.getElementById('input-phone').value.trim();
+            if(!phone || phone.length !== 10) return showMsg("請輸入完整 10 碼電話號碼");
+            
+            showLoading("正在核對會員身分...");
             try {
-                // 明確對齊您要求的路徑: artifacts/{APP_ID}/users/{userId}
-                const profileRef = doc(db, 'artifacts', APP_ID, 'users', userId);
-                const profileSnap = await getDoc(profileRef);
-                const today = new Date().toDateString();
-
-                if (profileSnap.exists()) {
-                    const data = profileSnap.data();
-                    if (data.lastPlayedDate !== today) {
-                        state.count = 0; state.lastPlayedDate = today;
-                        await saveProfileData();
-                    } else {
-                        state.count = data.count || 0;
-                        state.lastPlayedDate = data.lastPlayedDate || today;
-                    }
-                } else {
-                    state.lastPlayedDate = today;
-                    await saveProfileData();
+                const membersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'beauty_members');
+                const snap = await getDocs(query(membersRef, where('phone', '==', phone)));
+                
+                if(snap.empty) {
+                    hideLoading();
+                    // 查無資料，跳出精美方框
+                    document.getElementById('not-found-modal').classList.add('modal-active');
+                    return;
                 }
-
-                // 讀取個人的獎項庫: artifacts/{APP_ID}/users/{userId}/prizes
-                const prizesQuery = query(collection(db, 'artifacts', APP_ID, 'users', userId, 'prizes'));
-                const prizesSnap = await getDocs(prizesQuery);
-                state.prizes = prizesSnap.docs.map(d => ({ ...d.data(), id: d.id }));
-                state.prizes.sort((a,b) => b.winDate - a.winDate);
-            } catch(e) { console.error("Load user data error:", e); }
+                
+                const memberData = snap.docs[0].data();
+                state.userPhone = phone;
+                state.userName = memberData.name || `貴賓`; 
+                
+                await loadAppResources();
+            } catch (err) {
+                console.error(err);
+                hideLoading();
+                showMsg("驗證時發生錯誤，請稍後再試。");
+            }
         }
-
-        async function saveProfileData() {
-            if(!userId || !db) return;
+        
+        async function loadAppResources() {
+            showLoading("正在載入遊戲設定...");
             try {
-                // 強制寫入上層文件，確保在 Firebase Console 中能夠被看見
-                await setDoc(doc(db, 'artifacts', APP_ID, 'users', userId), {
-                    name: memberName,
-                    phone: memberPhone,
-                    count: state.count,
-                    lastPlayedDate: state.lastPlayedDate,
-                    updatedAt: Date.now()
-                }, { merge: true });
-            } catch(e) { console.error("Save profile error", e); }
+                // 載入雲端獎項設定
+                const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'slot_config', 'prizes');
+                const configSnap = await getDoc(configRef);
+                if(configSnap.exists() && configSnap.data().pool) {
+                    state.prizePool = configSnap.data().pool;
+                } else {
+                    state.prizePool = []; 
+                }
+                
+                await refreshUserStats();
+                
+                hideLoading();
+                // 切換視圖
+                document.getElementById('view-login-wrapper').classList.remove('active');
+                document.getElementById('view-game-wrapper').classList.add('active');
+                
+                setupUI();
+                drawWheel();
+                
+            } catch(err) {
+                console.error(err);
+                hideLoading();
+                showMsg("資料讀取失敗，請確認網路狀態後重新登入。");
+            }
+        }
+        
+        async function refreshUserStats() {
+            const todayStart = new Date();
+            todayStart.setHours(0,0,0,0);
+            const ts = todayStart.getTime();
+            
+            // 確保路徑完全正確：users/{phone}/prizes
+            const prizesRef = collection(db, 'artifacts', APP_ID, 'users', state.userPhone, 'prizes');
+            const pSnap = await getDocs(prizesRef);
+            let allPrizes = [];
+            pSnap.forEach(d => allPrizes.push(d.data()));
+            
+            // 讀取重置紀錄
+            const resetRef = doc(db, 'artifacts', APP_ID, 'users', state.userPhone, 'resets', getTodayString());
+            const rSnap = await getDoc(resetRef);
+            const resetTimestamp = rSnap.exists() ? rSnap.data().timestamp : 0;
+            
+            // 計算「今日已用次數」
+            const countBaseTime = Math.max(ts, resetTimestamp);
+            const todayPrizes = allPrizes.filter(p => p.winDate >= countBaseTime);
+            
+            state.spinsUsedToday = todayPrizes.length;
+            state.userPrizes = allPrizes.sort((a,b) => b.winDate - a.winDate);
         }
 
-        function updateUI() {
-            const totalMax = INITIAL_CHANCES;
-            const remaining = Math.max(0, totalMax - state.count);
-            const isLocked = remaining <= 0;
-            
-            document.getElementById('remaining-count').innerText = remaining;
-            document.getElementById('remaining-count-next').innerText = remaining;
-            
-            if (isLocked) {
-                document.getElementById('game-area').classList.add('hidden');
-                document.getElementById('locked-overlay').classList.remove('hidden');
-            } else {
-                document.getElementById('game-area').classList.remove('hidden');
-                document.getElementById('locked-overlay').classList.add('hidden');
+        function setupUI() {
+            let hideName = state.userName;
+            if (hideName.length >= 3 && !hideName.includes('*')) {
+                hideName = hideName.charAt(0) + '*' + hideName.substring(2);
+            } else if (hideName.length === 2 && !hideName.includes('*')) {
+                hideName = hideName.charAt(0) + '*';
             }
             
+            document.getElementById('history-user-info').innerText = `${hideName} | ${state.userPhone}`;
+            updateChancesUI();
+            renderHistory();
+        }
+        
+        function updateChancesUI() {
             const dots = document.getElementById('chance-dots');
-            if (dots) {
-                dots.innerHTML = '';
-                const maxDots = Math.max(3, totalMax); 
-                for(let i=0; i<maxDots; i++) {
-                    const dot = document.createElement('div');
-                    dot.className = `w-1.5 h-1.5 rounded-full ${i < (totalMax - remaining) ? 'bg-amber-100' : (i < totalMax ? 'bg-gray-800' : 'hidden')}`;
-                    dots.appendChild(dot);
+            dots.innerHTML = '';
+            for(let i=0; i<MAX_SPINS_PER_DAY; i++) {
+                const dot = document.createElement('div');
+                dot.className = `w-1.5 h-1.5 rounded-full ${i < state.spinsUsedToday ? 'bg-gray-300' : 'bg-[#181829]'}`;
+                dots.appendChild(dot);
+            }
+            
+            const btnSpin = document.getElementById('btn-spin');
+            if(state.spinsUsedToday >= MAX_SPINS_PER_DAY) {
+                btnSpin.innerText = "明日請早";
+                btnSpin.classList.add('opacity-50', 'cursor-not-allowed');
+                // 自動彈出今日已滿提示
+                document.getElementById('limit-modal').classList.add('modal-active');
+                btnSpin.onclick = () => document.getElementById('limit-modal').classList.add('modal-active');
+            } else {
+                btnSpin.innerText = "START 立即抽獎";
+                btnSpin.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnSpin.onclick = spinWheel;
+            }
+        }
+
+        function drawWheel() {
+            canvas = document.getElementById('wheel-canvas');
+            if(!canvas) return;
+            ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height, radius = w/2;
+            ctx.clearRect(0, 0, w, h);
+            
+            const activePrizes = state.prizePool.filter(p => !p.isHidden);
+            if(activePrizes.length === 0) {
+                ctx.fillStyle = '#f8f9fa'; ctx.beginPath(); ctx.arc(radius, radius, radius, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#1a1a2e'; ctx.font = "bold 20px sans-serif"; ctx.textAlign = "center";
+                ctx.fillText("尚未設定獎項", radius, radius);
+                return;
+            }
+
+            const arc = (Math.PI * 2) / activePrizes.length;
+            ctx.translate(radius, radius);
+            ctx.rotate(currentWheelAngle);
+
+            for (let i = 0; i < activePrizes.length; i++) {
+                // 繪製扇形背景 (淡色系交錯，配合整體高雅主題)
+                ctx.beginPath();
+                ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#f8f9fa';
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, radius, i * arc, (i + 1) * arc);
+                ctx.fill();
+                ctx.save();
+                
+                ctx.rotate(i * arc + arc / 2);
+                ctx.fillStyle = '#1a1a2e'; // 深色文字
+                ctx.font = 'bold 15px "Noto Sans TC", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // 動態多行文字邏輯
+                let text = activePrizes[i].name;
+                let lines = [];
+                // 自動斷行 (每 6~7 個字斷行)
+                for(let j=0; j<text.length; j+=7) {
+                    lines.push(text.substring(j, j+7));
                 }
+                
+                const lineHeight = 18;
+                const totalTextHeight = lines.length * lineHeight;
+                let startY = -(radius * 0.70) - (totalTextHeight / 2) + (lineHeight / 2);
+                
+                lines.forEach((line, idx) => {
+                    ctx.fillText(line, 0, startY + (idx * lineHeight));
+                });
+                
+                ctx.restore();
+            }
+            
+            // 繪製扇形分隔線
+            for (let i = 0; i < activePrizes.length; i++) {
+                ctx.beginPath();
+                ctx.strokeStyle = '#e2e8f0'; // 淺灰邊線
+                ctx.lineWidth = 1.5;
+                ctx.moveTo(0, 0);
+                ctx.rotate(arc);
+                ctx.lineTo(0, -radius);
+                ctx.stroke();
+            }
+
+            ctx.rotate(-currentWheelAngle);
+            ctx.translate(-radius, -radius);
+        }
+
+        async function spinWheel() {
+            if(state.spinsUsedToday >= MAX_SPINS_PER_DAY) {
+                document.getElementById('limit-modal').classList.add('modal-active');
+                return;
+            }
+            
+            const activePrizes = state.prizePool.filter(p => !p.isHidden);
+            if(activePrizes.length === 0) return showMsg("目前無可用獎項");
+
+            const totalWeight = activePrizes.reduce((sum, p) => sum + Number(p.weight), 0);
+            let rand = Math.random() * totalWeight, winIndex = 0;
+            for(let i=0; i<activePrizes.length; i++){
+                if(rand < activePrizes[i].weight) { winIndex = i; break; }
+                rand -= activePrizes[i].weight;
+            }
+
+            document.getElementById('btn-spin').disabled = true;
+            document.getElementById('btn-spin').classList.add('opacity-50');
+
+            const targetAngle = (Math.PI * 2) - ((winIndex + 0.5) * ((Math.PI * 2) / activePrizes.length));
+            const spins = 8;
+            const totalRotation = targetAngle + (Math.PI * 2 * spins) - currentWheelAngle;
+            
+            canvas.style.transform = `rotate(${currentWheelAngle + totalRotation}rad)`;
+            currentWheelAngle = (currentWheelAngle + totalRotation) % (Math.PI * 2);
+
+            setTimeout(() => { finishSpin(activePrizes[winIndex]); }, 6000);
+        }
+
+        async function finishSpin(prize) {
+            confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ['#181829', '#d9bcab', '#ffffff'] });
+            
+            const now = Date.now();
+            const exp = now + (EXPIRY_DAYS * 86400000);
+            const prizeId = 'PZ' + Math.random().toString(36).substring(2, 9).toUpperCase();
+            const logId = 'LOG' + now + Math.random().toString(36).substring(2, 6);
+            
+            const prizeRecord = { id: prizeId, name: prize.name, winDate: now, expDate: exp, isRedeemed: false };
+            const logRecord = { logId: logId, phone: state.userPhone, name: state.userName, prizeName: prize.name, prizeId: prizeId, timestamp: now, isRedeemed: false };
+
+            showLoading("寫入獎項資料中...");
+            let writeError = false;
+            
+            // 獨立寫入個人資料庫 (強制建置上層)
+            try {
+                await setDoc(doc(db, 'artifacts', APP_ID, 'users', state.userPhone), { lastUpdate: now }, { merge: true });
+                await setDoc(doc(db, 'artifacts', APP_ID, 'users', state.userPhone, 'prizes', prizeId), prizeRecord);
+            } catch(e) {
+                console.error("個人獎項寫入失敗:", e);
+                writeError = true;
+            }
+
+            // 獨立寫入全站日誌
+            try {
+                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs', logId), logRecord);
+            } catch(e) {
+                console.error("全站日誌寫入失敗:", e);
+                writeError = true;
+            }
+
+            if(writeError) showMsg("存檔過程遭遇異常，請聯絡管理員確認權限 (請檢查 Firebase Rule)。");
+
+            await refreshUserStats();
+            setupUI();
+            hideLoading();
+            document.getElementById('btn-spin').disabled = false;
+            
+            document.getElementById('result-prize-name').innerText = prize.name;
+            document.getElementById('result-time').innerText = new Date(now).toLocaleString();
+            document.getElementById('result-exp').innerText = new Date(exp).toLocaleDateString();
+            document.getElementById('result-modal').classList.add('modal-active');
+            
+            if(state.spinsUsedToday >= MAX_SPINS_PER_DAY) {
+                setTimeout(() => { if(!document.getElementById('result-modal').classList.contains('modal-active')) document.getElementById('limit-modal').classList.add('modal-active'); }, 1500);
             }
         }
 
@@ -710,567 +727,226 @@
             document.getElementById('page-game').classList.toggle('hidden', !isGame); 
             document.getElementById('page-history').classList.toggle('hidden', isGame);
             
-            document.getElementById('tab-game').className = isGame ? 'px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-white shadow-sm text-gray-800' : 'px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-gray-600';
-            document.getElementById('tab-history').className = !isGame ? 'px-4 py-1.5 rounded-lg text-xs font-bold transition-all bg-white shadow-sm text-gray-800' : 'px-4 py-1.5 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-gray-600';
-            if(!isGame) renderHistory();
-        };
-
-        let wheelCanvas, wheelCtx;
-        function initWheelCanvas() {
-            if(wheelCanvas) return; 
-            wheelCanvas = document.getElementById('wheel-canvas');
-            wheelCtx = wheelCanvas.getContext('2d', { alpha: false });
-            const scale = window.devicePixelRatio || 2;
-            wheelCanvas.width = canvasSize * scale;
-            wheelCanvas.height = canvasSize * scale;
-            wheelCtx.scale(scale, scale);
-        }
-
-        function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-            let words = text.split(''); 
-            let line = '';
-            let lines = [];
-            
-            if(text.includes('－')) {
-                const parts = text.split('－');
-                lines.push(parts[0] + '－');
-                words = parts[1].split('');
-            } else if (text.includes(' ')) {
-                const parts = text.split(' ');
-                if(parts.length > 1) {
-                    lines.push(parts[0]);
-                    words = parts.slice(1).join(' ').split('');
-                }
-            }
-
-            for(let n = 0; n < words.length; n++) {
-                let testLine = line + words[n];
-                let metrics = ctx.measureText(testLine);
-                let testWidth = metrics.width;
-                if (testWidth > maxWidth && n > 0) {
-                    lines.push(line);
-                    line = words[n];
-                } else {
-                    line = testLine;
-                }
-            }
-            lines.push(line);
-            
-            if(lines.length > 3) {
-                lines = lines.slice(0, 3);
-                lines[2] = lines[2].substring(0, lines[2].length - 1) + '..';
-            }
-
-            const totalHeight = lines.length * lineHeight;
-            let startY = y - (totalHeight / 2) + (lineHeight / 2);
-
-            for(let i = 0; i < lines.length; i++) {
-                ctx.fillText(lines[i], x, startY + (i * lineHeight));
-            }
-        }
-
-        function drawWheel(rotationAngle) {
-            if(!wheelCtx) return;
-            const cx = canvasSize / 2;
-            const cy = canvasSize / 2;
-            const radius = cx - 10;
-            
-            const visiblePrizes = state.prizePool.filter(p => !p.hidden);
-            const slices = visiblePrizes.length || 1; // 避免 0
-            const arc = (2 * Math.PI) / slices;
-
-            wheelCtx.fillStyle = '#ffffff';
-            wheelCtx.fillRect(0, 0, canvasSize, canvasSize);
-
-            for (let i = 0; i < slices; i++) {
-                const angle = rotationAngle + i * arc;
-                wheelCtx.beginPath();
-                wheelCtx.fillStyle = WHEEL_COLORS[i % WHEEL_COLORS.length];
-                wheelCtx.moveTo(cx, cy);
-                wheelCtx.arc(cx, cy, radius, angle, angle + arc, false);
-                wheelCtx.lineTo(cx, cy);
-                wheelCtx.fill();
-                
-                wheelCtx.lineWidth = 1.5;
-                wheelCtx.strokeStyle = '#fde68a';
-                wheelCtx.stroke();
-
-                wheelCtx.save();
-                wheelCtx.translate(cx, cy);
-                wheelCtx.rotate(angle + arc / 2);
-                
-                const textColor = TEXT_COLORS[i % TEXT_COLORS.length];
-                wheelCtx.fillStyle = textColor;
-                wheelCtx.textAlign = 'right';
-                wheelCtx.textBaseline = 'middle';
-                
-                wheelCtx.font = 'bold 8.5px "Noto Sans TC", sans-serif';
-                const text = visiblePrizes[i] ? visiblePrizes[i].name : '';
-                wrapText(wheelCtx, text, radius - 18, 0, radius - 60, 11); 
-                
-                wheelCtx.restore();
-            }
-            
-            wheelCtx.beginPath();
-            wheelCtx.arc(cx, cy, radius, 0, 2 * Math.PI, false);
-            wheelCtx.lineWidth = 4;
-            wheelCtx.strokeStyle = '#fde68a';
-            wheelCtx.stroke();
-            
-            for(let i = 0; i < slices * 2; i++) {
-                const dotAngle = rotationAngle + i * (Math.PI / slices);
-                const dotX = cx + Math.cos(dotAngle) * (radius - 5);
-                const dotY = cy + Math.sin(dotAngle) * (radius - 5);
-                wheelCtx.beginPath();
-                wheelCtx.arc(dotX, dotY, 2, 0, 2 * Math.PI);
-                wheelCtx.fillStyle = '#f59e0b';
-                wheelCtx.fill();
-            }
-        }
-
-        function easeOutCirc(x) { return Math.sqrt(1 - Math.pow(x - 1, 2)); }
-
-        window.startSpin = async () => {
-            if (isSpinning) return;
-            if (state.count >= INITIAL_CHANCES) { updateUI(); return; }
-
-            const visiblePrizes = state.prizePool.filter(p => !p.hidden);
-            if (visiblePrizes.length === 0) return showMsg("尚未設定獎項，請聯繫管理員");
-
-            isSpinning = true;
-            document.getElementById('btn-spin').disabled = true;
-            document.getElementById('prize-result-overlay').style.opacity = '0';
-            document.getElementById('wheel-container').classList.remove('scale-105', 'shadow-2xl');
-            
-            const { prizeName, prizeIndex } = preparePrize(visiblePrizes);
-            
-            const slices = visiblePrizes.length;
-            const arc = (2 * Math.PI) / slices;
-            
-            const targetBaseRotation = (-Math.PI / 2) - (prizeIndex * arc + arc / 2);
-            const extraSpins = 10 * 2 * Math.PI; 
-            
-            let targetRotation = extraSpins + targetBaseRotation;
-            let remainder = currentRotation % (2 * Math.PI);
-            targetRotation += (currentRotation - remainder);
-            if (targetRotation < currentRotation + extraSpins) {
-                targetRotation += 2 * Math.PI;
-            }
-
-            const duration = 7500; 
-            const startRotation = currentRotation;
-            const startTime = performance.now();
-
-            function animate(currentTime) {
-                const elapsed = currentTime - startTime;
-                if (elapsed >= duration) {
-                    currentRotation = targetRotation;
-                    drawWheel(currentRotation);
-                    finishSpin();
-                    return;
-                }
-                
-                const progress = easeOutCirc(elapsed / duration);
-                currentRotation = startRotation + (targetRotation - startRotation) * progress;
-                drawWheel(currentRotation);
-                requestAnimationFrame(animate);
-            }
-            requestAnimationFrame(animate);
-        };
-
-        function preparePrize(visiblePrizes) {
-            const totalWeight = visiblePrizes.reduce((sum, p) => sum + Number(p.weight), 0);
-            let random = Math.random() * totalWeight;
-            let prizeIndex = 0;
-            let prizeName = visiblePrizes[0].name;
-            
-            for (let i = 0; i < visiblePrizes.length; i++) { 
-                if (random < visiblePrizes[i].weight) { 
-                    prizeName = visiblePrizes[i].name; 
-                    prizeIndex = i;
-                    break; 
-                } 
-                random -= visiblePrizes[i].weight; 
-            }
-            
-            const now = Date.now(), exp = now + (EXPIRY_DAYS * 86400000);
-            window.currentPrize = { name: prizeName, winDate: now, expDate: exp, isRedeemed: false };
-            return { prizeName, prizeIndex };
-        }
-
-        async function finishSpin() {
-            const prizeObj = window.currentPrize;
-            const prizeName = prizeObj.name;
-            const isTopPrize = prizeName.includes("1獎") || prizeName.includes("2獎") || prizeName.includes("3獎") || prizeName.includes("加碼金 $1000");
-            
-            document.getElementById('prize-name').innerText = prizeName;
-            document.getElementById('verification-time').innerText = `開獎：${new Date(prizeObj.winDate).toLocaleString()}`;
-            document.getElementById('expiry-date').innerText = `有效至：${new Date(prizeObj.expDate).toLocaleDateString()}`;
-            
-            const overlay = document.getElementById('prize-result-overlay');
-            overlay.classList.remove('scale-95');
-            overlay.classList.add('scale-100');
-            
-            if (isTopPrize) {
-                document.getElementById('wheel-container').classList.add('big-win-glow');
-                document.getElementById('prize-name').classList.add('prize-text-anim');
-                document.getElementById('top-prize-banner').classList.remove('hidden');
-                document.getElementById('normal-prize-banner').classList.add('hidden');
-                
-                const end = Date.now() + 3000, colors = ['#f59e0b', '#fbbf24', '#fef3c7', '#ffffff'];
-                (function frame() {
-                    confetti({ particleCount: 5, angle: 60, spread: 65, origin: { x: 0 }, colors: colors });
-                    confetti({ particleCount: 5, angle: 120, spread: 65, origin: { x: 1 }, colors: colors });
-                    if (Date.now() < end) requestAnimationFrame(frame);
-                }());
-            } else { 
-                confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 }, colors: ['#f59e0b', '#fbbf24', '#fef3c7'] }); 
-                document.getElementById('top-prize-banner').classList.add('hidden');
-                document.getElementById('normal-prize-banner').classList.remove('hidden');
-            }
-
-            overlay.style.opacity = '1';
-            overlay.style.pointerEvents = 'auto';
-
-            state.count++; 
-            
-            // --- 拆分獨立區塊 1：寫入個人紀錄 ---
-            try {
-                if(db && userId) {
-                    await setDoc(doc(db, 'artifacts', APP_ID, 'users', userId), {
-                        name: memberName,
-                        phone: memberPhone,
-                        updatedAt: Date.now()
-                    }, { merge: true });
-
-                    const docRef = await addDoc(collection(db, 'artifacts', APP_ID, 'users', userId, 'prizes'), prizeObj);
-                    prizeObj.id = docRef.id;
-                    console.log("✅ 個人獎項寫入成功");
-                }
-            } catch(e) {
-                console.error("Save personal prize error", e);
-                prizeObj.id = "local-" + Date.now(); 
-            }
-
-            // --- 拆分獨立區塊 2：寫入全站日誌 ---
-            try {
-                if(db) {
-                    await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs'), {
-                        name: memberName,
-                        phone: memberPhone,
-                        prizeName: prizeObj.name,
-                        timestamp: prizeObj.winDate,
-                        countUsed: state.count
-                    });
-                    console.log("✅ 全站日誌寫入成功");
-                }
-            } catch(e) {
-                console.error("Save global log error", e);
-            }
-
-            state.prizes.unshift(prizeObj); 
-            await saveProfileData(); 
-            window.currentPrize = null;
-
-            document.getElementById('btn-spin').classList.add('hidden');
-            document.getElementById('btn-spin').disabled = false;
-            
-            updateUI(); 
-
-            if (state.count < INITIAL_CHANCES) {
-                document.getElementById('btn-reset-spin').classList.remove('hidden');
-            }
-
-            isSpinning = false;
-        }
-
-        window.resetWheelUI = () => {
-            document.getElementById('btn-reset-spin').classList.add('hidden');
-            document.getElementById('btn-spin').classList.remove('hidden');
-            
-            const overlay = document.getElementById('prize-result-overlay');
-            overlay.style.opacity = '0';
-            overlay.style.pointerEvents = 'none';
-            overlay.classList.remove('scale-100');
-            overlay.classList.add('scale-95');
-            
-            document.getElementById('wheel-container').classList.remove('big-win-glow');
-            updateUI();
+            document.getElementById('tab-game').className = isGame ? 'px-4 py-2 rounded-lg text-xs font-black transition-all bg-white shadow-sm text-[#181829]' : 'px-4 py-2 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-gray-600';
+            document.getElementById('tab-history').className = !isGame ? 'px-4 py-2 rounded-lg text-xs font-black transition-all bg-white shadow-sm text-[#181829]' : 'px-4 py-2 rounded-lg text-xs font-bold transition-all text-gray-400 hover:text-gray-600';
         };
 
         function renderHistory() {
-            const list = document.getElementById('history-list'); list.innerHTML = ''; const now = Date.now();
-            const valid = state.prizes.filter(p => !p.isRedeemed && now <= p.expDate), invalid = state.prizes.filter(p => p.isRedeemed || now > p.expDate);
-            document.getElementById('count-valid').innerText = valid.length; document.getElementById('count-invalid').innerText = invalid.length;
-            if(state.prizes.length === 0) { list.innerHTML = '<div class="py-12 text-center text-gray-400 text-sm">尚未有中獎紀錄</div>'; return; }
+            const list = document.getElementById('history-list'); 
+            list.innerHTML = ''; 
+            const now = Date.now();
             
-            const createSection = (title, items, isInv) => {
-                if (items.length === 0) return '';
-                let html = `<div class="mb-6"><div class="flex items-center gap-2 mb-3"><div class="h-4 w-1 rounded-full ${isInv ? 'bg-gray-300' : 'bg-gray-800'}"></div><h3 class="text-xs font-black ${isInv ? 'text-gray-400' : 'text-gray-800'} uppercase tracking-widest">${title}</h3></div>`;
-                items.forEach(p => {
-                    const isExp = now > p.expDate && !p.isRedeemed;
-                    html += `<div class="p-4 rounded-2xl border mb-3 transition-all ${p.isRedeemed || isExp ? 'bg-gray-50 border-gray-100 opacity-70' : 'bg-white border-gray-200 shadow-sm'}">
-                        <div class="flex justify-between items-start mb-1">
-                            <span class="text-[9px] text-gray-400 font-mono">ID: ${p.id ? p.id.substring(0,8) : '---'}</span>
-                            <span class="text-[10px] font-bold ${p.isRedeemed ? 'text-gray-400' : (isExp ? 'text-orange-400' : 'text-amber-500')}">${p.isRedeemed ? '已使用' : (isExp ? '已逾期' : '有效')}</span>
-                        </div>
-                        <div class="font-bold text-gray-800 text-sm mb-2">${p.name}</div>
-                        <div class="flex justify-between items-end">
-                            <span class="text-[9px] text-gray-400">有效至：${new Date(p.expDate).toLocaleDateString()}</span>
-                            ${(!p.isRedeemed && !isExp) ? `<button onclick="redeem('${p.id}')" class="px-4 py-1.5 bg-gray-800 text-white rounded-lg text-xs font-bold shadow-md active:scale-95">兌換</button>` : ''}
-                        </div>
-                    </div>`;
-                });
-                return html + '</div>';
+            const valid = state.userPrizes.filter(p => !p.isRedeemed && now <= p.expDate);
+            const invalid = state.userPrizes.filter(p => p.isRedeemed || now > p.expDate);
+            
+            document.getElementById('count-valid').innerText = valid.length; 
+            document.getElementById('count-invalid').innerText = invalid.length;
+            
+            if(state.userPrizes.length === 0) { 
+                list.innerHTML = '<div class="py-12 text-center text-gray-300 font-bold text-sm">尚未有中獎紀錄</div>'; 
+                return; 
+            }
+            
+            const createCard = (p, isInv, isExp) => {
+                return `<div class="p-4 rounded-2xl border mb-3 transition-all ${isInv ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-white border-gray-100 shadow-sm'}">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-[9px] text-gray-400 font-mono">ID: ${p.id}</span>
+                        <span class="text-[10px] font-bold ${p.isRedeemed ? 'text-gray-400' : (isExp ? 'text-rose-400' : 'text-emerald-500')}">${p.isRedeemed ? '已使用' : (isExp ? '已逾期' : '有效')}</span>
+                    </div>
+                    <div class="font-bold text-[#1a1a2e] text-sm mb-2">${p.name}</div>
+                    <div class="text-[9px] text-gray-400">有效至：${new Date(p.expDate).toLocaleDateString()}</div>
+                </div>`;
             };
-            list.innerHTML = createSection('可用獎項', valid, false) + createSection('過期或已使用', invalid, true);
+            
+            if(valid.length > 0) {
+                list.innerHTML += `<div class="flex items-center gap-2 mb-3"><div class="h-3 w-1 bg-[#1a1a2e] rounded-full"></div><h3 class="text-xs font-black text-[#1a1a2e] uppercase tracking-widest">可用獎項</h3></div>`;
+                valid.forEach(p => list.innerHTML += createCard(p, false, false));
+            }
+            if(invalid.length > 0) {
+                list.innerHTML += `<div class="flex items-center gap-2 mb-3 mt-6"><div class="h-3 w-1 bg-gray-300 rounded-full"></div><h3 class="text-xs font-black text-gray-400 uppercase tracking-widest">過期或已使用</h3></div>`;
+                invalid.forEach(p => list.innerHTML += createCard(p, true, now > p.expDate && !p.isRedeemed));
+            }
         }
 
-        window.redeem = (id) => {
-            const p = state.prizes.find(x => x.id === id); if(!p) return;
-            document.getElementById('redeem-confirm-modal').classList.remove('hidden');
-            document.getElementById('redeem-confirm-modal').classList.add('flex');
-            document.getElementById('confirm-redeem-btn').onclick = async () => { 
-                p.isRedeemed = true; 
-                try {
-                    // 同步寫入已兌換狀態
-                    if(db && userId && id) await updateDoc(doc(db, 'artifacts', APP_ID, 'users', userId, 'prizes', id), { isRedeemed: true });
-                } catch(e){ console.error(e) }
-                renderHistory(); closeModal('redeem-confirm-modal'); 
-            };
-        };
-
-        window.openAdminDashboard = () => {
-            document.getElementById('admin-pass').value = "";
-            document.getElementById('admin-auth-modal').classList.add('modal-active');
+        window.openAdmin = () => {
+            document.getElementById('admin-pass').value = '';
+            document.getElementById('admin-login-modal').classList.add('modal-active');
         };
 
         window.verifyAdmin = () => {
-            if (document.getElementById('admin-pass').value === ADMIN_PASS) {
-                closeModal('admin-auth-modal');
+            if (document.getElementById('admin-pass').value === "7310168888") {
+                closeModal('admin-login-modal');
                 document.getElementById('admin-dashboard-modal').classList.add('modal-active');
-                
-                if (!db) {
-                     var app = initializeApp(firebaseConfig);
-                     auth = getAuth(app);
-                     db = getFirestore(app);
-                     signInAnonymously(auth).then(() => switchAdminTab('stats'));
-                } else {
-                     switchAdminTab('stats');
-                }
-            } else { 
-                showMsg("❌ 密碼錯誤"); 
-            }
+                switchAdminTab('stats');
+            } else { showMsg("❌ 密碼錯誤"); }
         };
 
         window.switchAdminTab = (tab) => {
-            const tabs = ['stats', 'prizes', 'users', 'members'];
-            tabs.forEach(t => {
-                const btn = document.getElementById(`tab-admin-${t}`);
-                const page = document.getElementById(`admin-page-${t}`);
-                if (t === tab) {
-                    btn.className = "whitespace-nowrap px-3 py-2 text-xs font-bold rounded-lg bg-gray-200 text-gray-800 transition-colors";
-                    page.classList.remove('hidden');
-                } else {
-                    btn.className = "whitespace-nowrap px-3 py-2 text-xs font-bold rounded-lg text-gray-400 transition-colors";
-                    page.classList.add('hidden');
-                }
+            ['stats', 'resets', 'prizes'].forEach(t => {
+                document.getElementById('admin-page-'+t).classList.toggle('hidden', t !== tab);
+                document.getElementById('tab-admin-'+t).className = t === tab ? 'flex-1 py-3 text-xs font-bold text-[#181829] border-b-2 border-[#181829]' : 'flex-1 py-3 text-xs font-bold text-gray-400 border-b-2 border-transparent';
             });
-
-            if (tab === 'prizes') renderPrizeManageList();
-            if (tab === 'stats') loadGlobalStats();
-            if (tab === 'members') loadMembersAdmin();
+            if(tab === 'stats') loadAdminLogs(false);
+            if(tab === 'resets') loadAdminResets();
+            if(tab === 'prizes') renderAdminPrizes();
         };
 
-        window.loadGlobalStats = async () => {
-            const tbody = document.getElementById('stats-table-body');
-            tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400 font-bold">資料抓取中...</td></tr>';
+        window.loadAdminLogs = async (showAll) => {
+            const list = document.getElementById('admin-logs-list');
+            list.innerHTML = '<div class="text-center text-xs text-gray-400 py-4">讀取中...</div>';
             try {
-                if(!db) throw new Error("DB not ready");
-                // 明確對齊路徑: artifacts/{APP_ID}/public/data/slot_logs
-                const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs'));
-                const snap = await getDocs(q);
-                let logs = snap.docs.map(d => d.data());
+                const logsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs');
+                const snap = await getDocs(logsRef); 
+                let logs = [];
+                snap.forEach(d => logs.push(d.data()));
+                logs.sort((a,b) => b.timestamp - a.timestamp);
                 
-                logs.sort((a,b) => b.timestamp - a.timestamp); 
+                list.innerHTML = '';
+                let count = 0;
                 
-                if (logs.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400">目前尚無抽獎紀錄</td></tr>';
-                    return;
-                }
-                
-                tbody.innerHTML = '';
                 logs.forEach(log => {
-                    const dateObj = new Date(log.timestamp);
-                    const timeStr = `${dateObj.getMonth()+1}/${dateObj.getDate()} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
+                    const isExp = Date.now() > (log.timestamp + (EXPIRY_DAYS * 86400000));
+                    if(!showAll && (log.isRedeemed || isExp)) return; 
+                    count++;
                     
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-gray-100 transition-colors border-b border-gray-100 last:border-0";
-                    tr.innerHTML = `
-                        <td class="p-3 text-[10px] text-gray-400 font-mono">${timeStr}</td>
-                        <td class="p-3 text-[11px] font-bold text-gray-700">${maskName(log.name)}</td>
-                        <td class="p-3 text-[11px] font-mono text-gray-500">${log.phone}</td>
-                        <td class="p-3 text-[11px] text-center text-orange-500 font-bold">${log.countUsed}</td>
-                        <td class="p-3 text-[11px] text-gray-800 font-medium truncate max-w-[120px]" title="${log.prizeName}">${log.prizeName}</td>
+                    let statusHtml = '';
+                    if(log.isRedeemed) statusHtml = `<span class="text-[10px] text-gray-400 font-bold">已兌換 (${new Date(log.redeemTime||0).toLocaleString()})</span>`;
+                    else if(isExp) statusHtml = `<span class="text-[10px] text-rose-400 font-bold">已逾期</span>`;
+                    else statusHtml = `<button onclick="confirmAction('確認核銷兌換','是否確認核銷 ${log.name} 的 ${log.prizeName}？', () => adminRedeem('${log.logId}', '${log.phone}', '${log.prizeId}'))" class="bg-emerald-500 text-white px-3 py-1 rounded shadow-sm text-xs font-bold">核銷兌換</button>`;
+                    
+                    list.innerHTML += `
+                        <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex flex-col gap-1 ${log.isRedeemed||isExp ? 'opacity-60' : ''}">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-sm text-gray-800">${log.name} <span class="text-xs text-gray-400 font-normal">(${log.phone})</span></span>
+                                ${statusHtml}
+                            </div>
+                            <div class="text-xs font-black text-[#d97706] truncate">${log.prizeName}</div>
+                            <div class="text-[9px] text-gray-400">抽中時間：${new Date(log.timestamp).toLocaleString()}</div>
+                        </div>
                     `;
-                    tbody.appendChild(tr);
                 });
-            } catch(e) {
-                console.error("Load stats error", e);
-                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-orange-400">無法讀取資料</td></tr>';
-            }
+                if(count === 0) list.innerHTML = '<div class="text-center text-xs text-gray-400 py-4">目前沒有符合條件的紀錄</div>';
+            } catch(err) { console.error(err); list.innerHTML = '讀取失敗'; }
         };
 
-        window.adminResetTargetUser = async () => {
-            const phone = document.getElementById('reset-phone-input').value.trim();
-            if(!phone || phone.length < 8) return showMsg("請輸入完整的電話號碼");
-            
+        window.adminRedeem = async (logId, phone, prizeId) => {
+            showLoading("核銷中...");
             try {
-                const targetUserId = `user_${phone}`;
-                // 明確對齊路徑: artifacts/{APP_ID}/users/{userId}
-                const profileRef = doc(db, 'artifacts', APP_ID, 'users', targetUserId);
-                const snap = await getDoc(profileRef);
+                const now = Date.now();
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs', logId), { isRedeemed: true, redeemTime: now });
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'users', phone, 'prizes', prizeId), { isRedeemed: true, redeemTime: now });
+                showMsg("✅ 核銷成功");
+                loadAdminLogs(false);
+            } catch(err) { console.error(err); showMsg("核銷失敗，請確認權限。"); }
+            hideLoading();
+        };
+
+        window.loadAdminResets = async () => {
+            const list = document.getElementById('admin-today-players-list');
+            list.innerHTML = '<div class="text-center text-xs text-gray-400 py-4">讀取中...</div>';
+            
+            const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+            try {
+                const logsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs');
+                const snap = await getDocs(logsRef);
+                let players = {};
                 
-                if(snap.exists()) {
-                    await updateDoc(profileRef, { count: 0 });
-                    
-                    if (userId === targetUserId) {
-                        state.count = 0;
-                        resetWheelUI();
-                        updateUI();
+                snap.forEach(d => {
+                    const l = d.data();
+                    if(l.timestamp >= todayStart.getTime()) {
+                        if(!players[l.phone]) players[l.phone] = { name: l.name, count: 0 };
+                        players[l.phone].count++;
                     }
-                    
-                    showMsg(`✅ 已成功重置玩家 ${phone} 的今日次數`);
-                    document.getElementById('reset-phone-input').value = '';
-                } else {
-                    showMsg("❌ 找不到該玩家的抽獎紀錄");
-                }
-            } catch(e) {
-                console.error(e);
-                showMsg("❌ 重置失敗，請稍後再試");
-            }
-        };
-
-        function renderPrizeManageList() {
-            const container = document.getElementById('prize-manage-list');
-            container.innerHTML = '';
-            state.prizePool.forEach((p, index) => {
-                const div = document.createElement('div');
-                div.className = "flex items-center gap-1 bg-gray-50 p-2 rounded-xl mb-1";
-                div.innerHTML = `
-                    <input type="checkbox" onchange="updatePrizeHidden(${index}, this.checked)" ${p.hidden ? 'checked' : ''} class="w-4 h-4 text-amber-500 rounded border-gray-300 focus:ring-amber-500 cursor-pointer" title="打勾隱藏不顯示">
-                    <input type="text" onchange="updatePrizeName(${index}, this.value)" value="${p.name}" class="flex-1 text-[11px] font-bold text-gray-700 bg-transparent border-b border-gray-200 outline-none px-1" placeholder="獎項名稱">
-                    <input type="number" onchange="updatePrizeWeight(${index}, this.value)" value="${p.weight}" class="w-10 text-center border-b border-gray-200 text-[11px] bg-transparent outline-none font-bold text-gray-800" title="機率權重">
-                    <button onclick="deletePrize(${index})" class="text-orange-400 font-bold px-2 hover:bg-orange-100 rounded">✕</button>
-                `;
-                container.appendChild(div);
-            });
-        }
-        window.updatePrizeName = (idx, val) => { state.prizePool[idx].name = val; };
-        window.updatePrizeWeight = (idx, val) => { state.prizePool[idx].weight = Number(val); };
-        window.updatePrizeHidden = (idx, val) => { state.prizePool[idx].hidden = val; };
-        window.deletePrize = (idx) => { if(state.prizePool.length <= 1) return showMsg("至少需保留一個獎項"); state.prizePool.splice(idx, 1); renderPrizeManageList(); };
-        window.addPrizeToPool = () => {
-            const name = document.getElementById('new-prize-name').value, weight = document.getElementById('new-prize-weight').value;
-            if(!name || !weight) return showMsg("請輸入完整名稱與權重");
-            state.prizePool.push({ name, weight: Number(weight), hidden: false });
-            document.getElementById('new-prize-name').value = ''; document.getElementById('new-prize-weight').value = '';
-            renderPrizeManageList();
-        };
-        window.saveAndClosePrizeAdmin = async () => { 
-            const btn = document.getElementById('btn-save-admin');
-            btn.innerHTML = `<div class="loading-spinner w-5 h-5 border-white border-t-transparent mx-auto"></div>`;
-            try {
-                // 明確對齊路徑: artifacts/{APP_ID}/public/slot_config
-                if(db) await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'slot_config'), { prizePool: state.prizePool }, { merge: true });
-                if(wheelCtx) drawWheel(currentRotation); 
-                showMsg("✅ 雲端獎項設定已成功同步");
-            } catch(e) { console.error(e); showMsg("❌ 儲存失敗"); } 
-            finally { btn.innerHTML = `同步儲存設定`; }
-        };
-
-        window.loadMembersAdmin = async () => {
-            const tbody = document.getElementById('members-table-body');
-            tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-400 font-bold">資料抓取中...</td></tr>';
-            try {
-                if(!db) throw new Error("DB not ready");
-                const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'beauty_members'));
-                const snap = await getDocs(q);
-                let members = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                
-                if (members.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-400">目前尚無會員資料</td></tr>';
-                    return;
-                }
-                
-                tbody.innerHTML = '';
-                members.forEach(m => {
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-gray-100 transition-colors border-b border-gray-50 last:border-0";
-                    tr.innerHTML = `
-                        <td class="p-3 text-[11px] font-bold text-gray-700">${m.name}</td>
-                        <td class="p-3 text-[11px] font-mono text-gray-500">${m.phone}</td>
-                        <td class="p-3 text-right">
-                            <button onclick="deleteMemberAdmin('${m.id}')" class="text-orange-400 hover:text-orange-600 font-bold px-2 py-1 bg-orange-50 rounded">刪除</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
                 });
-            } catch(e) {
-                console.error("Load members error", e);
-                tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-orange-400">無法讀取資料</td></tr>';
-            }
-        };
-
-        window.addMemberAdmin = async () => {
-            const name = document.getElementById('new-member-name').value.trim();
-            const phone = document.getElementById('new-member-phone').value.trim();
-            if(!name || !phone) return showMsg("請輸入姓名與電話");
-            
-            try {
-                if(db) {
-                    await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'beauty_members'), {
-                        name: name,
-                        phone: phone,
-                        createdAt: Date.now()
-                    });
-                    document.getElementById('new-member-name').value = '';
-                    document.getElementById('new-member-phone').value = '';
-                    loadMembersAdmin();
-                    showMsg("✅ 新增會員成功");
+                
+                list.innerHTML = '';
+                if(Object.keys(players).length === 0) { list.innerHTML = '<div class="text-center text-xs text-gray-400 py-4">今日尚未有人抽獎</div>'; return; }
+                
+                for(let phone in players) {
+                    list.innerHTML += `
+                        <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center">
+                            <div>
+                                <div class="font-bold text-sm text-gray-800">${players[phone].name}</div>
+                                <div class="text-xs text-gray-500">${phone} (今日已留紀錄: ${players[phone].count}筆)</div>
+                            </div>
+                            <button onclick="confirmAction('重置今日次數','確定要為 ${players[phone].name} 恢復今日 3 次抽獎額度嗎？', () => adminResetPlayer('${phone}'))" class="bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg shadow-sm text-xs font-bold hover:bg-gray-200">
+                                刷新次數
+                            </button>
+                        </div>
+                    `;
                 }
-            } catch(e) {
-                console.error(e);
-                showMsg("❌ 新增失敗");
-            }
+            } catch(err) { console.error(err); list.innerHTML = '讀取失敗'; }
         };
 
-        window.deleteMemberAdmin = async (docId) => {
+        window.adminResetPlayer = async (phone) => {
+            showLoading("重置中...");
             try {
-                if(db) {
-                    await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'beauty_members', docId));
-                    loadMembersAdmin();
-                }
-            } catch(e) {
-                console.error(e);
-                showMsg("❌ 刪除失敗");
-            }
+                await setDoc(doc(db, 'artifacts', APP_ID, 'users', phone), { lastUpdate: Date.now() }, { merge: true });
+                await setDoc(doc(db, 'artifacts', APP_ID, 'users', phone, 'resets', getTodayString()), { timestamp: Date.now() });
+                showMsg("✅ 次數已為該玩家重置！");
+            } catch(err) { console.error(err); showMsg("重置失敗，請確認 Firebase 規則。"); }
+            hideLoading();
         };
 
-        window.showMsg = (text) => { document.getElementById('msg-text').innerText = text; document.getElementById('msg-modal').classList.add('modal-active'); };
-        window.closeModal = (id) => { document.getElementById(id).classList.remove('modal-active', 'flex'); document.getElementById(id).classList.add('hidden'); };
-        window.handleReservation = () => { window.open("https://liff.line.me/2010909434-eVswjkpc", "_blank"); };
+        window.manualResetPlayer = () => {
+            const phone = document.getElementById('admin-reset-phone').value.trim();
+            if(!phone || phone.length !== 10) return showMsg("請輸入完整的手機號碼");
+            confirmAction('手動重置次數', `確定要重置 ${phone} 的今日次數嗎？`, () => adminResetPlayer(phone));
+        };
 
-        function startTimer() {
-            const el = document.getElementById('countdown-timer');
-            const tick = () => {
-                const now = new Date(), mid = new Date(); mid.setHours(23, 59, 59, 999);
-                const diff = mid - now; if(diff <= 0) { location.reload(); return; }
-                const h = String(Math.floor(diff/3600000)).padStart(2,'0'), m = String(Math.floor((diff%3600000)/60000)).padStart(2,'0'), s = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
-                el.innerText = `重置：${h}:${m}:${s}`;
-            };
-            tick(); setInterval(tick, 1000);
+        window.renderAdminPrizes = () => {
+            const list = document.getElementById('admin-prize-list');
+            list.innerHTML = '';
+            state.prizePool.forEach((p, idx) => {
+                list.innerHTML += `
+                    <div class="flex items-center gap-2 bg-white border border-gray-100 p-2 rounded-xl">
+                        <input type="checkbox" onchange="updatePrizeProp(${idx}, 'isHidden', this.checked)" ${p.isHidden ? 'checked' : ''} title="隱藏不顯示" class="w-4 h-4 text-[#181829] rounded border-gray-300">
+                        <input type="text" onchange="updatePrizeProp(${idx}, 'name', this.value)" value="${p.name}" class="flex-1 text-xs font-bold border-b border-gray-100 px-1 py-1 focus:outline-none focus:border-[#181829] ${p.isHidden?'text-gray-400 line-through':''}">
+                        <input type="number" onchange="updatePrizeProp(${idx}, 'weight', Number(this.value))" value="${p.weight}" class="w-12 text-center text-xs border-b border-gray-100 focus:outline-none focus:border-[#181829]" title="權重">
+                        <button onclick="deletePrize(${idx})" class="text-gray-300 hover:text-rose-500 font-bold px-2">✕</button>
+                    </div>
+                `;
+            });
+        };
+        
+        window.updatePrizeProp = (idx, prop, val) => { state.prizePool[idx][prop] = val; };
+        window.deletePrize = (idx) => { state.prizePool.splice(idx, 1); renderAdminPrizes(); };
+        window.addPrize = () => {
+            const n = document.getElementById('new-prize-name').value, w = document.getElementById('new-prize-weight').value;
+            if(!n || !w) return showMsg("請輸入名稱與權重");
+            state.prizePool.push({ name: n, weight: Number(w), isHidden: false });
+            document.getElementById('new-prize-name').value = ''; document.getElementById('new-prize-weight').value = '';
+            renderAdminPrizes();
+        };
+        window.savePrizesToDB = async () => {
+            showLoading("儲存中...");
+            try {
+                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'slot_config', 'prizes'), { pool: state.prizePool });
+                showMsg("✅ 獎項已更新至雲端！");
+                if(canvas) drawWheel();
+            } catch(err) { console.error(err); showMsg("儲存失敗，請確認網路。"); }
+            hideLoading();
+        };
+
+        function getTodayString() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         }
+        
+        window.showMsg = (t) => { document.getElementById('msg-text').innerText = t; document.getElementById('msg-modal').classList.add('modal-active'); };
+        window.closeModal = (id) => { document.getElementById(id).classList.remove('modal-active'); };
+        window.showLoading = (t) => { document.getElementById('loading-ui').innerHTML = `<i class="ph ph-spinner-gap animate-spin text-5xl text-[#181829] mb-4 mx-auto"></i><p class="text-[#181829] font-bold tracking-widest text-sm">${t||'載入中...'}</p>`; document.getElementById('status-overlay').classList.remove('hidden'); };
+        window.hideLoading = () => { document.getElementById('status-overlay').classList.add('hidden'); };
+        
+        window.confirmAction = (title, text, actionFn) => {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-text').innerText = text;
+            document.getElementById('confirm-action-modal').classList.add('modal-active');
+            document.getElementById('btn-confirm-action').onclick = () => {
+                closeModal('confirm-action-modal');
+                actionFn();
+            };
+        };
 
         initApp();
     </script>
