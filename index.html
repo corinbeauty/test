@@ -498,9 +498,6 @@
                                         </h3>
                                         <p class="text-xs text-stone-500 mt-0.5">自動排除儲值本金與贈送金，僅計算一般消費/扣除儲值金；核對打勾後自動累加消費並適用回饋級距</p>
                                     </div>
-                                    <span class="text-xs bg-amber-100 text-amber-800 font-bold px-3 py-1 rounded-full">
-                                        一鍵入帳限最高權限 (Jerry)
-                                    </span>
                                 </div>
 
                                 <div class="overflow-x-auto hide-scroll">
@@ -894,7 +891,7 @@
             <i class="ph ph-gift text-5xl text-amber-500 mx-auto mb-4 block"></i>
             <h3 class="font-bold text-xl text-stone-800 mb-2">滿額點數兌換</h3>
             <p class="text-stone-500 text-sm mb-6">
-                是否要將 <span class="font-bold text-amber-600">5 點</span> 滿額點數<br/>轉換為 <span class="font-bold text-purple-600">$399</span> 贈送金？
+                是否要將 <span class="font-bold text-amber-600">5 點</span> 滿額點數<br/>轉換為 <span class="font-bold text-purple-600">$320</span> 贈送金？
             </p>
             <div class="bg-amber-50 rounded-xl p-4 mb-6 border border-amber-100 flex justify-between items-center">
                 <div class="text-left">
@@ -2347,9 +2344,9 @@
                 await executeTransaction({
                     type: 'convert',
                     amountChange: 0,
-                    bonusChange: 399,
+                    bonusChange: 320,
                     pointsChange: -5,
-                    remark: '滿額點數兌換：5點轉換為 $399 贈送金',
+                    remark: '滿額點數兌換：5點轉換為 $320 贈送金',
                     payMethod: '點數兌換',
                     shortfallPaid: 0
                 });
@@ -2368,8 +2365,10 @@
             
             tbody.innerHTML = '';
 
-            // 挑選出一般服務消費 consumeAmount > 0 的交易
-            const consumeTxs = periodTxs.filter(tx => (parseFloat(tx.consumeAmount) || 0) > 0);
+            // 挑選出一般服務消費 consumeAmount > 0 的交易，並依日期排序 (最新在最上面)
+            const consumeTxs = periodTxs
+                .filter(tx => (parseFloat(tx.consumeAmount) || 0) > 0)
+                .sort((a, b) => b.timestamp - a.timestamp);
 
             if (consumeTxs.length === 0) {
                 showElement(emptyEl);
@@ -2402,8 +2401,8 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-amber-50/40 transition border-b border-stone-100";
 
-                // 最高權限才能點擊一鍵發放
-                const isSuperAdmin = loggedInRole === 'admin';
+                // 只有帳號為 Jerry 的使用者才可以操作一鍵入帳
+                const isJerry = loggedInBeautician && loggedInBeautician.toLowerCase() === 'jerry';
 
                 let actionBtnHtml = '';
                 if (isRewardGranted) {
@@ -2411,7 +2410,7 @@
                 } else if (!refPhone || !referrerMember) {
                     actionBtnHtml = `<span class="text-xs text-stone-400">無對應推薦人</span>`;
                 } else {
-                    if (isSuperAdmin) {
+                    if (isJerry) {
                         actionBtnHtml = `
                             <button class="btn-grant-reward bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition flex items-center justify-center gap-1 mx-auto ${!tx.referrerAudited ? 'opacity-50 cursor-not-allowed' : ''}" 
                                     data-txid="${tx.id}" 
@@ -2424,7 +2423,7 @@
                             </button>
                         `;
                     } else {
-                        actionBtnHtml = `<span class="text-xs text-stone-400 font-medium" title="一鍵入只有最高權限可以操作">權限不足 (限Jerry)</span>`;
+                        actionBtnHtml = `<span class="text-xs text-stone-400 font-medium" title="一鍵入帳只有 Jerry 可以操作">權限不足 (限Jerry)</span>`;
                     }
                 }
 
@@ -2498,11 +2497,11 @@
                 });
             });
 
-            // 綁定「一鍵入到相對推薦人帳戶內的贈送金餘額」 (僅限最高權限)
+            // 綁定「一鍵入到相對推薦人帳戶內的贈送金餘額」 (僅限 Jerry 帳號)
             document.querySelectorAll('.btn-grant-reward').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
-                    if (loggedInRole !== 'admin') {
-                        return alert("一鍵入只有最高權限 (Jerry) 可以操作！");
+                    if (!loggedInBeautician || loggedInBeautician.toLowerCase() !== 'jerry') {
+                        return alert("一鍵入帳只有 Jerry 的帳號可以操作！");
                     }
 
                     const txId = e.currentTarget.getAttribute('data-txid');
