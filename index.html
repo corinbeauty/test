@@ -141,7 +141,7 @@
     <div id="status-overlay" class="fixed inset-0 bg-[#f5f6f8]/90 backdrop-blur-sm z-[200] flex flex-col items-center justify-center p-6 text-center transition-opacity duration-300">
         <div id="loading-ui">
             <i class="ph ph-spinner-gap animate-spin text-5xl text-pink-400 mb-4 mx-auto"></i>
-            <p class="text-pink-400 font-bold tracking-widest text-sm animate-pulse">連線中...</p>
+            <p class="text-pink-400 font-bold tracking-widest text-sm animate-pulse">連線至Corin Beauty伺服器中...</p>
         </div>
     </div>
 
@@ -490,8 +490,10 @@
                 // 精確對齊指定路徑: artifacts/check-balance-13da9/public/slot_config
                 const configRef = doc(db, 'artifacts', APP_ID, 'public', 'slot_config');
                 const configSnap = await getDoc(configRef);
-                if(configSnap.exists() && configSnap.data().pool) {
-                    state.prizePool = configSnap.data().pool;
+                
+                // 優先讀取 prizepool 欄位 (相容舊版 pool 欄位)
+                if(configSnap.exists()) {
+                    state.prizePool = configSnap.data().prizepool || configSnap.data().pool || [];
                 } else {
                     state.prizePool = []; 
                 }
@@ -883,7 +885,8 @@
         window.savePrizesToDB = async () => {
             showLoading("儲存中...");
             try {
-                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'slot_config'), { pool: state.prizePool });
+                // 同步寫入 prizepool 確保與新路徑對齊
+                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'slot_config'), { prizepool: state.prizePool, pool: state.prizePool }, { merge: true });
                 showMsg("✅ 獎項設定已儲存");
             } catch(err) { showMsg("儲存失敗"); }
             hideLoading();
@@ -928,7 +931,7 @@
         function getTodayString() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
         window.showMsg = (t) => { document.getElementById('msg-text').innerText = t; document.getElementById('msg-modal').classList.add('modal-active'); };
         window.closeModal = (id) => { document.getElementById(id).classList.remove('modal-active'); };
-        window.showLoading = (t) => { document.getElementById('loading-ui').innerHTML = `<i class="ph ph-spinner-gap animate-spin text-5xl text-pink-400 mb-4 mx-auto"></i><p class="text-pink-400 font-bold tracking-widest text-sm animate-pulse">${t||'處理中...'}</p>`; document.getElementById('status-overlay').classList.remove('hidden'); };
+        window.showLoading = (t) => { document.getElementById('loading-ui').innerHTML = `<i class="ph ph-spinner-gap animate-spin text-5xl text-pink-400 mb-4 mx-auto"></i><p class="text-pink-400 font-bold tracking-widest text-sm animate-pulse">${t||'連線至Corin Beauty伺服器中...'}</p>`; document.getElementById('status-overlay').classList.remove('hidden'); };
         window.hideLoading = () => { document.getElementById('status-overlay').classList.add('hidden'); };
         
         window.confirmAction = (title, text, actionFn) => {
