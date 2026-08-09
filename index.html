@@ -1369,6 +1369,53 @@
             }
         });
 
+        // ==========================================
+        // Global Delete Transaction Function (交易刪除與反向退回)
+        // ==========================================
+        window.deleteTransaction = function(txId) {
+            const tx = transactions.find(t => t.id === txId);
+            if (!tx) return;
+
+            showDeleteConfirm(`確定要永久刪除此筆交易紀錄嗎？<br><br>這將會自動反向扣除或加回當時的<br><span class="text-rose-600 font-bold">本金、贈送金、點數與暗沉拜拜堂數</span>`, async () => {
+                try {
+                    const member = members.find(m => m.id === tx.memberId);
+                    if (member) {
+                        // 反向計算所有相關餘額
+                        const revAmount = -(parseFloat(tx.amountChange) || 0);
+                        const revBonus = -(parseFloat(tx.bonusChange) || 0);
+                        const revPoints = -(parseFloat(tx.pointsChange) || 0);
+                        const revBrightening = -(parseFloat(tx.brighteningChange) || 0);
+
+                        const newBalance = (member.balance || 0) + revAmount;
+                        const newBonus = (member.bonusBalance || 0) + revBonus;
+                        const newPoints = (member.points || 0) + revPoints;
+                        const newBrightening = (member.brighteningSessions || 0) + revBrightening;
+
+                        // 更新會員主檔餘額
+                        await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'beauty_members', member.id), {
+                            balance: newBalance,
+                            bonusBalance: newBonus,
+                            points: newPoints,
+                            brighteningSessions: newBrightening
+                        });
+                    }
+                    
+                    // 刪除該筆交易紀錄
+                    await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'beauty_transactions', txId));
+                    
+                    // 若在報表頁面，則觸發重整
+                    if (currentActiveViewId === 'report') {
+                        document.getElementById('btnGenerateReport').click();
+                    }
+                } catch (err) {
+                    alert("刪除失敗: " + err.message);
+                }
+            });
+        };
+
+        // ==========================================
+        // Clear Application Data Function (登出徹底清除資料)
+        // ==========================================
         function clearAllData() {
             selectedMember = null;
             DOM.searchInput.value = '';
