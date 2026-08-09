@@ -934,20 +934,27 @@
 
             state.count++; 
             
+            // --- 拆分獨立區塊 1：寫入個人紀錄 ---
             try {
                 if(db && userId) {
-                    // 1. 強制寫入上層文件，確保在 Firebase Console 中資料夾不會被隱藏
                     await setDoc(doc(db, 'artifacts', APP_ID, 'users', userId), {
                         name: memberName,
                         phone: memberPhone,
                         updatedAt: Date.now()
                     }, { merge: true });
 
-                    // 2. 精準寫入個人的獎項資料夾: artifacts/{APP_ID}/users/{userId}/prizes
                     const docRef = await addDoc(collection(db, 'artifacts', APP_ID, 'users', userId, 'prizes'), prizeObj);
                     prizeObj.id = docRef.id;
-                    
-                    // 3. 精準寫入全站日誌: artifacts/{APP_ID}/public/data/slot_logs
+                    console.log("✅ 個人獎項寫入成功");
+                }
+            } catch(e) {
+                console.error("Save personal prize error", e);
+                prizeObj.id = "local-" + Date.now(); 
+            }
+
+            // --- 拆分獨立區塊 2：寫入全站日誌 ---
+            try {
+                if(db) {
                     await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs'), {
                         name: memberName,
                         phone: memberPhone,
@@ -955,11 +962,10 @@
                         timestamp: prizeObj.winDate,
                         countUsed: state.count
                     });
-                    console.log("資料庫寫入成功");
+                    console.log("✅ 全站日誌寫入成功");
                 }
             } catch(e) {
-                console.error("Save prize error", e);
-                prizeObj.id = "local-" + Date.now(); 
+                console.error("Save global log error", e);
             }
 
             state.prizes.unshift(prizeObj); 
