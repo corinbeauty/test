@@ -51,11 +51,13 @@
 
         /* 中獎資訊浮水印背景 */
         .result-bg-watermark {
-            background-color: #ffffff;
-            background-image: radial-gradient(rgba(208, 175, 149, 0.1) 1px, transparent 1px),
-                              radial-gradient(rgba(208, 175, 149, 0.1) 1px, transparent 1px);
-            background-size: 20px 20px;
-            background-position: 0 0, 10px 10px;
+            background-color: rgba(255, 255, 255, 0.95);
+            background-image:
+                url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 200 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg transform='translate(10, 0)' opacity='0.04'%3E%3Cpath d='M 85,25 A 40,40 0 1,0 85,95 A 30,30 0 1,1 85,25 Z' fill='%23d0af95'/%3E%3Cpath d='M 85,25 C 100,25 100,25 100,25 C 95,55 95,65 100,95 C 85,95 85,95 85,95 C 90,65 90,55 85,25 Z' fill='%23ac8468'/%3E%3Cpath d='M 100,25 C 140,25 140,60 110,60 C 120,60 120,35 100,35 Z' fill='%23ac8468'/%3E%3Cpath d='M 110,60 C 125,60 135,80 155,95 C 135,95 125,90 115,80 C 105,95 90,95 85,95 C 100,90 100,70 110,60 Z' fill='%23ac8468'/%3E%3C/g%3E%3C/svg%3E"),
+                repeating-linear-gradient(45deg, rgba(208, 175, 149, 0.04) 0px, rgba(208, 175, 149, 0.04) 1px, transparent 1px, transparent 6px);
+            background-size: 120px 120px, auto;
+            background-position: center center, 0 0;
+            backdrop-filter: blur(8px);
             position: relative;
         }
         .result-content-z {
@@ -171,8 +173,9 @@
             </div>
         </div>
         
-        <div class="mt-8">
+        <div class="mt-8 text-center space-y-1.5">
             <p onclick="openAdminDashboard()" class="text-[10px] text-gray-300 font-bold tracking-widest uppercase cursor-pointer hover:text-gray-500 transition-colors">System By Corin</p>
+            <p class="text-[10px] text-gray-400">原點數位科技 © 2026 All rights reserved.</p>
         </div>
     </div>
 
@@ -429,6 +432,11 @@
             
             <div id="history-list" class="flex-1 overflow-y-auto space-y-4 pr-1 no-scrollbar"></div>
         </div>
+        
+        <div class="mt-4 pt-4 border-t border-gray-50 text-center space-y-1.5 shrink-0">
+            <p onclick="openAdminDashboard()" class="text-[10px] text-gray-300 font-bold tracking-widest uppercase cursor-pointer hover:text-gray-500 transition-colors">System By Corin</p>
+            <p class="text-[10px] text-gray-400">原點數位科技 © 2026 All rights reserved.</p>
+        </div>
     </div>
     
     <!-- 一般提示訊息彈窗 -->
@@ -614,7 +622,7 @@
 
         async function loadGlobalConfig() {
             try {
-                const configRef = doc(db, 'artifacts', APP_ID, 'public', 'slot_config');
+                const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'slot_config');
                 const snap = await getDoc(configRef);
                 if (snap.exists() && snap.data().prizePool && snap.data().prizePool.length > 0) {
                     state.prizePool = snap.data().prizePool;
@@ -631,7 +639,7 @@
         async function loadUserProfileData() {
             if(!userId || !db) return;
             try {
-                const profileRef = doc(db, 'artifacts', APP_ID, 'slot_users', userId, 'profile');
+                const profileRef = doc(db, 'artifacts', APP_ID, 'users', userId, 'profile');
                 const profileSnap = await getDoc(profileRef);
                 const today = new Date().toDateString();
 
@@ -649,7 +657,7 @@
                     await saveProfileData();
                 }
 
-                const prizesQuery = query(collection(db, 'artifacts', APP_ID, 'slot_users', userId, 'prizes'));
+                const prizesQuery = query(collection(db, 'artifacts', APP_ID, 'users', userId, 'prizes'));
                 const prizesSnap = await getDocs(prizesQuery);
                 state.prizes = prizesSnap.docs.map(d => ({ ...d.data(), id: d.id }));
                 state.prizes.sort((a,b) => b.winDate - a.winDate);
@@ -659,7 +667,7 @@
         async function saveProfileData() {
             if(!userId || !db) return;
             try {
-                await setDoc(doc(db, 'artifacts', APP_ID, 'slot_users', userId, 'profile'), {
+                await setDoc(doc(db, 'artifacts', APP_ID, 'users', userId, 'profile'), {
                     name: memberName,
                     phone: memberPhone,
                     count: state.count,
@@ -929,11 +937,11 @@
             try {
                 if(db && userId) {
                     // 1. 寫入個人獎項庫
-                    const docRef = await addDoc(collection(db, 'artifacts', APP_ID, 'slot_users', userId, 'prizes'), prizeObj);
+                    const docRef = await addDoc(collection(db, 'artifacts', APP_ID, 'users', userId, 'prizes'), prizeObj);
                     prizeObj.id = docRef.id;
                     
                     // 2. 寫入全域日誌供後台查詢
-                    await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'slot_logs'), {
+                    await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs'), {
                         name: memberName,
                         phone: memberPhone,
                         prizeName: prizeObj.name,
@@ -1011,7 +1019,7 @@
             document.getElementById('confirm-redeem-btn').onclick = async () => { 
                 p.isRedeemed = true; 
                 try {
-                    if(db && userId && id) await updateDoc(doc(db, 'artifacts', APP_ID, 'slot_users', userId, 'prizes', id), { isRedeemed: true });
+                    if(db && userId && id) await updateDoc(doc(db, 'artifacts', APP_ID, 'users', userId, 'prizes', id), { isRedeemed: true });
                 } catch(e){ console.error(e) }
                 renderHistory(); closeModal('redeem-confirm-modal'); 
             };
@@ -1066,7 +1074,7 @@
             tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400 font-bold">資料抓取中...</td></tr>';
             try {
                 if(!db) throw new Error("DB not ready");
-                const q = query(collection(db, 'artifacts', APP_ID, 'public', 'slot_logs'));
+                const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'slot_logs'));
                 const snap = await getDocs(q);
                 let logs = snap.docs.map(d => d.data());
                 
@@ -1106,7 +1114,7 @@
             
             try {
                 const targetUserId = `user_${phone}`;
-                const profileRef = doc(db, 'artifacts', APP_ID, 'slot_users', targetUserId, 'profile');
+                const profileRef = doc(db, 'artifacts', APP_ID, 'users', targetUserId, 'profile');
                 const snap = await getDoc(profileRef);
                 
                 if(snap.exists()) {
@@ -1158,7 +1166,7 @@
             const btn = document.getElementById('btn-save-admin');
             btn.innerHTML = `<div class="loading-spinner w-5 h-5 border-white border-t-transparent mx-auto"></div>`;
             try {
-                if(db) await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'slot_config'), { prizePool: state.prizePool }, { merge: true });
+                if(db) await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'slot_config'), { prizePool: state.prizePool }, { merge: true });
                 if(wheelCtx) drawWheel(currentRotation); 
                 showMsg("✅ 雲端獎項機率已成功同步");
             } catch(e) { console.error(e); showMsg("❌ 儲存失敗"); } 
