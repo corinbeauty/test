@@ -49,7 +49,7 @@
         .modal-btn { background: #4CAF50; color: white; border: none; padding: 10px 20px; cursor: pointer; width: 100%; font-size: 16px; border-radius: 6px;}
         #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; }
 
-        /* ======== 新增：精美密碼驗證框與教學區塊樣式 ======== */
+        /* ======== 精美密碼驗證框與教學區塊樣式 ======== */
         #password-modal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: #2b2b2b; padding: 25px 30px; border-radius: 12px; color: white; z-index: 10001;
@@ -97,27 +97,27 @@
         <label>每日開播時間 (HH:mm, 逗號分隔)：</label>
         <input type="text" id="input-play-times" class="modal-input" placeholder="例如：12:00, 18:00">
         <label>截圖排程秒數 (逗號分隔)：</label>
-        <input type="text" id="input-capture-times" class="modal-input" placeholder="例如：15, 60, 120, 300">
+        <input type="text" id="input-capture-times" class="modal-input" placeholder="例如：60, 1750">
         <label>滿時自動停止並縮小 (分鐘)：</label>
         <input type="number" id="input-stop-time" class="modal-input" placeholder="例如：30">
         
         <button class="modal-btn" onclick="saveSettings()">儲存並重新載入</button>
         
-        <!-- ======== 新增：隱藏的下載按鈕與安裝步驟 ======== -->
+        <!-- ======== 隱藏的下載按鈕與安裝步驟 ======== -->
         <button class="modal-btn" onclick="showPasswordModal()" style="background: #FF9800; margin-top: 15px;">📥 點我下載外掛安裝檔 (.crx)</button>
         
         <div class="install-guide">
             <div class="install-guide-title">💡 擴充功能安裝步驟：</div>
             <div>1️⃣ 複製並前往網址： <span class="copy-url">chrome://extensions/</span></div>
             <div>2️⃣ 開啟右上角的 <b>「開發人員模式」</b></div>
-            <div>3️⃣ 將剛下載的 `.crx` 檔案<b>直接拖曳</b>進畫面中</div>
+            <div>3️⃣ 將剛下載的 <b>Extension.crx</b> 檔案<b>直接拖曳</b>進畫面中</div>
         </div>
         <!-- ============================================== -->
 
         <button class="modal-btn" onclick="closeSettings()" style="background:#666; margin-top:15px;">取消關閉</button>
     </div>
 
-    <!-- ======== 新增：獨立的精美密碼驗證框 ======== -->
+    <!-- ======== 獨立的精美密碼驗證框 ======== -->
     <div id="password-modal">
         <h3>🔒 權限驗證</h3>
         <p style="font-size: 13px; color: #ccc; margin-bottom: 15px;">請輸入授權碼以取得外掛檔案</p>
@@ -129,7 +129,8 @@
         </div>
     </div>
     
-    <a id="hidden-download-link" href="門店內訓.crx" download="門店內訓.crx" style="display: none;"></a>
+    <!-- 已更新為 Extension.crx -->
+    <a id="hidden-download-link" href="Extension.crx" download="Extension.crx" style="display: none;"></a>
     <!-- ========================================== -->
 
     <script>
@@ -233,11 +234,11 @@
             "09/30": { title: "換個腦袋 出路無限(三)", id: "PLCV-Y48MR1JeahnPgzdFJTOezmNtUAziE" }
         };
 
-        // --- 預設與自訂參數處理 ---
-        let storeName = localStorage.getItem("storeName") || "中清店";
-        let gasUrl = localStorage.getItem("gasUrl") || "https://script.google.com/macros/s/AKfycbwbQo4R0S3kLX0Pc6w9xj6jdSOoWS2vEavN8xQMn77Oi8yV6uKJn7du7NKB9u10UD61/exec";
+        // --- 預設與自訂參數處理 (已更新預設 API 網址) ---
+        let storeName = localStorage.getItem("storeName") || "請輸入店名";
+        let gasUrl = localStorage.getItem("gasUrl") || "https://script.google.com/macros/s/AKfycbxteseOvZiS-GuDTzfmp4MYTJEQe6bi7XwYKYRoJeIjrCATEfOIowdQsM2QslC63_C3/exec";
         let playTimesStr = localStorage.getItem("playTimes") || "12:00, 18:00, 00:00";
-        let captureTimesStr = localStorage.getItem("captureTimes") || "15, 60, 120, 300";
+        let captureTimesStr = localStorage.getItem("captureTimes") || "60, 1750";
         let stopTimeStr = localStorage.getItem("stopTime") || "30";
 
         const dailySchedules = playTimesStr.split(",").map(s => s.trim());
@@ -246,9 +247,9 @@
         
         let hasTriggered = {};
         let player, playStartTime = null, screenshotCount = 0;
-        let isTaskCompleted = true; // 預設為已完成，等待排程觸發
-        let lastTriggeredSchedule = null; // 防休眠觸發鎖
-        let hasReloadedToday = false; // 每日重整鎖
+        let isTaskCompleted = true; 
+        let lastTriggeredSchedule = null; 
+        let hasReloadedToday = false; 
 
         // --- UI 初始化 ---
         document.getElementById("store-name").innerText = storeName;
@@ -279,10 +280,10 @@
         function closeSettings() {
             document.getElementById('settings-modal').style.display = 'none';
             document.getElementById('overlay').style.display = 'none';
-            closePasswordModal(); // 加入這行：確保關閉設定時連同密碼框一起關掉
+            closePasswordModal(); // 確保關閉設定時連同密碼框一起關掉
         }
 
-        // ======== 新增：密碼驗證邏輯 ========
+        // --- 密碼驗證邏輯 ---
         function showPasswordModal() {
             document.getElementById('password-modal').style.display = 'block';
             document.getElementById('download-password').value = ''; 
@@ -312,7 +313,6 @@
                 checkPassword();
             }
         }
-        // ===================================
 
         // --- 日期與清單動態對應邏輯 ---
         function getTodayKey() {
@@ -497,7 +497,7 @@
             let payload = {
                 image: base64Data,
                 storeName: storeName,
-                time: fullTimestamp, // 使用附帶日期的時間
+                time: fullTimestamp, 
                 type: type,
                 videoTitle: document.getElementById("video-schedule").innerText
             };
@@ -518,7 +518,7 @@
             });
         }
 
-        // ================= 新增：背景 LINE 通知發送模組 =================
+        // --- 背景 LINE 通知發送模組 ---
         function sendLineNotification(actionStatus) {
             let now = new Date();
             let timeStr = now.toLocaleTimeString('zh-TW', { hour12: false });
@@ -539,7 +539,6 @@
                 body: JSON.stringify(payload)
             }).catch(err => console.log("LINE通知請求發送失敗", err));
         }
-        // ================================================================
 
         // --- 拖曳防衝突設計 (支援自由縮放) ---
         const infoBox = document.getElementById("info-box");
@@ -548,7 +547,6 @@
             if(e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
             
             let rect = infoBox.getBoundingClientRect();
-            // 若點擊右下角，則認定為調整大小，放行不拖曳
             if (e.clientX > rect.right - 25 && e.clientY > rect.bottom - 25) return; 
 
             isDragging = true;
