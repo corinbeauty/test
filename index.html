@@ -16,7 +16,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             border: 1px solid rgba(255,255,255,0.2);
             z-index: 9999; cursor: move;
-            min-width: 140px; max-width: 50%; width: auto; 
+            min-width: 150px; max-width: 50%; width: auto; 
             resize: both; overflow: hidden;
         }
         #info-box h2 { margin: 0 0 10px 0; font-size: 16px; color: #4CAF50; border-bottom: 1px solid #4CAF50; padding-bottom: 5px; }
@@ -38,6 +38,14 @@
         }
         #test-btn:hover { background: #1976D2; }
 
+        /* 版權宣告樣式 */
+        .copyright-text {
+            font-size: 10px; color: #888; text-align: center; 
+            margin-top: 12px; padding-top: 8px; 
+            border-top: 1px dashed rgba(255,255,255,0.2);
+            pointer-events: none; /* 避免干擾拖曳 */
+        }
+
         #settings-modal {
             display: none; position: fixed; top: 50%; left: 50%;
             transform: translate(-50%, -50%); background: #222;
@@ -49,13 +57,16 @@
         .modal-btn { background: #4CAF50; color: white; border: none; padding: 10px 20px; cursor: pointer; width: 100%; font-size: 16px; border-radius: 6px;}
         #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; }
 
-        /* ======== 精美密碼驗證框與教學區塊樣式 ======== */
-        #password-modal {
+        /* ======== 精美密碼驗證框與錯誤提示框樣式 ======== */
+        #password-modal, #alert-modal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: #2b2b2b; padding: 25px 30px; border-radius: 12px; color: white; z-index: 10001;
             width: 280px; box-shadow: 0 10px 30px rgba(0,0,0,0.9); text-align: center; border: 1px solid #444;
         }
-        #password-modal h3 { margin-top: 0; color: #FF9800; border-bottom: 1px solid #555; padding-bottom: 10px; font-size: 18px; }
+        /* 讓 alert-modal 層級最高 */
+        #alert-modal { z-index: 10002; width: 300px; }
+        
+        #password-modal h3, #alert-modal h3 { margin-top: 0; color: #FF9800; border-bottom: 1px solid #555; padding-bottom: 10px; font-size: 18px; }
         #download-password { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #555; background: #1a1a1a; color: white; text-align: center; font-size: 20px; letter-spacing: 5px; box-sizing: border-box; }
         #download-password:focus { outline: none; border-color: #FF9800; }
         
@@ -84,10 +95,16 @@
         <div class="info-row"><div class="info-label">📸 截圖：</div><div class="info-value" id="screenshot-count">0 張</div></div>
         <div id="status-log">系統待命中...</div>
         <button id="test-btn" onclick="takeAndUploadScreenshot('手動測試')">馬上測試一鍵截圖</button>
+        
+        <!-- 追加的版權宣告 -->
+        <div class="copyright-text">
+            原點數位科技 © 2026 All rights reserved.
+        </div>
     </div>
 
     <div id="overlay"></div>
     
+    <!-- 系統設定選單 -->
     <div id="settings-modal">
         <h3 style="margin-top:0; border-bottom: 1px solid #444; padding-bottom: 10px;">⚙️ 系統進階設定</h3>
         <label>門店名稱：</label>
@@ -103,7 +120,6 @@
         
         <button class="modal-btn" onclick="saveSettings()">儲存並重新載入</button>
         
-        <!-- ======== 下載按鈕 (帶入DOWNLOAD狀態) ======== -->
         <button class="modal-btn" onclick="showPasswordModal('DOWNLOAD')" style="background: #FF9800; margin-top: 15px;">📥 點我下載外掛安裝檔 (.crx)</button>
         
         <div class="install-guide">
@@ -116,7 +132,7 @@
         <button class="modal-btn" onclick="closeSettings()" style="background:#666; margin-top:15px;">取消關閉</button>
     </div>
 
-    <!-- ======== 獨立的精美密碼驗證框 ======== -->
+    <!-- 密碼驗證框 -->
     <div id="password-modal">
         <h3>🔒 權限驗證</h3>
         <p style="font-size: 13px; color: #ccc; margin-bottom: 15px;">請輸入授權碼以執行此操作</p>
@@ -127,10 +143,15 @@
             <button onclick="closePasswordModal()" style="flex: 1; background: #666; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer;">取消</button>
         </div>
     </div>
+
+    <!-- 精美錯誤提示對話框 -->
+    <div id="alert-modal">
+        <h3 style="color: #f44336;">⚠️ 系統提示</h3>
+        <p id="alert-message" style="font-size: 15px; color: #ddd; margin-bottom: 25px; line-height: 1.6; white-space: pre-wrap;"></p>
+        <button onclick="closeAlertModal()" style="width: 100%; background: #4CAF50; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 16px;">了解</button>
+    </div>
     
-    <!-- 更新為指定的 GAS 下載連結，並使用 target="_blank" -->
     <a id="hidden-download-link" href="https://script.google.com/d/1YkEjGvwK9eSI35C-6gHj7VvPo64k4zraaOEwCI8fTCkC64jrrjHr-w_0/edit?usp=drive_link" target="_blank" style="display: none;"></a>
-    <!-- ========================================== -->
 
     <script>
         // --- 07/01 ~ 09/30 完整播放清單庫 ---
@@ -258,9 +279,26 @@
         document.getElementById("input-capture-times").value = captureTimesStr;
         document.getElementById("input-stop-time").value = stopTimeStr;
 
+        // ======== 精美提示對話框呼叫函數 ========
+        function customAlert(msg) {
+            document.getElementById('alert-message').innerText = msg;
+            document.getElementById('alert-modal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+
+        function closeAlertModal() {
+            document.getElementById('alert-modal').style.display = 'none';
+            // 如果其他設定視窗也沒開著，才關閉背景黑幕
+            if (document.getElementById('settings-modal').style.display !== 'block' && 
+                document.getElementById('password-modal').style.display !== 'block') {
+                document.getElementById('overlay').style.display = 'none';
+            }
+        }
+        // ======================================
+
         // 若為初次載入，提示使用者設定
         if (storeName === "請輸入店名") {
-            alert("⚠️ 錯誤：系統尚未設定門店名稱！\n請按下 [ESC] 鍵並輸入密碼以進行設定。");
+            customAlert("若初次設定 請依照流程安裝設定\n如有問題請洽工程師");
             document.getElementById("store-name").style.color = "#f44336";
         }
 
@@ -268,10 +306,10 @@
         document.addEventListener('keydown', function(event) {
             if (event.key === "Escape") {
                 if (document.getElementById('settings-modal').style.display === 'block') {
-                    // 若設定視窗已開著，按 ESC 關閉
                     closeSettings();
-                } else if (document.getElementById('password-modal').style.display !== 'block') {
-                    // 帶入 ESC 狀態，呼叫密碼框
+                } else if (document.getElementById('password-modal').style.display !== 'block' && 
+                           document.getElementById('alert-modal').style.display !== 'block') {
+                    // 帶入 ESC 狀態，呼叫密碼框 (前提是警告框沒開)
                     showPasswordModal('ESC');
                 }
             }
@@ -282,7 +320,7 @@
             
             // 防呆機制：阻擋未修改的預設名稱
             if (inputStoreName === "" || inputStoreName === "請輸入店名") {
-                alert("❌ 儲存失敗：請輸入正確的門店名稱！不可為空白或預設名稱。");
+                customAlert("請輸入正確的門店名稱！\n不可為空白或預設名稱。");
                 return;
             }
 
@@ -301,7 +339,7 @@
         }
 
         // --- 密碼驗證邏輯 (整合 ESC 與 DOWNLOAD) ---
-        let passwordContext = ""; // 記錄當下是哪種動作觸發了密碼框
+        let passwordContext = ""; 
 
         function showPasswordModal(context) {
             passwordContext = context;
@@ -314,8 +352,7 @@
 
         function closePasswordModal() {
             document.getElementById('password-modal').style.display = 'none';
-            // 若是由 ESC 呼叫且使用者按取消，則一併關閉背景的黑幕
-            if (passwordContext === "ESC") {
+            if (passwordContext === "ESC" && document.getElementById('alert-modal').style.display !== 'block') {
                 document.getElementById('overlay').style.display = 'none';
             }
         }
@@ -415,10 +452,17 @@
         // --- 主時鐘與防休眠觸發迴圈 ---
         setInterval(() => {
             let now = new Date();
-            let currentTimeStr = now.toLocaleTimeString('zh-TW', { hour12: false });
-            let currentHHmm = currentTimeStr.substring(0, 5); 
+            
+            // 擷取月、日、時間，將目前時間顯示為帶有日期的格式
+            let mStr = (now.getMonth() + 1).toString().padStart(2, '0');
+            let dStr = now.getDate().toString().padStart(2, '0');
+            let timeStr = now.toLocaleTimeString('zh-TW', { hour12: false });
+            
+            let currentHHmm = timeStr.substring(0, 5); 
 
-            document.getElementById("current-time").innerText = currentTimeStr;
+            // 更新畫面上的「目前時間」(追加日期顯示)
+            document.getElementById("current-time").innerText = `${mStr}/${dStr} ${timeStr}`;
+            
             updateNextSchedule(now);
 
             // 更新影片當前時間
@@ -429,17 +473,16 @@
                 document.getElementById("video-current-time").innerText = `${m}:${s}`;
             }
 
-            // 1. 觸發開播與放大機制 (防休眠：無視秒數延遲)
+            // 1. 觸發開播與放大機制
             if (dailySchedules.includes(currentHHmm) && currentHHmm !== lastTriggeredSchedule && isTaskCompleted) {
                 lastTriggeredSchedule = currentHHmm;
                 
                 showLog(`到達排程時間！自動放大視窗並開始...`, "#4CAF50");
-                window.postMessage({ type: "REQUEST_MAXIMIZE" }, "*"); // 呼叫外掛放大
+                window.postMessage({ type: "REQUEST_MAXIMIZE" }, "*"); 
                 
                 playStartTime = now.getTime();
                 isTaskCompleted = false;
 
-                // 發送 LINE 開始播放推播
                 sendLineNotification("🟢 開始播放");
                 
                 scheduleSeconds.forEach(sec => hasTriggered[sec] = false);
@@ -454,7 +497,6 @@
                 let elapsedSeconds = Math.floor((now.getTime() - playStartTime) / 1000);
                 document.getElementById("total-play-time").innerText = Math.floor(elapsedSeconds / 60) + " 分鐘";
 
-                // 檢查截圖
                 scheduleSeconds.forEach(targetSec => {
                     if (elapsedSeconds >= targetSec && !hasTriggered[targetSec]) {
                         hasTriggered[targetSec] = true;
@@ -466,8 +508,6 @@
                 // 3. 結束與縮小機制
                 if (elapsedSeconds >= PLAY_DURATION_LIMIT) {
                     isTaskCompleted = true; 
-
-                    // 發送 LINE 結束播放推播
                     sendLineNotification("🔴 結束播放");
 
                     if (player && typeof player.pauseVideo === 'function') player.pauseVideo();
