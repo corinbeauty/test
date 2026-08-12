@@ -1,1689 +1,489 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Corin 專業日式無痛除毛</title>
-    
-    <meta name="description" content="Corin Beauty預約系統">
-    <meta property="og:title" content="Corin Beauty預約系統">
-    <meta property="og:description" content="Corin Beauty預約系統">
-    <meta property="og:type" content="website">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/airbnb.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://npmcdn.com/flatpickr/dist/l10n/zh-tw.js"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['"Noto Sans TC"', 'sans-serif'] },
-                    colors: {
-                        brand: {
-                            50: '#fdf8f6', 100: '#f2e8e5', 200: '#eaddd7', 300: '#e0cec7',
-                            400: '#d2bab0', 500: '#c5a89c', 600: '#b09489', 700: '#9b8075',
-                            800: '#866c62', 900: '#72584e',
-                        },
-                        admin: {
-                            50: '#f0fdf4', 500: '#22c55e', 600: '#16a34a',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>門店內訓自動播放系統</title>
     <style>
-        body { background-color: #fcfcfc; -ms-overflow-style: none; scrollbar-width: none; }
-        body::-webkit-scrollbar { display: none; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px 0 rgba(197, 168, 156, 0.15);
+        body { margin: 0; padding: 0; background-color: #000; overflow: hidden; font-family: '微軟正黑體', sans-serif; }
+        #player { width: 100vw; height: 100vh; pointer-events: none; }
+        
+        /* 輕量化彈性資訊方框 */
+        #info-box {
+            position: absolute; top: 10%; left: 2%; 
+            background: rgba(0, 0, 0, 0.75); color: #fff;
+            padding: 15px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.2);
+            z-index: 9999; cursor: move;
+            min-width: 140px; max-width: 50%; width: auto; 
+            resize: both; overflow: hidden;
         }
-
-        .service-radio + label { transition: all 0.3s ease; }
-
-        .loader {
-            border-top-color: #c5a89c;
-            animation: spinner 1.5s linear infinite;
-        }
-        @keyframes spinner {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        #info-box h2 { margin: 0 0 10px 0; font-size: 16px; color: #4CAF50; border-bottom: 1px solid #4CAF50; padding-bottom: 5px; }
+        
+        .info-row { display: flex; margin-bottom: 6px; font-size: 13px; line-height: 1.4; }
+        .info-label { color: #aaa; font-weight: bold; white-space: nowrap; margin-right: 5px; }
+        .info-value { flex: 1; word-break: break-all; }
+        
+        #status-log {
+            margin-top: 10px; padding: 8px; background: rgba(255,255,255,0.1);
+            border-radius: 6px; font-size: 12px; min-height: 20px; color: #ffeb3b;
         }
         
-        input, select, textarea { font-size: 16px !important; }
-        [v-cloak] { display: none !important; }
-
-        .step-enter-active, .step-leave-active { transition: all 0.4s ease; }
-        .step-enter-from, .step-leave-to { opacity: 0; transform: translateY(-10px); max-height: 0; overflow: hidden; margin: 0; padding: 0; }
-        .step-enter-to, .step-leave-from { opacity: 1; transform: translateY(1000px); max-height: 2000px; }
-
-        /* 公告彈窗專用精美動畫與細節 */
-        .swal2-popup.custom-announcement-popup {
-            border-radius: 1.25rem !important;
-            padding: 1.5rem !important;
-            font-family: 'Noto Sans TC', sans-serif !important;
+        #test-btn {
+            display: none; 
+            margin-top: 10px; width: 100%; padding: 8px;
+            background: #2196F3; color: white; border: none;
+            border-radius: 6px; cursor: pointer; font-size: 14px;
         }
+        #test-btn:hover { background: #1976D2; }
+
+        #settings-modal {
+            display: none; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); background: #222;
+            padding: 25px; border-radius: 10px; color: white;
+            z-index: 10000; width: 360px; box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            max-height: 90vh; overflow-y: auto;
+        }
+        .modal-input { width: 100%; padding: 8px; margin: 5px 0 15px 0; box-sizing: border-box; }
+        .modal-btn { background: #4CAF50; color: white; border: none; padding: 10px 20px; cursor: pointer; width: 100%; font-size: 16px; }
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; }
     </style>
 </head>
-<body class="text-gray-800 antialiased selection:bg-brand-200 selection:text-brand-900 bg-[#fcfcfc]">
+<body>
 
-  <div id="app" v-cloak class="min-h-screen flex flex-col">
+    <div id="player"></div>
 
-    <template v-if="currentView === 'front'">
-        <header class="sticky top-0 z-50 glass-panel border-b border-gray-100">
-            <div class="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <div class="flex-shrink-0 flex items-center justify-center mr-1">
-                        <svg viewBox="0 0 150 120" class="h-10 w-auto" xmlns="http://www.w3.org/2000/svg">
-                            <text x="5" y="90" font-family="'Playfair Display', serif" font-weight="700" font-size="100px" fill="#D6B6A1">C</text>
-                            <text x="70" y="90" font-family="'Playfair Display', serif" font-weight="700" font-size="100px" fill="#A8836B">R</text>
-                            <text x="72" y="112" font-family="'Noto Sans TC', sans-serif" font-weight="400" font-size="11px" fill="#A8836B" letter-spacing="0.35em" text-anchor="middle">HAIR REMOVAL</text>
-                        </svg>
-                    </div>
-                    <h1 class="text-lg font-bold text-gray-800 tracking-wider">Corin 專業日式無痛除毛</h1>
-                </div>
-                <button @click="goToAdminLogin" class="text-gray-300 hover:text-gray-400 focus:outline-none">
-                    <i class="fa-solid fa-lock text-xs"></i>
-                </button>
-            </div>
-        </header>
-
-        <main class="flex-grow max-w-md mx-auto w-full px-4 py-6 pb-28">
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">預約諮詢</h2>
-                
-                <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded-r-xl shadow-sm mb-6">
-                    <h3 class="text-red-800 font-bold mb-2 flex items-center gap-1"><i class="fa-solid fa-bullhorn"></i> 預約注意事項</h3>
-                    <p class="text-sm text-red-700 font-bold mb-1">預約完成後請等待美容師回覆確認</p>
-                    <p class="text-xs text-red-600 mb-3 leading-relaxed">※重要提醒：預約需提前2-3天才有辦法安排理想的時段，恕不接受當天預約操作，謝謝您的配合！</p>
-                    
-                    <h4 class="text-sm font-bold text-gray-800 mb-1">溫馨提醒 :</h4>
-                    <ol class="text-xs text-gray-700 list-decimal pl-4 space-y-1.5">
-                        <li>因無淋浴設備，麻煩預約私密處課程的您，先自行在家清潔完再前往店內。</li>
-                        <li>工作室空間有限，盡量以不攜伴為主。</li>
-                        <li>課程前一天請先將毛髮刮除，避免肌膚敏感，效果也最好。</li>
-                        <li>預約完成請準時赴約，現場保留10分鐘，逾時視同取消，並列入黑名單。</li>
-                        <li>為維護會員預約品質，二次預約不到或當月更改時間達二次，下次預約將酌收訂金$500。</li>
-                    </ol>
-                </div>
-            </div>
-
-            <form id="bookingForm" class="space-y-6" @submit.prevent="submitBooking">
-                
-                <div class="space-y-3 bg-white p-5 rounded-2xl shadow-sm border border-brand-100" id="step1">
-                    <div class="flex justify-between items-end mb-2">
-                        <label class="block text-sm font-bold text-gray-800">1. 會員驗證 <span class="text-red-400">*</span></label>
-                        <button type="button" @click="goToRegister" class="text-xs text-brand-600 hover:text-brand-800 font-medium underline underline-offset-2 flex items-center gap-1">
-                            <i class="fa-solid fa-user-plus"></i>我還不是會員？註冊
-                        </button>
-                    </div>
-                    
-                    <div v-if="!isVerified" class="flex gap-2">
-                        <input type="tel" v-model="verifyPhone" placeholder="請輸入手機號碼" class="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:ring-brand-500 focus:border-brand-500 bg-gray-50 focus:bg-white transition-colors" pattern="[0-9]*" required>
-                        <button type="button" @click="checkMember" class="bg-gray-800 hover:bg-gray-900 text-white px-5 py-3 rounded-lg text-sm font-bold transition-colors whitespace-nowrap shadow-sm">驗證</button>
-                    </div>
-                    
-                    <div v-else class="bg-green-50 p-4 rounded-xl border border-green-200 flex justify-between items-center shadow-inner">
-                        <div>
-                            <p class="text-sm font-bold text-green-800 mb-1">{{ bookingForm.name }}，歡迎回來！</p>
-                            <p class="text-xs text-green-700 font-medium"><i class="fa-solid fa-phone mr-1"></i>{{ bookingForm.phone }}</p>
-                            <p v-if="bookingForm.birthday" class="text-xs text-green-700 font-medium mt-0.5"><i class="fa-solid fa-cake-candles mr-1"></i>生日: {{ bookingForm.birthday }}</p>
-                        </div>
-                        <button type="button" @click="resetVerification" class="text-xs bg-white text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded border border-gray-200 shadow-sm transition-colors">更換</button>
-                    </div>
-                </div>
-
-                <transition name="step">
-                    <div v-show="isVerified" id="step2" class="space-y-3 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                        <label class="block text-sm font-bold text-gray-800">2. 選擇指定美容師 <span class="text-red-400">*</span></label>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="relative">
-                                <input type="radio" name="therapist_gender" id="therapist_female" value="female" v-model="bookingForm.therapistGender" @change="scrollToNext('step3')" class="service-radio hidden" required>
-                                <label for="therapist_female" :class="bookingForm.therapistGender === 'female' ? 'border-pink-300 bg-pink-50 text-pink-700 shadow-inner' : 'border-gray-100 hover:bg-gray-50 text-gray-500'" class="flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer h-full transition-all">
-                                    <i class="fa-solid fa-person-dress text-3xl mb-2" :class="bookingForm.therapistGender === 'female' ? 'text-pink-500' : 'text-gray-300'"></i>
-                                    <span class="text-sm font-medium">女師</span>
-                                </label>
-                            </div>
-                            <div class="relative">
-                                <input type="radio" name="therapist_gender" id="therapist_male" value="male" v-model="bookingForm.therapistGender" @change="scrollToNext('step3')" class="service-radio hidden" required>
-                                <label for="therapist_male" :class="bookingForm.therapistGender === 'male' ? 'border-blue-300 bg-blue-50 text-blue-700 shadow-inner' : 'border-gray-100 hover:bg-gray-50 text-gray-500'" class="flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer h-full transition-all">
-                                    <i class="fa-solid fa-person text-3xl mb-2" :class="bookingForm.therapistGender === 'male' ? 'text-blue-500' : 'text-gray-300'"></i>
-                                    <span class="text-sm font-medium">男師</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </transition>
-
-                <transition name="step">
-                    <div v-show="isVerified && bookingForm.therapistGender" id="step3" class="space-y-3 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                        <label class="block text-sm font-bold text-gray-800">3. 是否為 VIP 會員 <span class="text-red-400">*</span></label>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="relative">
-                                <input type="radio" name="vip" id="vip_yes" :value="true" v-model="bookingForm.isVip" @change="scrollToNext('step4')" class="service-radio hidden" required>
-                                <label for="vip_yes" :class="bookingForm.isVip === true ? 'border-amber-400 bg-amber-50 text-amber-700 shadow-inner' : 'border-gray-100 hover:bg-gray-50 text-gray-500'" class="flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer h-full transition-all">
-                                    <i class="fa-solid fa-crown text-3xl mb-2" :class="bookingForm.isVip === true ? 'text-amber-500' : 'text-gray-300'"></i>
-                                    <span class="text-sm font-medium">我是 VIP</span>
-                                </label>
-                            </div>
-                            <div class="relative">
-                                <input type="radio" name="vip" id="vip_no" :value="false" v-model="bookingForm.isVip" @change="scrollToNext('step4')" class="service-radio hidden" required>
-                                <label for="vip_no" :class="bookingForm.isVip === false ? 'border-gray-400 bg-gray-100 text-gray-700 shadow-inner' : 'border-gray-100 hover:bg-gray-50 text-gray-500'" class="flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer h-full transition-all">
-                                    <i class="fa-solid fa-user text-3xl mb-2" :class="bookingForm.isVip === false ? 'text-gray-500' : 'text-gray-300'"></i>
-                                    <span class="text-sm font-medium">我不是 VIP</span>
-                                </label>
-                                <button type="button" @click.stop="showVipInfo = true" class="absolute top-2 right-2 w-7 h-7 rounded border border-gray-200 flex items-center justify-center bg-white text-gray-400 hover:text-brand-500 hover:border-brand-300 transition-colors shadow-sm">
-                                    <i class="fa-solid fa-question text-xs"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </transition>
-
-                <transition name="step">
-                    <div v-show="bookingForm.isVip !== null" id="step4" class="space-y-3 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                        <label class="block text-sm font-bold text-gray-800">4. 請選擇您的性別 <span class="text-red-400">*</span></label>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="relative">
-                                <input type="radio" name="customer_gender" id="cust_female" value="female" v-model="bookingForm.customerGender" @change="scrollToNext('step5')" class="service-radio hidden" required>
-                                <label for="cust_female" :class="bookingForm.customerGender === 'female' ? 'border-pink-300 bg-pink-50 text-pink-700 shadow-inner' : 'border-gray-100 hover:bg-gray-50 text-gray-500'" class="flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer h-full transition-all">
-                                    <i class="fa-solid fa-venus text-3xl mb-2" :class="bookingForm.customerGender === 'female' ? 'text-pink-500' : 'text-gray-300'"></i>
-                                    <span class="text-sm font-medium">我是女生</span>
-                                </label>
-                            </div>
-                            <div class="relative">
-                                <input type="radio" name="customer_gender" id="cust_male" value="male" v-model="bookingForm.customerGender" @change="scrollToNext('step5')" class="service-radio hidden" required>
-                                <label for="cust_male" :class="bookingForm.customerGender === 'male' ? 'border-blue-300 bg-blue-50 text-blue-700 shadow-inner' : 'border-gray-100 hover:bg-gray-50 text-gray-500'" class="flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer h-full transition-all">
-                                    <i class="fa-solid fa-mars text-3xl mb-2" :class="bookingForm.customerGender === 'male' ? 'text-blue-500' : 'text-gray-300'"></i>
-                                    <span class="text-sm font-medium">我是男生</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </transition>
-
-                <transition name="step">
-                    <div v-show="bookingForm.customerGender" id="step5" class="space-y-3 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                        <label class="block text-sm font-bold text-gray-800 mb-2">5. 選擇服務項目 (可多選) <span class="text-red-400">*</span></label>
-                        
-                        <div v-if="activeServices.length === 0" class="text-center py-4 bg-gray-50 rounded-xl text-gray-500 text-sm">
-                            目前沒有符合您選擇的服務項目。
-                        </div>
-
-                        <div v-else class="grid grid-cols-2 gap-3">
-                            <div v-for="service in activeServices" :key="service.id" class="relative">
-                                <input type="checkbox" name="service" :id="'srv_' + service.id" :value="service.name" v-model="bookingForm.service" class="service-radio hidden">
-                                <label :for="'srv_' + service.id" :class="bookingForm.service.includes(service.name) ? 'border-brand-400 bg-brand-50 text-brand-800 shadow-inner' : 'border-gray-200 hover:bg-gray-50'" class="flex flex-col items-center justify-center p-4 border rounded-xl cursor-pointer h-full transition-all">
-                                    
-                                    <!-- 專屬象形圖渲染 -->
-                                    <div v-html="renderIcon(service.icon)" :class="[bookingForm.service.includes(service.name) ? 'text-brand-500' : 'text-gray-400']" class="w-10 h-10 mb-2 flex items-center justify-center"></div>
-                                    
-                                    <span class="text-sm font-medium text-center">{{ service.name }}</span>
-                                    <div class="flex flex-col items-center mt-1">
-                                        <span class="text-xs" :class="bookingForm.service.includes(service.name) ? 'text-brand-600' : 'text-gray-400'">{{ service.duration }} mins</span>
-                                        <span class="text-sm font-bold mt-0.5" :class="bookingForm.service.includes(service.name) ? 'text-brand-700' : 'text-gray-700'">NT$ {{ bookingForm.isVip ? (service.vipPrice || service.price || 0) : (service.regularPrice || service.price || 0) }}</span>
-                                    </div>
-                                    <div v-if="bookingForm.service.includes(service.name)" class="absolute top-2 right-2 text-brand-500">
-                                        <i class="fa-solid fa-circle-check"></i>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div v-if="bookingForm.service.length > 0" class="mt-4 p-4 bg-brand-50 rounded-xl border border-brand-200 shadow-sm transition-all">
-                            <div class="flex justify-between items-center mb-2 border-b border-brand-200/50 pb-2">
-                                <span class="text-sm font-bold text-gray-700">已選擇 {{ bookingForm.service.length }} 項服務</span>
-                                <span class="text-sm text-gray-600 font-medium"><i class="fa-regular fa-clock"></i> 約 {{ estimatedDuration }} 分鐘</span>
-                            </div>
-                            <div class="flex justify-between items-end">
-                                <span class="text-sm font-bold text-gray-700">預計消費金額</span>
-                                <span class="text-xl font-bold text-brand-700">NT$ {{ estimatedTotal }}</span>
-                            </div>
-                            <p class="text-[10px] text-gray-500 mt-2 text-right">※ 實際消費金額以現場美容師核銷計算</p>
-                        </div>
-                    </div>
-                </transition>
-
-                <transition name="step">
-                    <div v-show="bookingForm.service.length > 0" id="step6" class="space-y-4 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                        <label class="block text-sm font-bold text-gray-800 border-b pb-2">6. 選擇預約日期 <span class="text-red-400">*</span></label>
-                        <div>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="fa-regular fa-calendar text-gray-400"></i>
-                                </div>
-                                <input type="text" id="date" v-model="bookingForm.date" class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:ring-brand-500 focus:border-brand-500 bg-gray-50 focus:bg-white transition-colors cursor-pointer" placeholder="請點擊選擇日期" readonly required>
-                            </div>
-                        </div>
-                    </div>
-                </transition>
-
-                <transition name="step">
-                    <div v-show="bookingForm.date" id="step7" class="space-y-4 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                        <div class="flex items-center justify-between border-b pb-2">
-                            <label class="block text-sm font-bold text-gray-800">7. 選擇預約時段 <span class="text-red-400">*</span></label>
-                        </div>
-                        
-                        <div v-if="availableSlots.length > 0" class="grid grid-cols-3 gap-2 mt-2">
-                            <button
-                                v-for="slot in availableSlots"
-                                :key="slot.time"
-                                type="button"
-                                @click="slot.available && (bookingForm.time = slot.time); slot.available && scrollToNext('step8')"
-                                :disabled="!slot.available"
-                                :class="[
-                                    'py-2.5 px-2 rounded-lg text-sm font-medium transition-colors border',
-                                    bookingForm.time === slot.time ? 'bg-brand-500 text-white border-brand-500 shadow-sm' :
-                                    !slot.available ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed' :
-                                    'bg-white text-gray-700 border-gray-200 hover:border-brand-300 hover:bg-brand-50'
-                                ]"
-                            >
-                                {{ slot.time }}
-                            </button>
-                        </div>
-                        <div v-else class="text-center py-6 bg-gray-50 rounded-xl text-gray-500 text-sm">
-                            <i class="fa-regular fa-face-frown mb-2 text-xl block"></i>
-                            該日已無可滿足此服務時間的空檔<br>或未在營業時間內
-                        </div>
-                    </div>
-                </transition>
-
-                <transition name="step">
-                    <div v-show="bookingForm.time" id="step8" class="space-y-4 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                        <h3 class="text-sm font-bold text-gray-800 border-b pb-2">8. 顧客備註 <span class="text-gray-400 text-xs font-normal">(選填)</span></h3>
-                        
-                        <div>
-                            <textarea id="notes" v-model="bookingForm.notes" rows="3" class="block w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-brand-500 focus:border-brand-500 bg-gray-50 focus:bg-white transition-colors resize-none" placeholder="是否有特殊需求？"></textarea>
-                        </div>
-                    </div>
-                </transition>
-                
-                <button type="submit" ref="hiddenSubmitBtn" class="hidden"></button>
-            </form>
-            <div class="text-center text-xs text-gray-400 mt-10 pb-6">原點數位科技 © 2026 All rights reserved.</div>
-        </main>
-
-        <transition name="step">
-            <div v-show="bookingForm.time" class="fixed bottom-0 left-0 right-0 p-4 glass-panel border-t border-gray-100 z-40 pb-safe">
-                <div class="max-w-md mx-auto">
-                    <button type="button" @click="triggerSubmit" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-brand-500/30 transition duration-300 flex items-center justify-center gap-2 transform active:scale-[0.98]">
-                        <span>確認送出，前往 LINE</span>
-                        <i class="fa-brands fa-line text-xl"></i>
-                    </button>
-                </div>
-            </div>
-        </transition>
-
-        <div v-if="showVipInfo" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity" @click="showVipInfo = false">
-            <div class="bg-white rounded-2xl p-6 max-w-xs w-full shadow-2xl relative animate-[bounce_0.3s_ease-out]" @click.stop>
-                <button @click="showVipInfo = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-                <div class="flex items-start gap-4 mt-2">
-                    <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 text-amber-500">
-                        <i class="fa-solid fa-crown text-lg"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-gray-800 mb-1">VIP 專屬優惠</h4>
-                        <p class="text-sm text-gray-600 leading-relaxed">VIP 享原價 8 折優惠及點數累積回饋，詳情請洽詢美容師。</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </template>
-
-    <template v-else-if="currentView === 'admin_login'">
-        <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-            <div class="max-w-sm w-full bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                <div class="text-center mb-8">
-                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-admin-100 text-admin-600 mb-4">
-                        <i class="fa-solid fa-lock text-xl"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold text-gray-900">後台管理登入</h2>
-                </div>
-                <form @submit.prevent="verifyAdminLogin" class="space-y-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">管理員帳號</label>
-                        <input type="text" v-model="adminAccount" class="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-admin-500 focus:border-admin-500 text-lg" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">登入密碼</label>
-                        <input type="password" v-model="adminPassword" class="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-admin-500 focus:border-admin-500 font-mono text-lg" required>
-                        <p v-if="loginError" class="text-red-500 text-xs text-center mt-2">{{ loginError }}</p>
-                    </div>
-                    <div class="flex gap-3">
-                        <button type="button" @click="currentView = 'front'" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-xl transition duration-300">
-                            返回前台
-                        </button>
-                        <button type="submit" class="flex-1 bg-admin-500 hover:bg-admin-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition duration-300">
-                            登入
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </template>
-
-    <template v-else-if="currentView === 'admin'">
-        <header class="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-            <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-admin-500 flex items-center justify-center text-white shadow-md">
-                        <i class="fa-solid fa-gear text-sm"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-lg font-bold text-gray-800">Corin 無痛除毛 - 系統後台</h1>
-                        <p v-if="isSuperAdmin" class="text-[10px] text-admin-600 font-bold">👑 最高權限模式</p>
-                    </div>
-                </div>
-                <button @click="logoutAdmin" class="text-sm text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1">
-                    <i class="fa-solid fa-right-from-bracket"></i> 登出
-                </button>
-            </div>
-        </header>
-
-        <main class="flex-grow max-w-5xl mx-auto w-full px-4 py-6">
-            <div class="flex space-x-2 border-b border-gray-200 mb-6 overflow-x-auto whitespace-nowrap pb-1">
-                <button @click="adminTab = 'calendar'" :class="{'border-admin-500 text-admin-600 border-b-2': adminTab === 'calendar', 'text-gray-500 hover:text-gray-700': adminTab !== 'calendar'}" class="px-4 py-2 font-medium text-sm transition-colors">
-                    <i class="fa-regular fa-calendar-days mr-1"></i> 預約總表
-                </button>
-                <button @click="adminTab = 'bookings'" :class="{'border-admin-500 text-admin-600 border-b-2': adminTab === 'bookings', 'text-gray-500 hover:text-gray-700': adminTab !== 'bookings'}" class="px-4 py-2 font-medium text-sm transition-colors">
-                    <i class="fa-solid fa-list-check mr-1"></i> 列表管理
-                </button>
-                <button @click="adminTab = 'schedule'" :class="{'border-admin-500 text-admin-600 border-b-2': adminTab === 'schedule', 'text-gray-500 hover:text-gray-700': adminTab !== 'schedule'}" class="px-4 py-2 font-medium text-sm transition-colors">
-                    <i class="fa-regular fa-calendar-xmark mr-1"></i> 可預約時間設定
-                </button>
-                <button v-if="isSuperAdmin" @click="adminTab = 'services'" :class="{'border-admin-500 text-admin-600 border-b-2': adminTab === 'services', 'text-gray-500 hover:text-gray-700': adminTab !== 'services'}" class="px-4 py-2 font-medium text-sm transition-colors">
-                    <i class="fa-solid fa-list mr-1"></i> 品項管理
-                </button>
-                <button v-if="isSuperAdmin" @click="adminTab = 'admins'" :class="{'border-admin-500 text-admin-600 border-b-2': adminTab === 'admins', 'text-gray-500 hover:text-gray-700': adminTab !== 'admins'}" class="px-4 py-2 font-medium text-sm transition-colors">
-                    <i class="fa-solid fa-users-gear mr-1"></i> 權限管理
-                </button>
-            </div>
-
-            <div v-show="adminTab === 'calendar'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-                <div class="flex flex-col md:flex-row md:items-center justify-between p-4 border-b gap-4">
-                    <div class="flex flex-col md:flex-row md:items-center gap-4">
-                        <h2 class="text-xl font-bold text-gray-800 whitespace-nowrap">{{ currentYear }} 年 {{ currentMonth + 1 }} 月</h2>
-                        <div class="flex gap-2">
-                            <span class="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-md font-medium">總人數: {{ monthlyStats.total }}</span>
-                            <span class="text-xs bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-md font-medium">待確認: {{ monthlyStats.pending }}</span>
-                            <span class="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-md font-medium">已完成: {{ monthlyStats.completed }}</span>
-                            <span class="text-xs bg-red-100 text-red-700 px-2.5 py-1 rounded-md font-medium">已取消: {{ monthlyStats.cancelled }}</span>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button @click="goToToday" class="px-3 py-1 text-sm border rounded hover:bg-gray-50 transition-colors">今天</button>
-                        <div class="flex border rounded overflow-hidden">
-                            <button @click="prevMonth" class="px-3 py-1 hover:bg-gray-50 border-r transition-colors"><i class="fa-solid fa-chevron-left"></i></button>
-                            <button @click="nextMonth" class="px-3 py-1 hover:bg-gray-50 transition-colors"><i class="fa-solid fa-chevron-right"></i></button>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-7 border-b bg-gray-50 text-center text-sm font-medium text-gray-600">
-                    <div class="py-2 border-r">日</div><div class="py-2 border-r">一</div><div class="py-2 border-r">二</div>
-                    <div class="py-2 border-r">三</div><div class="py-2 border-r">四</div><div class="py-2 border-r">五</div><div class="py-2">六</div>
-                </div>
-                <div class="grid grid-cols-7 flex-grow auto-rows-[minmax(120px,auto)]">
-                    <div v-for="(day, index) in calendarDays" :key="index" 
-                         class="border-r border-b p-1 h-32 flex flex-col transition-colors"
-                         :class="[!day.isCurrentMonth ? 'bg-gray-50 text-gray-400' : (day.hasCustomSchedule ? 'bg-pink-50' : 'bg-white')]">
-                        <div class="text-right text-xs mb-1" :class="[day.isToday ? 'font-bold text-white bg-admin-600 w-5 h-5 rounded-full flex items-center justify-center ml-auto shadow-sm' : 'mr-1']">
-                            {{ day.date }}
-                        </div>
-                        <div class="flex-grow flex flex-col gap-1 overflow-y-auto scrollbar-hide pt-1 px-1">
-                            <div v-if="day.bookings && day.bookings.length > 0" class="flex flex-col gap-1">
-                                <div v-for="b in day.bookings" :key="b.id" class="text-[10px] px-1.5 py-1 rounded shadow-sm leading-tight truncate flex items-center gap-1 cursor-pointer transition-transform hover:scale-[1.02]"
-                                     :class="getBookingColorClass(b)"
-                                     @click="openEditBookingModal(b); adminTab='bookings'" :title="`${b.time} - ${b.name} (${b.service})`">
-                                     <i :class="b.therapistGender === 'male' ? 'fa-solid fa-person' : 'fa-solid fa-person-dress'" class="text-[9px]"></i>
-                                     {{ b.time }} {{ b.name }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div v-show="adminTab === 'bookings'">
-                <div class="flex justify-between items-end mb-4">
-                    <p class="text-sm text-gray-500">查看並管理所有客人的預約紀錄與施作狀態。</p>
-                </div>
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-gray-500">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
-                                <tr>
-                                    <th class="px-4 py-3 w-28">日期 / 時間</th>
-                                    <th class="px-4 py-3 w-24">狀態</th>
-                                    <th class="px-4 py-3 w-20">美容師</th>
-                                    <th class="px-4 py-3 w-32">客戶姓名 (電話/生日)</th>
-                                    <th class="px-4 py-3 min-w-[120px]">服務項目</th>
-                                    <th class="px-4 py-3 min-w-[100px]">顧客備註</th>
-                                    <th class="px-4 py-3 w-16">時長</th>
-                                    <th class="px-4 py-3 w-28 text-right">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-if="bookings.length === 0" class="bg-white border-b">
-                                    <td colspan="8" class="px-4 py-8 text-center text-gray-400">尚無預約紀錄。</td>
-                                </tr>
-                                <tr v-for="b in bookings" :key="b.id" class="bg-white border-b hover:bg-gray-50" :class="{'opacity-60 bg-gray-50': b.status === 'cancelled'}">
-                                    <td class="px-4 py-3 font-medium text-gray-900">
-                                        <div class="text-sm">{{ b.date }}</div>
-                                        <div class="text-xs text-admin-600 bg-admin-50 inline-block px-2 py-0.5 rounded mt-1">{{ b.time }}</div>
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <select v-model="b.status" @change="updateBookingStatus(b)" class="text-xs border border-gray-300 rounded focus:ring-admin-500 focus:border-admin-500 font-medium px-2 py-1" :class="{'text-yellow-700 bg-yellow-50 border-yellow-200': b.status === 'pending' || !b.status, 'text-green-700 bg-green-50 border-green-200': b.status === 'completed', 'text-gray-600 bg-gray-200 border-gray-300': b.status === 'cancelled'}">
-                                            <option value="pending">待確認</option>
-                                            <option value="completed">已完成</option>
-                                            <option value="cancelled">已取消</option>
-                                        </select>
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <span class="inline-flex items-center gap-1">
-                                            <i :class="b.therapistGender === 'male' ? 'fa-solid fa-person' : 'fa-solid fa-person-dress'" class="text-gray-400"></i>
-                                            {{ b.therapistGender === 'male' ? '男師' : '女師' }}
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <div class="font-medium text-gray-800 flex items-center gap-1">
-                                            {{ b.name }}
-                                            <i v-if="b.customerGender === 'female'" class="fa-solid fa-venus text-pink-500 text-xs" title="女性客戶"></i>
-                                            <i v-else-if="b.customerGender === 'male'" class="fa-solid fa-mars text-blue-500 text-xs" title="男性客戶"></i>
-                                        </div>
-                                        <div class="text-xs text-gray-400">{{ b.phone }}</div>
-                                        <div v-if="b.birthday" class="text-[10px] text-gray-400">生日: {{ b.birthday }}</div>
-                                    </td>
-                                    <td class="px-4 py-3 text-gray-700">
-                                        <div class="flex items-start gap-1">
-                                            <i v-if="b.isVip" class="fa-solid fa-crown text-amber-500 text-xs mt-1" title="VIP"></i>
-                                            <span class="text-sm line-clamp-2" :title="b.service">{{ b.service }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <div v-if="b.notes" class="text-sm text-gray-600 whitespace-pre-wrap line-clamp-2" :title="b.notes">{{ b.notes }}</div>
-                                        <div v-else class="text-xs text-gray-300">-</div>
-                                    </td>
-                                    <td class="px-4 py-3">{{ b.duration }} 分</td>
-                                    <td class="px-4 py-3 text-right space-x-1 whitespace-nowrap">
-                                        <button @click="copyStatusMessage(b)" class="text-green-600 hover:text-green-900 px-2 py-1.5 rounded hover:bg-green-50 text-xs font-medium border border-green-200" title="複製通知文字貼給客人">
-                                            <i class="fa-brands fa-line"></i> 通知
-                                        </button>
-                                        <button @click="openEditBookingModal(b)" class="text-blue-600 hover:text-blue-900 px-2 py-1.5 rounded hover:bg-blue-50 text-xs font-medium border border-blue-200">
-                                            修改
-                                        </button>
-                                        <button @click="deleteBooking(b.id)" class="text-red-600 hover:text-red-900 p-1.5 rounded hover:bg-red-50" title="刪除紀錄">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div v-show="adminTab === 'schedule'" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h3 class="text-lg font-bold text-gray-800 mb-2">可預約時間與休假設定</h3>
-                <p class="text-sm text-gray-500 mb-6">點擊日曆上的日期，可將其設定為「全天公休」或「自訂營業時間」。預設營業時間為 12:00 - 21:00。</p>
-                <div class="flex flex-col md:flex-row gap-8">
-                    <div class="flex justify-center md:justify-start">
-                        <div id="admin-calendar-container" class="shadow-sm rounded-lg overflow-hidden border border-gray-100"></div>
-                    </div>
-                    <div class="flex-1">
-                        <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">已設定的特殊日期</h4>
-                        <div class="space-y-2 max-h-[350px] overflow-y-auto pr-2">
-                            <div v-for="(setting, date) in closedDatesMap" :key="date" class="p-3 border border-gray-200 bg-gray-50 rounded-lg flex justify-between items-center">
-                                <div>
-                                    <span class="font-bold text-gray-800">{{date}}</span>
-                                    <span v-if="setting.isClosed" class="ml-2 px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full font-medium">全天公休</span>
-                                    <span v-else class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">營業: {{setting.start}} - {{setting.end}}</span>
-                                </div>
-                                <button @click="removeDateSetting(date)" class="text-red-500 hover:bg-red-100 p-1.5 rounded transition-colors" title="移除設定"><i class="fa-solid fa-trash text-sm"></i></button>
-                            </div>
-                            <p v-if="Object.keys(closedDatesMap).length === 0" class="text-gray-400 text-sm py-4 text-center border-2 border-dashed border-gray-200 rounded-lg">目前無特殊日期設定</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div v-if="isSuperAdmin" v-show="adminTab === 'services'">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 gap-3">
-                    <p class="text-sm text-gray-500">管理所有預約服務的項目與預設時間。您可手動修改排序號碼以決定前台顯示順序。</p>
-                    <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-                        <div class="flex gap-2 w-full md:w-auto">
-                            <input type="text" v-model="serviceSearch" placeholder="搜尋品項名稱..." class="block w-full md:w-48 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
-                            <select v-model="serviceFilterGender" class="block w-full md:w-36 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
-                                <option value="all">所有適用對象</option>
-                                <option value="female">限女性客戶</option>
-                                <option value="male">限男性客戶</option>
-                            </select>
-                        </div>
-                        <div class="flex gap-2">
-                            <button @click="importDefaultServices" class="flex-1 md:flex-none bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
-                                <i class="fa-solid fa-download"></i> 匯入預設
-                            </button>
-                            <button @click="openServiceModal()" class="flex-1 md:flex-none bg-admin-500 hover:bg-admin-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 shadow-sm transition-colors">
-                                <i class="fa-solid fa-plus"></i> 新增品項
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-gray-500">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
-                                <tr>
-                                    <th class="px-4 py-3 w-16">排序</th>
-                                    <th class="px-4 py-3 w-16 text-center">上架</th>
-                                    <th class="px-4 py-3">品項名稱</th>
-                                    <th class="px-4 py-3">原價 / VIP價</th>
-                                    <th class="px-4 py-3">預設時間</th>
-                                    <th class="px-4 py-3 text-right">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-if="filteredServices.length === 0" class="bg-white border-b">
-                                    <td colspan="6" class="px-4 py-8 text-center text-gray-400">查無符合篩選條件的服務品項。</td>
-                                </tr>
-                                <tr v-for="service in filteredServices" :key="service.id" class="bg-white border-b hover:bg-gray-50">
-                                    <td class="px-4 py-3">
-                                        <input type="number" v-model="service.sortOrder" @change="updateServiceOrder(service)" class="w-14 px-1 py-1 border border-gray-300 rounded text-center text-sm focus:ring-admin-500 focus:border-admin-500" title="修改後點擊其他地方即可儲存">
-                                    </td>
-                                    <td class="px-4 py-3 text-center">
-                                        <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" v-model="service.isActive" @change="toggleServiceStatus(service)" class="sr-only peer">
-                                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-admin-500"></div>
-                                        </label>
-                                    </td>
-                                    <td class="px-4 py-3 font-medium text-gray-900">
-                                        <div class="flex items-center gap-2">
-                                            <span v-html="renderIcon(service.icon)" class="text-gray-400 w-5 h-5 inline-block text-center flex-shrink-0"></span>
-                                            {{ service.name }}
-                                        </div>
-                                        <div class="text-[10px] text-gray-500 ml-7 mt-0.5">
-                                            客戶性別: <span :class="{'text-pink-600': service.genderTarget === 'female', 'text-blue-600': service.genderTarget === 'male'}">{{ service.genderTarget === 'female' ? '限女性' : (service.genderTarget === 'male' ? '限男性' : '男女客皆可') }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-3 font-medium text-brand-600">
-                                        <div class="text-gray-500">原價: ${{ service.regularPrice || service.price || 0 }}</div>
-                                        <div class="text-amber-600 font-bold">VIP: ${{ service.vipPrice || service.price || 0 }}</div>
-                                    </td>
-                                    <td class="px-4 py-3">{{ service.duration }} 分</td>
-                                    <td class="px-4 py-3 text-right space-x-1 whitespace-nowrap">
-                                        <button @click="copyService(service)" class="text-green-600 hover:text-green-900 p-1.5 rounded hover:bg-green-50" title="複製"><i class="fa-regular fa-copy"></i></button>
-                                        <button @click="openServiceModal(service)" class="text-blue-600 hover:text-blue-900 p-1.5 rounded hover:bg-blue-50" title="編輯"><i class="fa-solid fa-pen"></i></button>
-                                        <button @click="deleteService(service.id)" class="text-red-600 hover:text-red-900 p-1.5 rounded hover:bg-red-50" title="刪除"><i class="fa-solid fa-trash"></i></button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div v-if="isSuperAdmin" v-show="adminTab === 'admins'">
-                <div class="flex justify-between items-end mb-4">
-                    <p class="text-sm text-gray-500">新增或移除可登入後台的美容師帳號（一般帳號登入時將無法查看此頁面與品項管理）。</p>
-                </div>
-                <div class="flex flex-col md:flex-row gap-6">
-                    <div class="w-full md:w-1/3">
-                        <form @submit.prevent="saveAdminUser" class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 space-y-4">
-                            <h3 class="font-bold text-gray-800 border-b pb-2">新增美容師帳號</h3>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">登入帳號</label>
-                                <input type="text" v-model="formAdmin.account" required class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">登入密碼</label>
-                                <input type="text" v-model="formAdmin.password" required class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm font-mono">
-                            </div>
-                            <button type="submit" class="w-full px-4 py-2 bg-admin-500 text-white rounded-lg hover:bg-admin-600 font-medium transition-colors">新增</button>
-                        </form>
-                    </div>
-                    <div class="w-full md:w-2/3 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <table class="w-full text-left text-sm text-gray-500">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
-                                <tr>
-                                    <th class="px-4 py-3">帳號</th>
-                                    <th class="px-4 py-3">密碼</th>
-                                    <th class="px-4 py-3 text-right">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-if="admins.length === 0" class="bg-white border-b">
-                                    <td colspan="3" class="px-4 py-8 text-center text-gray-400">尚無其他美容師帳號。</td>
-                                </tr>
-                                <tr v-for="admin in admins" :key="admin.id" class="bg-white border-b hover:bg-gray-50">
-                                    <td class="px-4 py-3 font-medium text-gray-900">{{ admin.account }}</td>
-                                    <td class="px-4 py-3 font-mono text-gray-600">{{ admin.password }}</td>
-                                    <td class="px-4 py-3 text-right">
-                                        <button @click="deleteAdminUser(admin.id)" class="text-red-600 hover:text-red-900 p-1.5 rounded hover:bg-red-50" title="移除權限"><i class="fa-solid fa-trash"></i></button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <div v-if="isBookingModalOpen" class="fixed inset-0 bg-black/50 z-[120] flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-                <div class="flex justify-between items-center mb-5 border-b pb-3">
-                    <h3 class="text-lg font-bold text-gray-900">修改排程時間</h3>
-                    <button @click="closeBookingModal" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-                </div>
-                <form @submit.prevent="saveBookingEdit" class="space-y-4">
-                    <div class="bg-gray-50 p-3 rounded-lg text-sm text-gray-600 mb-4">
-                        <p><strong>客戶：</strong>{{ editBookingForm.name }} ({{ editBookingForm.phone }})</p>
-                        <p v-if="editBookingForm.birthday"><strong>生日：</strong>{{ editBookingForm.birthday }}</p>
-                        <p><strong>項目：</strong>{{ editBookingForm.service }}</p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">施作日期</label>
-                        <input type="date" v-model="editBookingForm.date" required class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">時間 (HH:mm)</label>
-                            <input type="time" v-model="editBookingForm.time" required class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">總長度 (分鐘)</label>
-                            <input type="number" v-model="editBookingForm.duration" required min="10" step="10" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">顧客備註</label>
-                        <textarea v-model="editBookingForm.notes" rows="2" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm" placeholder="手動輸入或編輯客人的備註需求..."></textarea>
-                    </div>
-                    <div class="pt-2 flex gap-3">
-                        <button type="button" @click="closeBookingModal" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">取消</button>
-                        <button type="submit" class="flex-1 px-4 py-2 bg-admin-500 text-white rounded-lg hover:bg-admin-600 font-medium">儲存變更</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div v-if="isDateSettingModalOpen" class="fixed inset-0 bg-black/50 z-[120] flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-                <div class="flex justify-between items-center mb-5 border-b pb-3">
-                    <h3 class="text-lg font-bold text-gray-900">設定日期: {{ editingDate }}</h3>
-                    <button @click="isDateSettingModalOpen = false" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-                </div>
-                <div class="space-y-5">
-                    <label class="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors" :class="{'border-red-300 bg-red-50': dateSettingForm.isClosed}">
-                        <input type="checkbox" v-model="dateSettingForm.isClosed" class="w-4 h-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
-                        <span class="text-sm font-medium text-gray-700">設定為全天公休 (不開放預約)</span>
-                    </label>
-                    
-                    <div v-if="!dateSettingForm.isClosed" class="p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-3">
-                        <h4 class="text-sm font-bold text-gray-700 mb-2"><i class="fa-regular fa-clock"></i> 自訂營業時間</h4>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500 mb-1">開始時間</label>
-                            <input type="time" v-model="dateSettingForm.start" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500 mb-1">結束時間</label>
-                            <input type="time" v-model="dateSettingForm.end" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 text-sm">
-                        </div>
-                    </div>
-
-                    <div class="pt-2 flex gap-3">
-                        <button type="button" @click="isDateSettingModalOpen = false" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">取消</button>
-                        <button type="button" @click="saveDateSetting" class="flex-1 px-4 py-2 bg-admin-500 text-white rounded-lg hover:bg-admin-600 font-medium">儲存設定</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div v-if="isServiceModalOpen" class="fixed inset-0 bg-black/50 z-[120] flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-                <div class="flex justify-between items-center mb-5 border-b pb-3">
-                    <h3 class="text-lg font-bold text-gray-900">{{ editingService ? '編輯品項' : '新增品項' }}</h3>
-                    <button @click="closeServiceModal" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-                </div>
-                <form @submit.prevent="saveServiceData" class="space-y-4">
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">品項名稱 *</label>
-                            <input type="text" v-model="formService.name" required class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">排序碼</label>
-                            <input type="number" v-model="formService.sortOrder" required class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">客戶性別 *</label>
-                        <select v-model="formService.genderTarget" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
-                            <option value="all">男女客皆可</option>
-                            <option value="female">限女性客戶</option>
-                            <option value="male">限男性客戶</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">原價 (NT$) *</label>
-                            <input type="number" v-model="formService.regularPrice" required min="0" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">VIP價 (NT$) *</label>
-                            <input type="number" v-model="formService.vipPrice" required min="0" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
-                        </div>
-                        <div class="col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">預設施作時間 (分鐘) *</label>
-                            <input type="number" v-model="formService.duration" required min="10" step="10" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">選擇圖標 *</label>
-                        <div class="grid grid-cols-5 gap-2">
-                            <label v-for="icon in availableIcons" :key="icon" class="cursor-pointer">
-                                <input type="radio" name="icon" :value="icon" v-model="formService.icon" class="sr-only peer">
-                                <div class="flex items-center justify-center p-3 border rounded-lg peer-checked:border-admin-500 peer-checked:bg-admin-50 peer-checked:text-admin-600 text-gray-400 hover:bg-gray-50 transition-colors">
-                                    <div v-html="renderIcon(icon)" class="w-6 h-6"></div>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="pt-4 flex gap-3">
-                        <button type="button" @click="closeServiceModal" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">取消</button>
-                        <button type="submit" class="flex-1 px-4 py-2 bg-admin-500 text-white rounded-lg hover:bg-admin-600 font-medium">儲存</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </template>
-
-    <div v-if="isLoading" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-[150] flex flex-col items-center justify-center">
-        <div class="loader ease-linear rounded-full border-4 border-t-4 h-12 w-12 mb-4" :class="currentView === 'admin' ? 'border-admin-200 border-t-admin-500' : 'border-gray-200 border-t-brand-500'"></div>
-        <p class="text-gray-600 font-medium">處理中...</p>
+    <div id="info-box">
+        <h2>📌 門店自動巡檢 V1.4 (LINE推播版)</h2>
+        <div class="info-row"><div class="info-label">🏪 門店：</div><div class="info-value" id="store-name">讀取中...</div></div>
+        <div class="info-row"><div class="info-label">📅 目前：</div><div class="info-value" id="current-time">讀取中...</div></div>
+        <div class="info-row"><div class="info-label">⏰ 下次：</div><div class="info-value" id="next-schedule-time" style="color:#FF9800;">計算中...</div></div>
+        <div class="info-row"><div class="info-label">🎬 排程：</div><div class="info-value" id="video-schedule">載入中...</div></div>
+        <div class="info-row"><div class="info-label">▶ 已播：</div><div class="info-value" id="total-play-time">0 分鐘</div></div>
+        <div class="info-row"><div class="info-label">⏱ 影片：</div><div class="info-value"><span id="video-current-time">00:00</span></div></div>
+        <div class="info-row"><div class="info-label">📸 截圖：</div><div class="info-value" id="screenshot-count">0 張</div></div>
+        <div id="status-log">系統待命中...</div>
+        <button id="test-btn" onclick="takeAndUploadScreenshot('手動測試')">馬上測試一鍵截圖</button>
     </div>
 
-  </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
-
-        createApp({
-            setup() {
-                const userFirebaseConfig = {
-                    apiKey: "AIzaSyCe0KE7va2H4-A6XECdzhTUCjhTeT6FOJM",
-                    authDomain: "check-balance-13da9.firebaseapp.com",
-                    projectId: "check-balance-13da9",
-                    storageBucket: "check-balance-13da9.firebasestorage.app",
-                    messagingSenderId: "827416952029",
-                    appId: "1:827416952029:web:e18ac89b984c8351e36f34",
-                    measurementId: "G-J4KY08ECZR"
-                };
-                
-                const appId = userFirebaseConfig.projectId; 
-                let db = null;
-                let auth = null;
-                const isDbReady = ref(false);
-
-                const currentView = ref('front'); 
-                const adminTab = ref('calendar'); 
-                const isLoading = ref(false);
-                
-                const services = ref([]);
-                const bookings = ref([]);
-                const closedDatesMap = ref({}); 
-                const admins = ref([]);
-
-                const adminAccount = ref('');
-                const adminPassword = ref('');
-                const loginError = ref('');
-                const isAdminAuthenticated = ref(false);
-                const isSuperAdmin = ref(false);
-                
-                const showVipInfo = ref(false);
-
-                const serviceSearch = ref('');
-                const serviceFilterGender = ref('all');
-
-                // 精美系統公告彈窗
-                const showAnnouncementNotice = () => {
-                    Swal.fire({
-                        title: '<div class="flex items-center justify-center gap-2 text-brand-800 text-lg font-bold"><i class="fa-solid fa-bell text-brand-500"></i> 預約系統優化升級公告</div>',
-                        html: `
-                            <div class="text-left text-sm text-gray-700 leading-relaxed space-y-3 py-2">
-                                <div class="bg-brand-50/80 p-3.5 rounded-xl border border-brand-100 text-brand-900 text-xs font-medium">
-                                    <p class="font-bold text-sm mb-1 text-brand-800">親愛的貴賓 您好：</p>
-                                    <p>即日起，因本館預約系統正在進行優化與轉換升級，若您在預約操作上有任何疑問或遇到問題，請隨時透過我們的 <strong class="text-brand-700">官方 LINE 帳號</strong> 傳送訊息。</p>
-                                </div>
-                                <p class="text-xs text-gray-600 pl-1">
-                                    收到您的訊息後，美容師與工程團隊將會第一時間協助您確認預約狀態並為您解答，感謝您的包容與配合！
-                                </p>
-                            </div>
-                        `,
-                        confirmButtonText: '我知道了，開始預約',
-                        confirmButtonColor: '#c5a89c',
-                        customClass: {
-                            popup: 'custom-announcement-popup'
-                        },
-                        showClass: {
-                            popup: 'animate-[fadeInDown_0.3s_ease-out]'
-                        },
-                        hideClass: {
-                            popup: 'animate-[fadeOutUp_0.2s_ease-in]'
-                        }
-                    });
-                };
-
-                // === SVG 象形圖庫 ===
-                const customSvgIcons = {
-                    'svg-face': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M12 21a8 8 0 0 0 8-8c0-5.5-4-11-8-11S4 7.5 4 13a8 8 0 0 0 8 8z"/><path d="M12 14v3"/></svg>',
-                    'svg-arm': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M14 3l-3 9-3-2-2 7 4 3 6-11z"/></svg>',
-                    'svg-leg': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M10 3v12a2 2 0 0 0 1 1.73V21a1 1 0 0 0 2 0v-4.27A2 2 0 0 0 14 15V3"/></svg>',
-                    'svg-body': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M8 4h8v7c0 3-1.5 5-4 5s-4-2-4-5V4z"/><path d="M12 12v.01"/></svg>',
-                    'svg-vio': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M4 8l8 10 8-10c-5-2-11-2-16 0z"/><circle cx="12" cy="11" r="1.5"/></svg>',
-                    'svg-underarm': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M5 8c3-1.5 6-1.5 9 0M5 16c3-1.5 6-1.5 9 0M10 4v16"/></svg>'
-                };
-
-                const renderIcon = (iconClass) => {
-                    if (!iconClass) return '';
-                    if (customSvgIcons[iconClass]) return customSvgIcons[iconClass];
-                    return `<i class="${iconClass}"></i>`;
-                };
-
-                const timeToMins = (timeStr) => {
-                    if(!timeStr) return 0;
-                    const [h, m] = timeStr.split(':').map(Number);
-                    return h * 60 + m;
-                };
-                const minsToTime = (mins) => {
-                    const h = Math.floor(mins / 60).toString().padStart(2, '0');
-                    const m = (mins % 60).toString().padStart(2, '0');
-                    return `${h}:${m}`;
-                };
-
-                const initFirebase = async () => {
-                    try {
-                        const app = initializeApp(userFirebaseConfig);
-                        db = getFirestore(app);
-                        auth = getAuth(app);
-                        await signInAnonymously(auth);
-
-                        setupFirestoreListeners();
-                        isDbReady.value = true;
-                    } catch(e) {
-                        Swal.fire('系統錯誤', '驗證連線失敗，請稍後再試。', 'error');
-                    }
-                };
-
-                const setupFirestoreListeners = () => {
-                    if (!auth.currentUser) return;
-
-                    onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'services'), (snap) => {
-                        let data = snap.docs.map(d => ({ id: d.id, sortOrder: 0, ...d.data() }));
-                        data.sort((a, b) => {
-                            const orderA = a.sortOrder || 0;
-                            const orderB = b.sortOrder || 0;
-                            if (orderA !== orderB) return orderA - orderB;
-                            const priceA = Number(a.regularPrice || a.price || 0);
-                            const priceB = Number(b.regularPrice || b.price || 0);
-                            return priceB - priceA;
-                        });
-                        services.value = data;
-                    });
-
-                    onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'bookings'), (snap) => {
-                        let data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                        data.sort((a, b) => {
-                            if(a.date !== b.date) return a.date.localeCompare(b.date);
-                            return a.time.localeCompare(b.time);
-                        });
-                        bookings.value = data;
-                    });
-
-                    onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'schedule'), (snap) => {
-                        if (snap.exists()) closedDatesMap.value = snap.data().dates || {};
-                        else closedDatesMap.value = {};
-                    });
-
-                    onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'admins'), (snap) => {
-                        admins.value = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    });
-                };
-
-                const verifyPhone = ref('');
-                const isVerified = ref(false);
-                const bookingForm = ref({ therapistGender: '', isVip: null, customerGender: '', service: [], date: '', time: '', name: '', phone: '', birthday: '', notes: '' });
-                
-                const scrollToNext = (targetId) => {
-                    setTimeout(() => {
-                        const el = document.getElementById(targetId);
-                        if (el) {
-                            el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                        }
-                    }, 300); 
-                };
-
-                const checkMember = async () => {
-                    if (!verifyPhone.value) {
-                        Swal.fire('提示', '請輸入手機號碼', 'warning');
-                        return;
-                    }
-                    if (!isDbReady.value) {
-                        Swal.fire('系統錯誤', '資料庫連線中，請稍後再試。', 'error');
-                        return;
-                    }
-                    
-                    isLoading.value = true;
-                    try {
-                        const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'beauty_members'), where('phone', '==', verifyPhone.value));
-                        const snap = await getDocs(q);
-                        
-                        if (!snap.empty) {
-                            const data = snap.docs[0].data();
-                            bookingForm.value.name = data.name || '';
-                            bookingForm.value.phone = data.phone || verifyPhone.value;
-                            
-                            let bd = data.birthday || '';
-                            if (bd) {
-                                const parts = bd.split(/[-/]/);
-                                if (parts.length >= 2) {
-                                    bd = `${parts[parts.length - 2]}/${parts[parts.length - 1]}`;
-                                }
-                            }
-                            bookingForm.value.birthday = bd;
-                            isVerified.value = true;
-                            
-                            Swal.fire({
-                                icon: 'success',
-                                title: '驗證成功',
-                                html: `歡迎回來，<strong>${bookingForm.value.name}</strong>！<br><span style="font-size: 0.9em; color: #d33;">※ 送出後需待美容師回覆才算預約成功唷~<br>請耐心等候！</span>`,
-                                confirmButtonColor: '#c5a89c'
-                            }).then(() => {
-                                scrollToNext('step2');
-                            });
-                        } else {
-                            let timerInterval;
-                            Swal.fire({
-                                icon: 'error',
-                                title: '查無會員資料',
-                                html: '系統中找不到您的手機號碼。<br>將在 <b></b> 秒後為您導向註冊頁面...',
-                                timer: 2500,
-                                timerProgressBar: true,
-                                showConfirmButton: false,
-                                didOpen: () => {
-                                    const b = Swal.getHtmlContainer().querySelector('b');
-                                    timerInterval = setInterval(() => { b.textContent = Math.ceil(Swal.getTimerLeft() / 1000); }, 100);
-                                },
-                                willClose: () => { clearInterval(timerInterval); }
-                            }).then(() => {
-                                window.location.href = 'https://check-balance-jbiy.vercel.app/';
-                            });
-                        }
-                    } catch(e) {
-                        console.error(e);
-                        Swal.fire('錯誤', '驗證時發生錯誤，請稍後再試', 'error');
-                    }
-                    isLoading.value = false;
-                };
-
-                const goToRegister = () => {
-                    Swal.fire({
-                        icon: 'info',
-                        title: '前往註冊',
-                        text: '註冊完成後，請重新回到此頁面進行預約唷！',
-                        confirmButtonText: '我知道了，前往註冊',
-                        confirmButtonColor: '#c5a89c'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = 'https://check-balance-jbiy.vercel.app/';
-                        }
-                    });
-                };
-
-                const resetVerification = () => {
-                    isVerified.value = false;
-                    verifyPhone.value = '';
-                    bookingForm.value = { therapistGender: '', isVip: null, customerGender: '', service: [], date: '', time: '', name: '', phone: '', birthday: '', notes: '' };
-                };
-
-                const activeServices = computed(() => {
-                    return services.value.filter(s => {
-                        if (!s.isActive) return false;
-                        if (!bookingForm.value.customerGender) return true;
-                        return !s.genderTarget || s.genderTarget === 'all' || s.genderTarget === bookingForm.value.customerGender;
-                    }).sort((a, b) => {
-                        const orderA = a.sortOrder || 0;
-                        const orderB = b.sortOrder || 0;
-                        if (orderA !== orderB) return orderA - orderB;
-                        const priceA = Number(a.regularPrice || a.price || 0);
-                        const priceB = Number(b.regularPrice || b.price || 0);
-                        return priceB - priceA;
-                    });
-                });
-
-                const estimatedTotal = computed(() => {
-                    if (!bookingForm.value.service.length) return 0;
-                    return bookingForm.value.service.reduce((sum, name) => {
-                        // FIX: 在 activeServices 中尋找，確保抓到符合當前性別的價格，避免重名項目抓錯
-                        const s = activeServices.value.find(service => service.name === name);
-                        if (!s) return sum;
-                        const price = bookingForm.value.isVip ? Number(s.vipPrice || s.price || 0) : Number(s.regularPrice || s.price || 0);
-                        return sum + price;
-                    }, 0);
-                });
-
-                const estimatedDuration = computed(() => {
-                    if (!bookingForm.value.service.length) return 0;
-                    return bookingForm.value.service.reduce((sum, name) => {
-                        // FIX: 在 activeServices 中尋找
-                        const s = activeServices.value.find(service => service.name === name);
-                        return sum + (s ? Number(s.duration) : 0);
-                    }, 0);
-                });
-                
-                const hiddenSubmitBtn = ref(null);
-                let frontDatePicker = null;
-
-                const getMinSelectableDate = () => {
-                    const now = new Date();
-                    return now;
-                };
-
-                const initFrontDatePicker = () => {
-                    if (frontDatePicker) frontDatePicker.destroy();
-                    const el = document.getElementById('date');
-                    if (!el) return;
-
-                    frontDatePicker = flatpickr(el, {
-                        locale: "zh_tw",
-                        minDate: getMinSelectableDate(),
-                        disable: [
-                            (date) => {
-                                const dStr = flatpickr.formatDate(date, "Y-m-d");
-                                return closedDatesMap.value[dStr]?.isClosed === true;
-                            }
-                        ],
-                        dateFormat: "Y-m-d",
-                        onChange: (selectedDates, dateStr) => {
-                            bookingForm.value.date = dateStr;
-                            bookingForm.value.time = ''; 
-                            scrollToNext('step7');
-                        }
-                    });
-                };
-
-                const availableSlots = computed(() => {
-                    if (!bookingForm.value.date || bookingForm.value.service.length === 0 || !bookingForm.value.therapistGender) return [];
-
-                    const duration = estimatedDuration.value;
-                    const date = bookingForm.value.date;
-                    const gender = bookingForm.value.therapistGender;
-
-                    const dateSettings = closedDatesMap.value[date] || { isClosed: false, start: '12:00', end: '21:00' };
-                    if (dateSettings.isClosed) return [];
-
-                    const dayBookings = bookings.value.filter(b => b.date === date && b.therapistGender === gender && b.status !== 'cancelled');
-
-                    const slots = [];
-                    const startMin = timeToMins(dateSettings.start || '12:00');
-                    const endMin = timeToMins(dateSettings.end || '21:00');
-                    const stepMin = 30;
-
-                    const now = new Date();
-                    const isToday = (date === flatpickr.formatDate(now, "Y-m-d"));
-                    const currentMins = now.getHours() * 60 + now.getMinutes();
-
-                    for (let m = startMin; m < endMin; m += stepMin) {
-                        const slotStart = m;
-                        const slotEnd = m + duration;
-                        let isAvailable = true;
-
-                        if (isToday && slotStart <= currentMins + 30) isAvailable = false;
-                        if (slotEnd > endMin) isAvailable = false;
-
-                        if (isAvailable) {
-                            for (const b of dayBookings) {
-                                const bStart = timeToMins(b.time);
-                                const bEnd = bStart + Number(b.duration);
-                                if (slotStart < bEnd && slotEnd > bStart) {
-                                    isAvailable = false;
-                                    break;
-                                }
-                            }
-                        }
-                        slots.push({ time: minsToTime(m), available: isAvailable });
-                    }
-                    return slots;
-                });
-
-                watch(() => bookingForm.value.therapistGender, () => {
-                    bookingForm.value.isVip = null;
-                    bookingForm.value.customerGender = '';
-                    bookingForm.value.service = [];
-                    bookingForm.value.date = '';
-                });
-                watch(() => bookingForm.value.isVip, () => {
-                    bookingForm.value.customerGender = '';
-                    bookingForm.value.service = [];
-                    bookingForm.value.date = '';
-                });
-                watch(() => bookingForm.value.customerGender, () => {
-                    bookingForm.value.service = [];
-                    bookingForm.value.date = '';
-                });
-                watch(() => bookingForm.value.service.length, (newLen, oldLen) => {
-                    if (newLen > 0 && oldLen === 0) {
-                        nextTick(() => { initFrontDatePicker(); scrollToNext('step6'); });
-                    }
-                    bookingForm.value.time = '';
-                });
-                watch(() => bookingForm.value.date, () => {
-                    bookingForm.value.time = '';
-                });
-
-                const triggerSubmit = () => { if (hiddenSubmitBtn.value) hiddenSubmitBtn.value.click(); };
-
-                const submitBooking = async () => {
-                    isLoading.value = true;
-                    try {
-                        const duration = estimatedDuration.value;
-                        const price = estimatedTotal.value;
-                        const serviceString = bookingForm.value.service.join(' + ');
-
-                        if (isDbReady.value) {
-                            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'bookings'), {
-                                therapistGender: bookingForm.value.therapistGender,
-                                isVip: bookingForm.value.isVip,
-                                customerGender: bookingForm.value.customerGender, 
-                                service: serviceString,
-                                duration: duration,
-                                date: bookingForm.value.date,
-                                time: bookingForm.value.time,
-                                status: 'pending',
-                                name: bookingForm.value.name,
-                                phone: bookingForm.value.phone,
-                                birthday: bookingForm.value.birthday || '',
-                                notes: bookingForm.value.notes,
-                                createdAt: new Date().toISOString()
-                            });
-                        }
-
-                        const tGenderText = bookingForm.value.therapistGender === 'male' ? '男師' : '女師';
-                        const cGenderText = bookingForm.value.customerGender === 'male' ? '男生' : '女生';
-                        const vipText = bookingForm.value.isVip ? '✅ 是 (享VIP價)' : '❌ 否 (原價)';
-                        
-                        const messageText = `✨【預約需求確認】✨\n\n` +
-                                          `指定：${tGenderText}\n` +
-                                          `客戶性別：${cGenderText}\n` +
-                                          `VIP會員：${vipText}\n` +
-                                          `姓名：${bookingForm.value.name}\n` +
-                                          `電話：${bookingForm.value.phone}\n` +
-                                          `項目：${serviceString}\n` +
-                                          `價格：NT$ ${price}\n` +
-                                          `日期：${bookingForm.value.date}\n` +
-                                          `時段：${bookingForm.value.time}\n` +
-                                          `備註：${bookingForm.value.notes || '無'}\n\n` +
-                                          `💡 請幫我確認此預約是否成立，謝謝！`;
-
-                        setTimeout(() => {
-                            isLoading.value = false;
-                            
-                            if (typeof liff !== 'undefined' && liff.isInClient()) {
-                                liff.sendMessages([{ type: 'text', text: messageText }])
-                                    .then(() => {
-                                        liff.closeWindow();
-                                    })
-                                    .catch(err => {
-                                        alert(`⚠️ LINE 自動傳送攔截\n\n原因: ${err.message}\n\n可能是您尚未在 LINE Developers 後台開啟「chat_message.write」權限。\n\n為確保預約不中斷，系統將為您跳轉，請「手動選擇本官方帳號」貼上發送！`);
-                                        window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(messageText)}`;
-                                        resetVerification();
-                                    });
-                            } else {
-                                window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(messageText)}`;
-                                resetVerification();
-                            }
-                        }, 800);
-                    } catch(e) {
-                        console.error(e);
-                        Swal.fire('錯誤', '預約送出失敗，請稍後再試。', 'error');
-                        isLoading.value = false;
-                    }
-                };
-
-                const goToAdminLogin = () => {
-                    currentView.value = 'admin_login';
-                    window.location.hash = 'admin';
-                };
-                
-                const verifyAdminLogin = () => {
-                    isLoading.value = true;
-                    loginError.value = '';
-                    setTimeout(() => {
-                        let authSuccess = false;
-                        let isSuper = false;
-                        
-                        if (adminAccount.value === '信吉' && adminPassword.value === '7310168888') {
-                            authSuccess = true;
-                            isSuper = true;
-                        } else {
-                            const found = admins.value.find(a => a.account === adminAccount.value && a.password === adminPassword.value);
-                            if (found) {
-                                authSuccess = true;
-                                if (found.account === '信吉') isSuper = true;
-                            }
-                        }
-                        
-                        if (authSuccess) {
-                            isAdminAuthenticated.value = true;
-                            isSuperAdmin.value = isSuper;
-                            currentView.value = 'admin';
-                            adminTab.value = 'calendar'; 
-                            adminAccount.value = '';
-                            adminPassword.value = '';
-                        } else {
-                            loginError.value = '帳號或密碼錯誤';
-                        }
-                        isLoading.value = false;
-                    }, 500);
-                };
-
-                const logoutAdmin = () => {
-                    isAdminAuthenticated.value = false;
-                    isSuperAdmin.value = false;
-                    currentView.value = 'front';
-                    window.location.hash = '';
-                };
-
-                let adminCalendar = null;
-                const isDateSettingModalOpen = ref(false);
-                const editingDate = ref('');
-                const dateSettingForm = ref({ isClosed: false, start: '12:00', end: '21:00' });
-
-                const initAdminCalendar = () => {
-                    const el = document.getElementById('admin-calendar-container');
-                    if (!el) return;
-                    if (adminCalendar) adminCalendar.destroy();
-
-                    adminCalendar = flatpickr(el, {
-                        inline: true, locale: "zh_tw", dateFormat: "Y-m-d",
-                        onChange: (selectedDates, dateStr) => {
-                            if (dateStr) {
-                                editingDate.value = dateStr;
-                                const existing = closedDatesMap.value[dateStr];
-                                if (existing) {
-                                    dateSettingForm.value = { ...existing };
-                                } else {
-                                    dateSettingForm.value = { isClosed: false, start: '12:00', end: '21:00' };
-                                }
-                                isDateSettingModalOpen.value = true;
-                            }
-                        }
-                    });
-                };
-                
-                const saveDateSetting = async () => {
-                    if (!isDbReady.value) return;
-                    const newDates = { ...closedDatesMap.value, [editingDate.value]: dateSettingForm.value };
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'schedule'), { dates: newDates });
-                    isDateSettingModalOpen.value = false;
-                    if (adminCalendar) adminCalendar.clear();
-                };
-
-                const removeDateSetting = async (date) => {
-                    if (!isDbReady.value) return;
-                    const newDates = { ...closedDatesMap.value };
-                    delete newDates[date];
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'schedule'), { dates: newDates });
-                };
-
-                watch(adminTab, (newTab) => {
-                    if (newTab === 'schedule') nextTick(() => { initAdminCalendar(); });
-                });
-
-                const calendarDate = ref(new Date());
-                const currentYear = computed(() => calendarDate.value.getFullYear());
-                const currentMonth = computed(() => calendarDate.value.getMonth());
-
-                const monthlyStats = computed(() => {
-                    const currentMonthStr = `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, '0')}`;
-                    const monthBookings = bookings.value.filter(b => b.date.startsWith(currentMonthStr));
-                    return {
-                        total: monthBookings.length,
-                        pending: monthBookings.filter(b => b.status === 'pending' || !b.status).length,
-                        completed: monthBookings.filter(b => b.status === 'completed').length,
-                        cancelled: monthBookings.filter(b => b.status === 'cancelled').length
-                    };
-                });
-
-                const calendarDays = computed(() => {
-                    const year = currentYear.value;
-                    const month = currentMonth.value;
-                    const firstDay = new Date(year, month, 1).getDay(); 
-                    const daysInMonth = new Date(year, month + 1, 0).getDate();
-                    
-                    const days = [];
-                    const todayStr = flatpickr.formatDate(new Date(), "Y-m-d");
-
-                    for (let i = 0; i < firstDay; i++) {
-                        days.push({ date: '', isCurrentMonth: false });
-                    }
-                    for (let i = 1; i <= daysInMonth; i++) {
-                        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-                        const dayBookings = bookings.value.filter(b => b.date === dateStr);
-                        
-                        days.push({ 
-                            date: i, fullDate: dateStr, isCurrentMonth: true, isToday: dateStr === todayStr,
-                            bookings: dayBookings,
-                            hasCustomSchedule: !!closedDatesMap.value[dateStr] 
-                        });
-                    }
-                    const totalCells = days.length;
-                    const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
-                    for (let i = 0; i < remainingCells; i++) {
-                        days.push({ date: '', isCurrentMonth: false });
-                    }
-                    return days;
-                });
-
-                const prevMonth = () => { calendarDate.value = new Date(currentYear.value, currentMonth.value - 1, 1); };
-                const nextMonth = () => { calendarDate.value = new Date(currentYear.value, currentMonth.value + 1, 1); };
-                const goToToday = () => { calendarDate.value = new Date(); };
-
-                const isBookingModalOpen = ref(false);
-                const editBookingForm = ref({});
-                
-                const getBookingColorClass = (b) => {
-                    if (b.status === 'pending' || !b.status) return 'bg-yellow-200 text-yellow-800 border border-yellow-400 font-medium';
-                    if (b.status === 'cancelled') return 'bg-gray-100 text-gray-400 border border-gray-200 opacity-60';
-                    if (b.status === 'completed') return 'bg-green-100 text-green-700 border border-green-200';
-                    return b.therapistGender === 'female' ? 'bg-pink-100 text-pink-700 border border-pink-200' : 'bg-blue-100 text-blue-700 border border-blue-200';
-                };
-
-                const updateBookingStatus = async (b) => {
-                    if (!isDbReady.value) return;
-                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', b.id), { status: b.status });
-                };
-
-                const openEditBookingModal = (b) => {
-                    editBookingForm.value = { ...b };
-                    isBookingModalOpen.value = true;
-                };
-                const closeBookingModal = () => isBookingModalOpen.value = false;
-                
-                const saveBookingEdit = async () => {
-                    if (!isDbReady.value) return;
-                    try {
-                        const bRef = doc(db, 'artifacts', appId, 'public', 'data', 'bookings', editBookingForm.value.id);
-                        await updateDoc(bRef, {
-                            date: editBookingForm.value.date,
-                            time: editBookingForm.value.time,
-                            duration: Number(editBookingForm.value.duration),
-                            notes: editBookingForm.value.notes || ''
-                        });
-                        closeBookingModal();
-                        Swal.fire('成功', '預約時間及備註已更新', 'success');
-                    } catch(e) { Swal.fire('錯誤', '更新失敗', 'error'); }
-                };
-
-                const deleteBooking = (id) => {
-                    Swal.fire({
-                        title: '確認刪除',
-                        text: '確定要刪除這筆紀錄嗎？此動作無法復原！',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#ef4444',
-                        cancelButtonColor: '#9ca3af',
-                        confirmButtonText: '確定刪除',
-                        cancelButtonText: '取消'
-                    }).then(async (result) => {
-                        if (result.isConfirmed && isDbReady.value) {
-                            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', id));
-                            Swal.fire('已刪除', '紀錄已成功刪除', 'success');
-                        }
-                    });
-                };
-
-                const copyStatusMessage = (b) => {
-                    let msg = "";
-                    if (b.status === 'completed') {
-                        msg = `您好 ${b.name}！\n您於 ${b.date} ${b.time} 預約的【${b.service}】已經確認完成囉！\n屆時請準時抵達，期待為您服務！✨`;
-                    } else if (b.status === 'cancelled') {
-                        msg = `您好 ${b.name}！\n不好意思，您於 ${b.date} ${b.time} 預約的【${b.service}】因故已為您取消。\n如需重新預約，歡迎隨時與我們聯繫！`;
-                    } else {
-                        msg = `您好 ${b.name}！\n您於 ${b.date} ${b.time} 預約的【${b.service}】目前正在為您確認排程中，請稍候片刻！`;
-                    }
-                    
-                    const tempInput = document.createElement("textarea");
-                    tempInput.value = msg;
-                    document.body.appendChild(tempInput);
-                    tempInput.select();
-                    document.execCommand("copy");
-                    document.body.removeChild(tempInput);
-                    
-                    Swal.fire({
-                        title: '文字已複製！',
-                        text: '請直接切換至 LINE 聊天室，將文字「貼上」傳送給客人',
-                        icon: 'success',
-                        confirmButtonColor: '#22c55e',
-                        confirmButtonText: '好的'
-                    });
-                };
-
-                const filteredServices = computed(() => {
-                    return services.value.filter(s => {
-                        const matchSearch = s.name.toLowerCase().includes(serviceSearch.value.toLowerCase());
-                        const matchGender = serviceFilterGender.value === 'all' || s.genderTarget === serviceFilterGender.value;
-                        return matchSearch && matchGender;
-                    }).sort((a, b) => {
-                        const orderA = a.sortOrder || 0;
-                        const orderB = b.sortOrder || 0;
-                        if (orderA !== orderB) return orderA - orderB;
-                        const priceA = Number(a.regularPrice || a.price || 0);
-                        const priceB = Number(b.regularPrice || b.price || 0);
-                        return priceB - priceA;
-                    });
-                });
-
-                const updateServiceOrder = async (service) => {
-                    if (!isDbReady.value) return;
-                    try {
-                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'services', service.id), { sortOrder: Number(service.sortOrder) || 0 });
-                    } catch(e) {
-                        console.error(e);
-                    }
-                };
-
-                const isServiceModalOpen = ref(false);
-                const editingService = ref(null);
-                const formService = ref({ name: '', duration: 60, regularPrice: 0, vipPrice: 0, icon: 'svg-face', isActive: true, genderTarget: 'all', sortOrder: 0 });
-                
-                const availableIcons = [
-                    'svg-face', 'svg-arm', 'svg-leg', 'svg-body', 'svg-vio', 'svg-underarm',
-                    'fa-solid fa-leaf', 'fa-solid fa-droplet', 'fa-solid fa-hand-sparkles', 'fa-solid fa-heart'
-                ];
-
-                const openServiceModal = (service = null) => {
-                    editingService.value = service;
-                    formService.value = service ? { ...service, regularPrice: service.regularPrice || service.price || 0, vipPrice: service.vipPrice || service.price || 0, sortOrder: service.sortOrder || 0 } : { name: '', duration: 60, regularPrice: 0, vipPrice: 0, icon: 'svg-face', isActive: true, genderTarget: 'all', sortOrder: 0 };
-                    isServiceModalOpen.value = true;
-                };
-                const copyService = (service) => {
-                    editingService.value = null; 
-                    formService.value = { ...service, name: service.name + ' (複製)', id: undefined, regularPrice: service.regularPrice || service.price || 0, vipPrice: service.vipPrice || service.price || 0, sortOrder: service.sortOrder || 0 };
-                    isServiceModalOpen.value = true;
-                };
-                const closeServiceModal = () => isServiceModalOpen.value = false;
-
-                const saveServiceData = async () => {
-                    if(!isDbReady.value) return;
-                    try {
-                        const payload = { ...formService.value, duration: Number(formService.value.duration), regularPrice: Number(formService.value.regularPrice || 0), vipPrice: Number(formService.value.vipPrice || 0), sortOrder: Number(formService.value.sortOrder || 0), genderTarget: formService.value.genderTarget || 'all' };
-                        delete payload.price; 
-                        
-                        if (editingService.value && editingService.value.id) {
-                            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'services', editingService.value.id), payload);
-                        } else {
-                            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'services'), payload);
-                        }
-                        closeServiceModal();
-                    } catch(e) { console.error(e); }
-                };
-
-                const toggleServiceStatus = async (service) => {
-                    if(isDbReady.value) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'services', service.id), { isActive: service.isActive });
-                };
-
-                const deleteService = (id) => {
-                    Swal.fire({
-                        title: '確認刪除',
-                        text: '確定要刪除這個服務品項嗎？',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#ef4444',
-                        cancelButtonColor: '#9ca3af',
-                        confirmButtonText: '確定刪除'
-                    }).then(async (result) => {
-                        if (result.isConfirmed && isDbReady.value) {
-                            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'services', id));
-                        }
-                    });
-                };
-
-                const importDefaultServices = async () => {
-                    if (!isDbReady.value) return;
-                    Swal.fire({
-                        title: '確認匯入',
-                        text: '即將自動為您匯入小部位、中部位、大部位及私密處預設品項。確定要匯入嗎？',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#c5a89c',
-                        cancelButtonColor: '#9ca3af',
-                        confirmButtonText: '確定匯入'
-                    }).then(async (result) => {
-                        if (result.isConfirmed) {
-                            isLoading.value = true;
-                            try {
-                                const defaults = [
-                                    ...['腋下'].map(n => ({name: n, duration: 20, regularPrice: 399, vipPrice: 320, genderTarget: 'female', icon: 'svg-underarm', isActive: true})),
-                                    ...['腋下'].map(n => ({name: n, duration: 20, regularPrice: 599, vipPrice: 480, genderTarget: 'male', icon: 'svg-underarm', isActive: true})),
-                                    ...['唇周','下巴','鬢角'].map(n => ({name: n, duration: 20, regularPrice: 399, vipPrice: 320, genderTarget: 'female', icon: 'svg-face', isActive: true})),
-                                    ...['唇周','下巴','鬢角'].map(n => ({name: n, duration: 20, regularPrice: 599, vipPrice: 480, genderTarget: 'male', icon: 'svg-face', isActive: true})),
-                                    ...['乳暈','後頸','肚臍'].map(n => ({name: n, duration: 20, regularPrice: 399, vipPrice: 320, genderTarget: 'female', icon: 'svg-body', isActive: true})),
-                                    ...['乳暈','後頸','肚臍'].map(n => ({name: n, duration: 20, regularPrice: 599, vipPrice: 480, genderTarget: 'male', icon: 'svg-body', isActive: true})),
-                                    ...['膝蓋'].map(n => ({name: n, duration: 20, regularPrice: 399, vipPrice: 320, genderTarget: 'female', icon: 'svg-leg', isActive: true})),
-                                    ...['膝蓋'].map(n => ({name: n, duration: 20, regularPrice: 599, vipPrice: 480, genderTarget: 'male', icon: 'svg-leg', isActive: true})),
-                                    ...['指頭'].map(n => ({name: n, duration: 20, regularPrice: 399, vipPrice: 320, genderTarget: 'female', icon: 'svg-arm', isActive: true})),
-                                    ...['指頭'].map(n => ({name: n, duration: 20, regularPrice: 599, vipPrice: 480, genderTarget: 'male', icon: 'svg-arm', isActive: true})),
-                                    ...['上手','下手'].map(n => ({name: n, duration: 30, regularPrice: 699, vipPrice: 560, genderTarget: 'female', icon: 'svg-arm', isActive: true})),
-                                    ...['上手','下手'].map(n => ({name: n, duration: 30, regularPrice: 899, vipPrice: 720, genderTarget: 'male', icon: 'svg-arm', isActive: true})),
-                                    ...['全臉','落腮鬍'].map(n => ({name: n, duration: 30, regularPrice: 699, vipPrice: 560, genderTarget: 'female', icon: 'svg-face', isActive: true})),
-                                    ...['全臉','落腮鬍'].map(n => ({name: n, duration: 30, regularPrice: 899, vipPrice: 720, genderTarget: 'male', icon: 'svg-face', isActive: true})),
-                                    ...['上腹','下腹','上背','下背'].map(n => ({name: n, duration: 30, regularPrice: 699, vipPrice: 560, genderTarget: 'female', icon: 'svg-body', isActive: true})),
-                                    ...['上腹','下腹','上背','下背'].map(n => ({name: n, duration: 30, regularPrice: 899, vipPrice: 720, genderTarget: 'male', icon: 'svg-body', isActive: true})),
-                                    ...['大腿','小腿'].map(n => ({name: n, duration: 40, regularPrice: 899, vipPrice: 720, genderTarget: 'female', icon: 'svg-leg', isActive: true})),
-                                    ...['大腿','小腿'].map(n => ({name: n, duration: 40, regularPrice: 1099, vipPrice: 880, genderTarget: 'male', icon: 'svg-leg', isActive: true})),
-                                    ...['臀部'].map(n => ({name: n, duration: 40, regularPrice: 899, vipPrice: 720, genderTarget: 'female', icon: 'svg-vio', isActive: true})),
-                                    ...['臀部'].map(n => ({name: n, duration: 40, regularPrice: 1099, vipPrice: 880, genderTarget: 'male', icon: 'svg-vio', isActive: true})),
-                                    {name: 'V / I / O (單部位)', duration: 30, regularPrice: 699, vipPrice: 560, genderTarget: 'female', icon: 'svg-vio', isActive: true},
-                                    {name: 'V + I', duration: 40, regularPrice: 1299, vipPrice: 1040, genderTarget: 'female', icon: 'svg-vio', isActive: true},
-                                    {name: 'V + I + O', duration: 50, regularPrice: 1799, vipPrice: 1440, genderTarget: 'female', icon: 'svg-vio', isActive: true},
-                                    {name: 'V / I / O (單部位)', duration: 30, regularPrice: 899, vipPrice: 720, genderTarget: 'male', icon: 'svg-vio', isActive: true},
-                                    {name: 'V + I', duration: 40, regularPrice: 1799, vipPrice: 1440, genderTarget: 'male', icon: 'svg-vio', isActive: true},
-                                    {name: 'V + I + O', duration: 60, regularPrice: 2599, vipPrice: 2080, genderTarget: 'male', icon: 'svg-vio', isActive: true},
-                                ];
-                                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'services');
-                                for (let i = 0; i < defaults.length; i++) {
-                                    await addDoc(colRef, { ...defaults[i], sortOrder: 0 });
-                                }
-                                Swal.fire('成功', '預設品項已全部匯入完畢！', 'success');
-                            } catch(e) {
-                                console.error(e);
-                                Swal.fire('錯誤', '匯入失敗', 'error');
-                            }
-                            isLoading.value = false;
-                        }
-                    });
-                };
-
-                const formAdmin = ref({ account: '', password: '' });
-                const saveAdminUser = async () => {
-                    if (!isDbReady.value) return;
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'admins'), formAdmin.value);
-                    formAdmin.value = { account: '', password: '' };
-                    Swal.fire('成功', '已新增管理員帳號', 'success');
-                };
-                const deleteAdminUser = (id) => {
-                    Swal.fire({
-                        title: '確認移除',
-                        text: '確定要移除此管理員權限嗎？',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#ef4444',
-                        cancelButtonColor: '#9ca3af',
-                        confirmButtonText: '確定移除'
-                    }).then(async (result) => {
-                        if (result.isConfirmed && isDbReady.value) {
-                            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'admins', id));
-                        }
-                    });
-                };
-
-                onMounted(() => {
-                    initFirebase();
-                    
-                    if (typeof liff !== 'undefined') {
-                        liff.init({ liffId: "2010909434-eVswjkpc" })
-                            .catch(err => console.error('LIFF init failed', err));
-                    }
-                    
-                    window.addEventListener('hashchange', () => {
-                        currentView.value = (window.location.hash === '#admin' && !isAdminAuthenticated.value) ? 'admin_login' : (window.location.hash === '#admin' ? 'admin' : 'front');
-                    });
-                    if (window.location.hash === '#admin') currentView.value = 'admin_login';
-
-                    // 開啟頁面時自動彈出精美公告通知
-                    if (window.location.hash !== '#admin') {
-                        setTimeout(() => {
-                            showAnnouncementNotice();
-                        }, 500);
-                    }
-                });
-
-                return {
-                    currentView, adminTab, isLoading, services, activeServices, bookings, closedDatesMap, admins, isSuperAdmin,
-                    adminAccount, adminPassword, loginError, goToAdminLogin, verifyAdminLogin, logoutAdmin,
-                    verifyPhone, isVerified, checkMember, goToRegister, resetVerification, renderIcon,
-                    bookingForm, availableSlots, hiddenSubmitBtn, triggerSubmit, submitBooking, scrollToNext,
-                    estimatedTotal, estimatedDuration, showVipInfo, serviceSearch, serviceFilterGender, filteredServices, updateServiceOrder,
-                    isBookingModalOpen, editBookingForm, openEditBookingModal, closeBookingModal, saveBookingEdit, deleteBooking, getBookingColorClass, updateBookingStatus, copyStatusMessage,
-                    isServiceModalOpen, editingService, formService, availableIcons,
-                    openServiceModal, copyService, closeServiceModal, saveServiceData, toggleServiceStatus, deleteService, importDefaultServices,
-                    isDateSettingModalOpen, editingDate, dateSettingForm, saveDateSetting, removeDateSetting,
-                    formAdmin, saveAdminUser, deleteAdminUser,
-                    calendarDate, currentYear, currentMonth, calendarDays, prevMonth, nextMonth, goToToday, monthlyStats, showAnnouncementNotice
-                };
+    <div id="overlay"></div>
+    <div id="settings-modal">
+        <h3 style="margin-top:0; border-bottom: 1px solid #444; padding-bottom: 10px;">⚙️ 系統進階設定</h3>
+        <label>門店名稱：</label>
+        <input type="text" id="input-store-name" class="modal-input" placeholder="例如：中清店">
+        <label>接收端 Google API (GAS) URL：</label>
+        <input type="text" id="input-gas-url" class="modal-input" placeholder="貼上 /exec 結尾的網址">
+        <label>每日開播時間 (HH:mm, 逗號分隔)：</label>
+        <input type="text" id="input-play-times" class="modal-input" placeholder="例如：12:00, 18:00">
+        <label>截圖排程秒數 (逗號分隔)：</label>
+        <input type="text" id="input-capture-times" class="modal-input" placeholder="例如：15, 60, 120, 300">
+        <label>滿時自動停止並縮小 (分鐘)：</label>
+        <input type="number" id="input-stop-time" class="modal-input" placeholder="例如：30">
+        <button class="modal-btn" onclick="saveSettings()">儲存並重新載入</button>
+        <button class="modal-btn" onclick="closeSettings()" style="background:#666; margin-top:10px;">取消關閉</button>
+    </div>
+
+    <script>
+        // --- 07/01 ~ 09/30 完整播放清單庫 ---
+        const playlistSchedule = {
+            "07/01": { title: "讓客人說Yes !優質的銷售心法 下集", id: "PLCV-Y48MR1Jd-DqEGEVW0txYmxFOpEmGz" },
+            "07/02": { title: "敢於挑戰夢想 上集", id: "PLCV-Y48MR1JcVZKK-xxhyRIo0recmZoJT" },
+            "07/03": { title: "敢於挑戰夢想 下集", id: "PLCV-Y48MR1Je4gmZw6gGSBWXFmgTiFN4b" },
+            "07/04": { title: "態度決勝負 上集", id: "PLCV-Y48MR1JexttsFgAYwdcxvK5gJG8qZ" },
+            "07/05": { title: "態度決勝負 下集", id: "PLCV-Y48MR1JfZVCEEjgHSIQeJiutTd1SI" },
+            "07/06": { title: "成功優質生活的五Ｑ必勝法則 上集", id: "PLCV-Y48MR1JcXXO9pouB_LTAYNTp9RaVH" },
+            "07/07": { title: "成功優質生活的五Ｑ必勝法則 下集", id: "PLCV-Y48MR1JfRcSGSs76msFc7PxGyL9DZ" },
+            "07/08": { title: "現代人職場大贏家法則 上集", id: "PLCV-Y48MR1JdUTJ0O4Rj5i8fu0ptsK0vt" },
+            "07/09": { title: "現代人職場大贏家法則 下集", id: "PLCV-Y48MR1JcE6f2iHnl6NBAPI5S_aWwE" },
+            "07/10": { title: "從關係中找回生命的核心價值 上集", id: "PLCV-Y48MR1JcBJKaDWk5fQvQk4ZTWLAi8" },
+            "07/11": { title: "從關係中找回生命的核心價值 下集", id: "PLCV-Y48MR1Jd4QMf17fX30a5AJLjw25A9" },
+            "07/12": { title: "不感動也難-新時代的人際吸引力 上集", id: "PLCV-Y48MR1JeN18nT82cA3TFtKi9xx5KL" },
+            "07/13": { title: "不感動也難-新時代的人際吸引力 下集", id: "PLCV-Y48MR1JfhG7m1IgyOGyLsItrRTFgY" },
+            "07/14": { title: "揪感心的服務-好客由你來創造 上集", id: "PLCV-Y48MR1JcqLgqA4gq2c-D4fOF2uChr" },
+            "07/15": { title: "揪感心的服務-好客由你來創造 下集", id: "PLCV-Y48MR1JdsMfSKMVCSOOyuUCpm7CC3" },
+            "07/16": { title: "如何在逆境中創造優勢 上集", id: "PLCV-Y48MR1JfgoDMBcThxIgW93hqvs-v_" },
+            "07/17": { title: "如何在逆境中創造優勢 下集", id: "PLCV-Y48MR1Jf-w_hZ3mtH2C_brw9WTqzm" },
+            "07/18": { title: "好聲音溝通力-把話說好，讓溝通更有效率 上集", id: "PLCV-Y48MR1Jdb2pjUqzusMOfQby3Llq5l" },
+            "07/19": { title: "好聲音溝通力-把話說好，讓溝通更有效率 下集", id: "PLCV-Y48MR1Jfw5PaIEadYpASQSYKHFny8" },
+            "07/20": { title: "好聲音形象力-用聲音創造好形象 上集", id: "PLCV-Y48MR1Jcemhkp5LUYZRL1S539FWLL" },
+            "07/21": { title: "好聲音形象力-用聲音創造好形象 下集", id: "PLCV-Y48MR1JcgZ04uRg2yUVp4OQKTiCEW" },
+            "07/22": { title: "高獲利的銷售技能與販賣技巧 上集", id: "PLCV-Y48MR1Jfm2y2IT0xBfJstkR8ud9jJ" },
+            "07/23": { title: "高獲利的銷售技能與販賣技巧 下集", id: "PLCV-Y48MR1JcJVKDyl4yk1cVjB3dg_UOK" },
+            "07/24": { title: "超級顧客的服務管理與VIP經營 上集", id: "PLCV-Y48MR1JdLBYLz1uUDX6_lAw2XcbEt" },
+            "07/25": { title: "超級顧客的服務管理與VIP經營 下集", id: "PLCV-Y48MR1JdTwXz15k5On8GWPFpQO6mY" },
+            "07/26": { title: "最有溫度的感動行銷 上集", id: "PLCV-Y48MR1JdU7SJDKjQZfeNn7agRTM6p" },
+            "07/27": { title: "最有溫度的感動行銷 下集", id: "PLCV-Y48MR1JdDq7jp2Ia9ASq31rzDAY3z" },
+            "07/28": { title: "打動人心的顧客經營祕訣 上集", id: "PLCV-Y48MR1JdvOgifjZAZiQVx1o1mtwYo" },
+            "07/29": { title: "打動人心的顧客經營祕訣 下集", id: "PLCV-Y48MR1Jfj3zhvGDoj449HPeYWlqlW" },
+            "07/30": { title: "如何經營一個美滿的家 上半部", id: "PLCV-Y48MR1JfoPcxRduD2X6DHEs0-vHz-" },
+            "07/31": { title: "如何經營一個美滿的家 下半部", id: "PLCV-Y48MR1JfhoOu-uwe_l0L17_htAKBs" },
+            
+            // 8月
+            "08/01": { title: "如何成為卓越的上班族 上半部", id: "PLCV-Y48MR1Jdn2OHxmCDXk60S6wj7FFLb" },
+            "08/02": { title: "如何成為卓越的上班族 下半部", id: "PLCV-Y48MR1JdRXg7LtatMu_pkA26xckL_" },
+            "08/03": { title: "突破現狀.自我成長 上半部", id: "PLCV-Y48MR1JdeHiauGYq9un0r0sIjzXje" },
+            "08/04": { title: "突破現狀.自我成長 下半部", id: "PLCV-Y48MR1Jd7sTN6AGyVkeMmWWnFIBsX" },
+            "08/05": { title: "如何創造好心情 上半部", id: "PLCV-Y48MR1JeOyl1b2_fP5ECaBCBNHEHd" },
+            "08/06": { title: "如何創造好心情 下半部", id: "PLCV-Y48MR1JfrtpJUyv3VkeAyNpnnPiyz" },
+            "08/07": { title: "如何提升銷售戰力 第一部第一~三集", id: "PLCV-Y48MR1JfO6qO9chPztCeJ47eXp5ss" },
+            "08/08": { title: "如何提升銷售戰力 第一部第四集 第二部第一~二集", id: "PLCV-Y48MR1JeI-1T_RTdMFUEKpMW8dGyf" },
+            "08/09": { title: "如何提升銷售戰力 第二部第三~四集 第三部第一集", id: "PLCV-Y48MR1JelWTnLOjMLMLdkjlYc3QHU" },
+            "08/10": { title: "如何提升銷售戰力 第三部第二~四集", id: "PLCV-Y48MR1JcbT8xfkUtkKmyV5DThX3pj" },
+            "08/11": { title: "如何做好溝通與管理 上半部", id: "PLCV-Y48MR1JevkHsb0MSIcAD4Qbvpw8wu" },
+            "08/12": { title: "如何做好溝通與管理 下半部", id: "PLCV-Y48MR1JdYMHnhmYUGXSDBvJuFJsLx" },
+            "08/13": { title: "淺談愛情.婚姻.工作觀 上半部", id: "PLCV-Y48MR1JfIAqZOi6MxMsTpKEM3wFD6" },
+            "08/14": { title: "淺談愛情.婚姻.工作觀 中半部", id: "PLCV-Y48MR1JdnIaOUAuz1XrxD7duPO--R" },
+            "08/15": { title: "淺談愛情.婚姻.工作觀 下半部", id: "PLCV-Y48MR1JfWxt1d7-r8BKJ2-IrOrifI" },
+            "08/16": { title: "如何做好人際運作 上集", id: "PLCV-Y48MR1JeM9PCvM55oA61iMmwzmV2R" },
+            "08/17": { title: "如何做好人際運作 下集", id: "PLCV-Y48MR1Je9mMuZT8XkwYtkx-0MKh74" },
+            "08/18": { title: "如何把話說得更好 上集", id: "PLCV-Y48MR1JfMb8FiyJGbuqI4ujWUxwGF" },
+            "08/19": { title: "如何把話說得更好 下集", id: "PLCV-Y48MR1JeSK02btsQkVMPJBLQHC4E2" },
+            "08/20": { title: "生活有藍天 悟出希望來 上集", id: "PLCV-Y48MR1Jegjy6GVBvoPoLeyG2PToa7" },
+            "08/21": { title: "生活有藍天 悟出希望來 下集", id: "PLCV-Y48MR1JcNAQgwAGwp5OmSFnCd3zBW" },
+            "08/22": { title: "台灣諺語看人生 第一~二集", id: "PLCV-Y48MR1Jce-WgGFR5M86yc7PuKhcv_" },
+            "08/23": { title: "台灣諺語看人生 第三~四集", id: "PLCV-Y48MR1JcQt7fPrZnVsPB5SNcbM1-t" },
+            "08/24": { title: "話歲月-春花秋月何時了 第一~二集", id: "PLCV-Y48MR1JdpFos_o6_eagANUWURP7fG" },
+            "08/25": { title: "話歲月-春花秋月何時了 第三~四集", id: "PLCV-Y48MR1JdG75gEOqcNjyohKUAaY1p8" },
+            "08/26": { title: "論世事-無可奈何花落去 第一~二集", id: "PLCV-Y48MR1JckP5pjwMHJ7AhMb1uFeA7F" },
+            "08/27": { title: "論世事-無可奈何花落去 第三~四集", id: "PLCV-Y48MR1JddKSMwwkPCkl7m9Dit-Uw1" },
+            "08/28": { title: "台灣諺語論世事 第一~二集", id: "PLCV-Y48MR1Jfiw3WP9B0PTgsZwvQIM20q" },
+            "08/29": { title: "台灣諺語論世事 第三~四集", id: "PLCV-Y48MR1JcH1CVfNHhvBFZ7z2DaJbhs" },
+            "08/30": { title: "台灣諺語談理財 第一~二集", id: "PLCV-Y48MR1JdSLyqYGXRKmM6sQOXtEiJQ" },
+            "08/31": { title: "台灣諺語談理財 第三~四集", id: "PLCV-Y48MR1JejKNg_9N7MCeHzdewiJ8Kc" },
+    
+            // 9月
+            "09/01": { title: "談人生-莫使金樽空對月 第一~二集", id: "PLCV-Y48MR1JeIo0_laxp34URRFVkArEf1" },
+            "09/02": { title: "談人生-莫使金樽空對月 第三~四集", id: "PLCV-Y48MR1JcQXb4tIt3ocqvdcd5TFuSq" },
+            "09/03": { title: "說愛情-問世間情為何物 第一~二集", id: "PLCV-Y48MR1JddDxh_Hff6rUWPKvHzC9nK" },
+            "09/04": { title: "說愛情-問世間情為何物 第三~四集", id: "PLCV-Y48MR1JfCSnm_a5-1R3SiUO5Br_U2" },
+            "09/05": { title: "說服要領與抱怨處理(一)", id: "PLCV-Y48MR1Jc-Yo_MyKCAjFVdDEDWjq2l" },
+            "09/06": { title: "說服要領與抱怨處理(二)", id: "PLCV-Y48MR1JdOhzRgVUlqMD5AZagCzDsH" },
+            "09/07": { title: "說服要領與抱怨處理(三)", id: "PLCV-Y48MR1JcAYo8RXv8JOXHFkmfRVJjF" },
+            "09/08": { title: "如何提升服務品質(一)", id: "PLCV-Y48MR1JcD1gtr7UIdCsABZe1jRJqk" },
+            "09/09": { title: "如何提升服務品質(二)", id: "PLCV-Y48MR1JekyZUkbC1ls_6DwJr0JW72" },
+            "09/10": { title: "如何提升服務品質(三)", id: "PLCV-Y48MR1JdG18NQiq20lmH01fWuk5f9" },
+            "09/11": { title: "EQ與情緒管理(一)", id: "PLCV-Y48MR1JcDXEf7M964LQUnVfYf6Ga-" },
+            "09/12": { title: "EQ與情緒管理(二)", id: "PLCV-Y48MR1JcXb7UXfBOwlW--wWX-nksO" },
+            "09/13": { title: "EQ與情緒管理(三)", id: "PLCV-Y48MR1JerTwfydMUIMQ7SGZmXLkt4" },
+            "09/14": { title: "人脈成功致富學(一)", id: "PLCV-Y48MR1JcdIPszHxdAtGnDkewer9Bp" },
+            "09/15": { title: "人脈成功致富學(二)", id: "PLCV-Y48MR1JfLU8KguBbuEA1lRCDEnF1s" },
+            "09/16": { title: "人脈成功致富學(三)", id: "PLCV-Y48MR1JfuwkNqx5MV01u5rnnULy8D" },
+            "09/17": { title: "如何做一個快樂的現代人(一)", id: "PLCV-Y48MR1JedSEJ5QXuZA9Pajp2QbpPO" },
+            "09/18": { title: "如何做一個快樂的現代人(二)", id: "PLCV-Y48MR1JccZ43cRlgoB-FL6wbIEVLk" },
+            "09/19": { title: "如何做一個快樂的現代人(三)", id: "PLCV-Y48MR1JejNXjyHoxAQORWhCAdXPpA" },
+            "09/20": { title: "如何創造魅力與影響力(一)", id: "PLCV-Y48MR1JdjchNQSRMhWl0NgD1HOLzZ" },
+            "09/21": { title: "如何創造魅力與影響力(二)", id: "PLCV-Y48MR1Jfb15VhmhL1D4WYkfQb9zO1" },
+            "09/22": { title: "吸引力法則 心想事成的方法(一)", id: "PLCV-Y48MR1JfUbw5WAEbG2SEQ72Af9Ynl" },
+            "09/23": { title: "吸引力法則 心想事成的方法(二)", id: "PLCV-Y48MR1JdfS9RPqMGTLQNsvY8LbSSC" },
+            "09/24": { title: "吸引力法則 心想事成的方法(三)", id: "PLCV-Y48MR1JeDDQtS9vFXgX5sDJdxmg0-" },
+            "09/25": { title: "幽默口才成功學(一)", id: "PLCV-Y48MR1JeRrd03M5vjI61vLnaN_pzq" },
+            "09/26": { title: "幽默口才成功學(二)", id: "PLCV-Y48MR1JfGnAh4cK0cJjLvTyw7acTE" },
+            "09/27": { title: "幽默口才成功學(三)", id: "PLCV-Y48MR1JfM9VgfxgWB4yip7iF67t5k" },
+            "09/28": { title: "換個腦袋 出路無限(一)", id: "PLCV-Y48MR1JecLnd3e-wpH9UZzgbN-ihL" },
+            "09/29": { title: "換個腦袋 出路無限(二)", id: "PLCV-Y48MR1JdSSewV8mwnVn264uDiVv4v" },
+            "09/30": { title: "換個腦袋 出路無限(三)", id: "PLCV-Y48MR1JeahnPgzdFJTOezmNtUAziE" }
+        };
+
+        // --- 預設與自訂參數處理 ---
+        let storeName = localStorage.getItem("storeName") || "中清店";
+        let gasUrl = localStorage.getItem("gasUrl") || "https://script.google.com/macros/s/AKfycbwbQo4R0S3kLX0Pc6w9xj6jdSOoWS2vEavN8xQMn77Oi8yV6uKJn7du7NKB9u10UD61/exec";
+        let playTimesStr = localStorage.getItem("playTimes") || "12:00, 18:00, 00:00";
+        let captureTimesStr = localStorage.getItem("captureTimes") || "15, 60, 120, 300";
+        let stopTimeStr = localStorage.getItem("stopTime") || "30";
+
+        const dailySchedules = playTimesStr.split(",").map(s => s.trim());
+        const scheduleSeconds = captureTimesStr.split(",").map(s => parseInt(s.trim()));
+        const PLAY_DURATION_LIMIT = parseInt(stopTimeStr) * 60;
+        
+        let hasTriggered = {};
+        let player, playStartTime = null, screenshotCount = 0;
+        let isTaskCompleted = true; // 預設為已完成，等待排程觸發
+        let lastTriggeredSchedule = null; // 防休眠觸發鎖
+        let hasReloadedToday = false; // 每日重整鎖
+
+        // --- UI 初始化 ---
+        document.getElementById("store-name").innerText = storeName;
+        document.getElementById("input-store-name").value = storeName;
+        document.getElementById("input-gas-url").value = gasUrl;
+        document.getElementById("input-play-times").value = playTimesStr;
+        document.getElementById("input-capture-times").value = captureTimesStr;
+        document.getElementById("input-stop-time").value = stopTimeStr;
+
+        // --- 彈出設定視窗 (ESC鍵) ---
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape") {
+                document.getElementById('settings-modal').style.display = 'block';
+                document.getElementById('overlay').style.display = 'block';
+                document.getElementById('test-btn').style.display = 'block'; 
             }
-        }).mount('#app');
+        });
+
+        function saveSettings() {
+            localStorage.setItem("storeName", document.getElementById("input-store-name").value.trim());
+            localStorage.setItem("gasUrl", document.getElementById("input-gas-url").value.trim());
+            localStorage.setItem("playTimes", document.getElementById("input-play-times").value.trim());
+            localStorage.setItem("captureTimes", document.getElementById("input-capture-times").value.trim());
+            localStorage.setItem("stopTime", document.getElementById("input-stop-time").value.trim());
+            location.reload();
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+
+        // --- 日期與清單動態對應邏輯 ---
+        function getTodayKey() {
+            let today = new Date();
+            let month = (today.getMonth() + 1).toString().padStart(2, '0');
+            let day = today.getDate().toString().padStart(2, '0');
+            return `${month}/${day}`;
+        }
+        
+        const dateKey = getTodayKey();
+        const currentPlaylistData = playlistSchedule[dateKey];
+        // 如果找不到當天排程，預設給一個保底影片
+        const targetPlaylistId = currentPlaylistData ? currentPlaylistData.id : "PLCV-Y48MR1Jdn2OHxmCDXk60S6wj7FFLb";
+        const targetTitle = currentPlaylistData ? currentPlaylistData.title : "本日無排程(預設)";
+        document.getElementById("video-schedule").innerText = `[${dateKey}] ${targetTitle}`;
+
+        // --- YouTube API 載入 ---
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                playerVars: { 
+                    'autoplay': 1, 
+                    'controls': 0, 
+                    'loop': 1, 
+                    'mute': 1, 
+                    'listType': 'playlist',
+                    'list': targetPlaylistId // 動態套用今日播放清單
+                }
+            });
+        }
+
+        // --- 排程預測與日期顯示 ---
+        function updateNextSchedule(now) {
+            let currentMinutes = now.getHours() * 60 + now.getMinutes();
+            
+            let sortedSchedules = dailySchedules.map(t => {
+                let parts = t.split(":");
+                return {
+                    h: parseInt(parts[0]),
+                    m: parseInt(parts[1]),
+                    totalMinutes: parseInt(parts[0]) * 60 + parseInt(parts[1]),
+                    str: t
+                };
+            }).sort((a,b) => a.totalMinutes - b.totalMinutes);
+            
+            let next = sortedSchedules.find(s => s.totalMinutes > currentMinutes);
+            
+            if (next) {
+                let month = (now.getMonth() + 1).toString().padStart(2, '0');
+                let day = now.getDate().toString().padStart(2, '0');
+                document.getElementById("next-schedule-time").innerText = `${month}/${day} ${next.str}`;
+            } else {
+                let tomorrow = new Date(now);
+                tomorrow.setDate(now.getDate() + 1);
+                let month = (tomorrow.getMonth() + 1).toString().padStart(2, '0');
+                let day = tomorrow.getDate().toString().padStart(2, '0');
+                document.getElementById("next-schedule-time").innerText = `${month}/${day} ${sortedSchedules[0].str} (明日)`;
+            }
+        }
+
+        // --- 主時鐘與防休眠觸發迴圈 ---
+        setInterval(() => {
+            let now = new Date();
+            let currentTimeStr = now.toLocaleTimeString('zh-TW', { hour12: false });
+            let currentHHmm = currentTimeStr.substring(0, 5); 
+
+            document.getElementById("current-time").innerText = currentTimeStr;
+            updateNextSchedule(now);
+
+            // 更新影片當前時間
+            if(player && player.getCurrentTime) {
+                let cSec = Math.floor(player.getCurrentTime());
+                let m = Math.floor(cSec / 60).toString().padStart(2, '0');
+                let s = (cSec % 60).toString().padStart(2, '0');
+                document.getElementById("video-current-time").innerText = `${m}:${s}`;
+            }
+
+            // 1. 觸發開播與放大機制 (防休眠：無視秒數延遲)
+            if (dailySchedules.includes(currentHHmm) && currentHHmm !== lastTriggeredSchedule && isTaskCompleted) {
+                lastTriggeredSchedule = currentHHmm;
+                
+                showLog(`到達排程時間！自動放大視窗並開始...`, "#4CAF50");
+                window.postMessage({ type: "REQUEST_MAXIMIZE" }, "*"); // 呼叫外掛放大
+                
+                playStartTime = now.getTime();
+                isTaskCompleted = false;
+
+                // 發送 LINE 開始播放推播
+                sendLineNotification("🟢 開始播放");
+                
+                scheduleSeconds.forEach(sec => hasTriggered[sec] = false);
+                screenshotCount = 0;
+                document.getElementById("screenshot-count").innerText = `0 張`;
+                
+                setTimeout(() => { if (player && player.playVideo) player.playVideo(); }, 1500);
+            }
+
+            // 2. 播放中狀態計算
+            if (playStartTime && !isTaskCompleted) {
+                let elapsedSeconds = Math.floor((now.getTime() - playStartTime) / 1000);
+                document.getElementById("total-play-time").innerText = Math.floor(elapsedSeconds / 60) + " 分鐘";
+
+                // 檢查截圖
+                scheduleSeconds.forEach(targetSec => {
+                    if (elapsedSeconds >= targetSec && !hasTriggered[targetSec]) {
+                        hasTriggered[targetSec] = true;
+                        let typeStr = targetSec < 60 ? `${targetSec}秒` : `${targetSec/60}分鐘`;
+                        takeAndUploadScreenshot(`排程: ${typeStr}`);
+                    }
+                });
+
+                // 3. 結束與縮小機制
+                if (elapsedSeconds >= PLAY_DURATION_LIMIT) {
+                    isTaskCompleted = true; 
+
+                    // 發送 LINE 結束播放推播
+                    sendLineNotification("🔴 結束播放");
+
+                    if (player && typeof player.pauseVideo === 'function') player.pauseVideo();
+                    showLog(`✅ 任務完成，縮小中...`, "#4CAF50");
+                    
+                    setTimeout(() => {
+                        window.postMessage({ type: "REQUEST_MINIMIZE" }, "*");
+                    }, 3000); 
+                }
+            }
+
+            // 4. 每日跨夜自動重整更新當日影片
+            if (currentHHmm === "03:00" && !hasReloadedToday) {
+                hasReloadedToday = true;
+                location.reload(); 
+            }
+            if (currentHHmm === "04:00") {
+                hasReloadedToday = false; 
+            }
+        }, 1000);
+
+        function showLog(msg, color = "#ffeb3b") {
+            const logEl = document.getElementById("status-log");
+            logEl.style.color = color;
+            logEl.innerText = msg;
+        }
+
+        // --- 外掛截圖與上傳機制 (附加完整日期時間) ---
+        function takeAndUploadScreenshot(type = "自動截圖") {
+            showLog(`[${type}] 呼叫外掛截圖中...`, "#03A9F4");
+            window.postMessage({ type: "REQUEST_CAPTURE" }, "*");
+
+            let captureTimeout = setTimeout(() => {
+                showLog(`[${type}] 截圖失敗：未偵測到擴充功能！`, "#f44336");
+            }, 3000);
+
+            function captureListener(event) {
+                if (event.source !== window || !event.data) return;
+                if (event.data.type === "RECEIVE_CAPTURE") {
+                    clearTimeout(captureTimeout); 
+                    window.removeEventListener("message", captureListener);
+
+                    let imgData = event.data.dataUrl;
+                    if(!imgData) {
+                        showLog(`[${type}] 擷取失敗，無畫面。`, "#f44336");
+                        return;
+                    }
+                    showLog(`[${type}] 擷取成功，上傳雲端中...`, "#ffeb3b");
+                    
+                    let now = new Date();
+                    let dateStr = (now.getMonth() + 1).toString().padStart(2, '0') + "/" + now.getDate().toString().padStart(2, '0');
+                    let timeStr = now.toLocaleTimeString('zh-TW', { hour12: false });
+                    let fullTimestamp = `${dateStr} ${timeStr}`;
+
+                    uploadToCloud(imgData, type, fullTimestamp);
+                }
+            }
+            window.addEventListener("message", captureListener);
+        }
+
+        function uploadToCloud(base64Data, type, fullTimestamp) {
+            let payload = {
+                image: base64Data,
+                storeName: storeName,
+                time: fullTimestamp, // 使用附帶日期的時間
+                type: type,
+                videoTitle: document.getElementById("video-schedule").innerText
+            };
+
+            fetch(gasUrl, {
+                method: "POST",
+                mode: "no-cors", 
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                screenshotCount++;
+                document.getElementById("screenshot-count").innerText = `${screenshotCount} 張`;
+                showLog(`[${type}] 上傳成功！`, "#4CAF50");
+            })
+            .catch(err => {
+                showLog(`[${type}] 上傳遭遇網路問題。`, "#f44336");
+            });
+        }
+
+        // ================= 新增：背景 LINE 通知發送模組 =================
+        function sendLineNotification(actionStatus) {
+            let now = new Date();
+            let timeStr = now.toLocaleTimeString('zh-TW', { hour12: false });
+            let videoTitle = document.getElementById("video-schedule").innerText;
+
+            let payload = {
+                type: "LINE_NOTIFY", 
+                storeName: storeName,
+                action: actionStatus, 
+                videoTitle: videoTitle,
+                time: timeStr
+            };
+
+            fetch(gasUrl, {
+                method: "POST",
+                mode: "no-cors", 
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            }).catch(err => console.log("LINE通知請求發送失敗", err));
+        }
+        // ================================================================
+
+        // --- 拖曳防衝突設計 (支援自由縮放) ---
+        const infoBox = document.getElementById("info-box");
+        let isDragging = false, offsetX, offsetY;
+        infoBox.addEventListener("mousedown", (e) => {
+            if(e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+            
+            let rect = infoBox.getBoundingClientRect();
+            // 若點擊右下角，則認定為調整大小，放行不拖曳
+            if (e.clientX > rect.right - 25 && e.clientY > rect.bottom - 25) return; 
+
+            isDragging = true;
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            infoBox.style.cursor = "grabbing";
+        });
+        document.addEventListener("mousemove", (e) => {
+            if (!isDragging) return;
+            infoBox.style.left = (e.clientX - offsetX) + "px";
+            infoBox.style.top = (e.clientY - offsetY) + "px";
+        });
+        document.addEventListener("mouseup", () => {
+            isDragging = false;
+            infoBox.style.cursor = "move";
+        });
     </script>
 </body>
 </html>
