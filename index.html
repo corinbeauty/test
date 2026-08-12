@@ -92,7 +92,7 @@
         <h3 style="margin-top:0; border-bottom: 1px solid #444; padding-bottom: 10px;">⚙️ 系統進階設定</h3>
         <label>門店名稱：</label>
         <input type="text" id="input-store-name" class="modal-input" placeholder="例如：中清店">
-        <label>接收端 Google API (GAS) URL：</label>
+        <label>接收端 Google URL：</label>
         <input type="text" id="input-gas-url" class="modal-input" placeholder="貼上 /exec 結尾的網址">
         <label>每日開播時間 (HH:mm, 逗號分隔)：</label>
         <input type="text" id="input-play-times" class="modal-input" placeholder="例如：12:00, 18:00">
@@ -103,16 +103,15 @@
         
         <button class="modal-btn" onclick="saveSettings()">儲存並重新載入</button>
         
-        <!-- ======== 隱藏的下載按鈕與安裝步驟 ======== -->
-        <button class="modal-btn" onclick="showPasswordModal()" style="background: #FF9800; margin-top: 15px;">📥 點我下載外掛安裝檔 (.crx)</button>
+        <!-- ======== 下載按鈕 (帶入DOWNLOAD狀態) ======== -->
+        <button class="modal-btn" onclick="showPasswordModal('DOWNLOAD')" style="background: #FF9800; margin-top: 15px;">📥 點我下載外掛安裝檔 (.crx)</button>
         
         <div class="install-guide">
             <div class="install-guide-title">💡 擴充功能安裝步驟：</div>
             <div>1️⃣ 複製並前往網址： <span class="copy-url">chrome://extensions/</span></div>
             <div>2️⃣ 開啟右上角的 <b>「開發人員模式」</b></div>
-            <div>3️⃣ 將剛下載的 <b>Extension.crx</b> 檔案<b>直接拖曳</b>進畫面中</div>
+            <div>3️⃣ 將剛下載的檔案<b>直接拖曳</b>進畫面中</div>
         </div>
-        <!-- ============================================== -->
 
         <button class="modal-btn" onclick="closeSettings()" style="background:#666; margin-top:15px;">取消關閉</button>
     </div>
@@ -120,17 +119,17 @@
     <!-- ======== 獨立的精美密碼驗證框 ======== -->
     <div id="password-modal">
         <h3>🔒 權限驗證</h3>
-        <p style="font-size: 13px; color: #ccc; margin-bottom: 15px;">請輸入授權碼以取得外掛檔案</p>
+        <p style="font-size: 13px; color: #ccc; margin-bottom: 15px;">請輸入授權碼以執行此操作</p>
         <input type="password" id="download-password" placeholder="輸入密碼" onkeypress="handlePasswordKey(event)">
         <p id="password-error" style="color: #f44336; font-size: 13px; display: none; margin-top: -10px; margin-bottom: 10px;">❌ 密碼錯誤，請重新輸入</p>
         <div style="display: flex; gap: 10px;">
-            <button onclick="checkPassword()" style="flex: 1; background: #4CAF50; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer;">確認下載</button>
+            <button onclick="checkPassword()" style="flex: 1; background: #4CAF50; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer;">確認</button>
             <button onclick="closePasswordModal()" style="flex: 1; background: #666; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer;">取消</button>
         </div>
     </div>
     
-    <!-- 已更新為 Extension.crx -->
-    <a id="hidden-download-link" href="Extension.crx" download="Extension.crx" style="display: none;"></a>
+    <!-- 更新為指定的 GAS 下載連結，並使用 target="_blank" -->
+    <a id="hidden-download-link" href="https://script.google.com/d/1YkEjGvwK9eSI35C-6gHj7VvPo64k4zraaOEwCI8fTCkC64jrrjHr-w_0/edit?usp=drive_link" target="_blank" style="display: none;"></a>
     <!-- ========================================== -->
 
     <script>
@@ -234,7 +233,7 @@
             "09/30": { title: "換個腦袋 出路無限(三)", id: "PLCV-Y48MR1JeahnPgzdFJTOezmNtUAziE" }
         };
 
-        // --- 預設與自訂參數處理 (已更新預設 API 網址) ---
+        // --- 預設與自訂參數處理 ---
         let storeName = localStorage.getItem("storeName") || "請輸入店名";
         let gasUrl = localStorage.getItem("gasUrl") || "https://script.google.com/macros/s/AKfycbxteseOvZiS-GuDTzfmp4MYTJEQe6bi7XwYKYRoJeIjrCATEfOIowdQsM2QslC63_C3/exec";
         let playTimesStr = localStorage.getItem("playTimes") || "12:00, 18:00, 00:00";
@@ -259,17 +258,35 @@
         document.getElementById("input-capture-times").value = captureTimesStr;
         document.getElementById("input-stop-time").value = stopTimeStr;
 
-        // --- 彈出設定視窗 (ESC鍵) ---
+        // 若為初次載入，提示使用者設定
+        if (storeName === "請輸入店名") {
+            alert("⚠️ 錯誤：系統尚未設定門店名稱！\n請按下 [ESC] 鍵並輸入密碼以進行設定。");
+            document.getElementById("store-name").style.color = "#f44336";
+        }
+
+        // --- 彈出設定視窗 (ESC鍵防呆檢查與密碼) ---
         document.addEventListener('keydown', function(event) {
             if (event.key === "Escape") {
-                document.getElementById('settings-modal').style.display = 'block';
-                document.getElementById('overlay').style.display = 'block';
-                document.getElementById('test-btn').style.display = 'block'; 
+                if (document.getElementById('settings-modal').style.display === 'block') {
+                    // 若設定視窗已開著，按 ESC 關閉
+                    closeSettings();
+                } else if (document.getElementById('password-modal').style.display !== 'block') {
+                    // 帶入 ESC 狀態，呼叫密碼框
+                    showPasswordModal('ESC');
+                }
             }
         });
 
         function saveSettings() {
-            localStorage.setItem("storeName", document.getElementById("input-store-name").value.trim());
+            let inputStoreName = document.getElementById("input-store-name").value.trim();
+            
+            // 防呆機制：阻擋未修改的預設名稱
+            if (inputStoreName === "" || inputStoreName === "請輸入店名") {
+                alert("❌ 儲存失敗：請輸入正確的門店名稱！不可為空白或預設名稱。");
+                return;
+            }
+
+            localStorage.setItem("storeName", inputStoreName);
             localStorage.setItem("gasUrl", document.getElementById("input-gas-url").value.trim());
             localStorage.setItem("playTimes", document.getElementById("input-play-times").value.trim());
             localStorage.setItem("captureTimes", document.getElementById("input-capture-times").value.trim());
@@ -280,12 +297,16 @@
         function closeSettings() {
             document.getElementById('settings-modal').style.display = 'none';
             document.getElementById('overlay').style.display = 'none';
-            closePasswordModal(); // 確保關閉設定時連同密碼框一起關掉
+            closePasswordModal(); 
         }
 
-        // --- 密碼驗證邏輯 ---
-        function showPasswordModal() {
+        // --- 密碼驗證邏輯 (整合 ESC 與 DOWNLOAD) ---
+        let passwordContext = ""; // 記錄當下是哪種動作觸發了密碼框
+
+        function showPasswordModal(context) {
+            passwordContext = context;
             document.getElementById('password-modal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
             document.getElementById('download-password').value = ''; 
             document.getElementById('password-error').style.display = 'none'; 
             document.getElementById('download-password').focus(); 
@@ -293,15 +314,28 @@
 
         function closePasswordModal() {
             document.getElementById('password-modal').style.display = 'none';
+            // 若是由 ESC 呼叫且使用者按取消，則一併關閉背景的黑幕
+            if (passwordContext === "ESC") {
+                document.getElementById('overlay').style.display = 'none';
+            }
         }
 
         function checkPassword() {
             let pwd = document.getElementById('download-password').value;
             if (pwd === "8888") {
-                document.getElementById('hidden-download-link').click(); // 密碼正確，觸發隱藏下載
-                closePasswordModal();
-                showLog("✅ 授權成功，外掛檔案下載中...", "#4CAF50");
+                document.getElementById('password-modal').style.display = 'none';
+                
+                if (passwordContext === "ESC") {
+                    // ESC 密碼正確，開啟設定介面
+                    document.getElementById('settings-modal').style.display = 'block';
+                    document.getElementById('test-btn').style.display = 'block'; 
+                } else if (passwordContext === "DOWNLOAD") {
+                    // DOWNLOAD 密碼正確，觸發隱藏下載並留在設定介面
+                    document.getElementById('hidden-download-link').click(); 
+                    showLog("✅ 授權成功，正在開啟外掛連結...", "#4CAF50");
+                }
             } else {
+                // 密碼錯誤
                 document.getElementById('password-error').style.display = 'block';
                 document.getElementById('download-password').value = ''; 
                 document.getElementById('download-password').focus(); 
@@ -313,6 +347,7 @@
                 checkPassword();
             }
         }
+        // ===================================
 
         // --- 日期與清單動態對應邏輯 ---
         function getTodayKey() {
