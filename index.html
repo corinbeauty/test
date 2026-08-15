@@ -1,604 +1,649 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>稽核監控中心 - 中清行館 V1.9.4</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>門店內訓自動播放系統</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; overflow-x: hidden; }
+        body { margin: 0; padding: 0; background-color: #000; overflow: hidden; font-family: '微軟正黑體', sans-serif; }
+        #player { width: 100vw; height: 100vh; pointer-events: none; }
         
-        .modal-active { display: flex !important; opacity: 1; pointer-events: auto; }
-        .modal-inactive { display: none !important; opacity: 0; pointer-events: none; }
+        /* 輕量化彈性資訊方框 */
+        #info-box {
+            position: absolute; top: 10%; left: 2%; 
+            background: rgba(0, 0, 0, 0.75); color: #fff;
+            padding: 15px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.2);
+            z-index: 9999; cursor: move;
+            min-width: 150px; max-width: 50%; width: auto; 
+            resize: both; overflow: hidden;
+        }
+        #info-box h2 { margin: 0 0 10px 0; font-size: 16px; color: #4CAF50; border-bottom: 1px solid #4CAF50; padding-bottom: 5px; }
         
-        .compact-table th, .compact-table td { 
-            padding: 0.25rem 0.15rem !important; 
-            border: 1px solid #f1f5f9; 
-            vertical-align: middle; 
-            line-height: 1.1;
+        .info-row { display: flex; margin-bottom: 6px; font-size: 13px; line-height: 1.4; }
+        .info-label { color: #aaa; font-weight: bold; white-space: nowrap; margin-right: 5px; }
+        .info-value { flex: 1; word-break: break-all; }
+        
+        #status-log {
+            margin-top: 10px; padding: 8px; background: rgba(255,255,255,0.1);
+            border-radius: 6px; font-size: 12px; min-height: 20px; color: #ffeb3b;
         }
         
-        .q-col { 
-            min-width: 40px; 
-            max-width: 52px;
-            text-align: center; 
-            font-weight: 800; 
-            font-size: 8px; 
-            letter-spacing: -0.6px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+        #test-btn {
+            display: none; 
+            margin-top: 10px; width: 100%; padding: 8px;
+            background: #2196F3; color: white; border: none;
+            border-radius: 6px; cursor: pointer; font-size: 14px;
         }
-        
-        @keyframes pulse-red-alert { 
-            0% { background-color: #ef4444; transform: scale(1); } 
-            50% { background-color: #dc2626; transform: scale(1.01); } 
-            100% { background-color: #ef4444; transform: scale(1); } 
-        }
-        .alarm-banner { 
-            animation: pulse-red-alert 1.5s infinite ease-in-out; 
-            box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.4); 
-            border: 2px solid white;
+        #test-btn:hover { background: #1976D2; }
+
+        /* 版權宣告樣式 */
+        .copyright-text {
+            font-size: 10px; color: #888; text-align: center; 
+            margin-top: 12px; padding-top: 8px; 
+            border-top: 1px dashed rgba(255,255,255,0.2);
+            pointer-events: none;
         }
 
-        .custom-scroll::-webkit-scrollbar { height: 4px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
-        .toast-entry { transition: all 0.5s ease-in-out; }
-        .toast-fade { opacity: 0; transform: translateX(20px); }
-
-        @media print {
-            .no-print { display: none !important; }
-            body { background: white; padding: 0; }
-            .print-compact { border-radius: 0 !important; box-shadow: none !important; border: none !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; }
-            @page { size: A2 landscape; margin: 0.3cm; }
+        #settings-modal {
+            display: none; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); background: #222;
+            padding: 25px; border-radius: 10px; color: white;
+            z-index: 10000; width: 380px; box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            max-height: 90vh; overflow-y: auto;
         }
+        .modal-input { width: 100%; padding: 8px; margin: 5px 0 15px 0; box-sizing: border-box; }
+        .modal-btn { background: #4CAF50; color: white; border: none; padding: 10px 20px; cursor: pointer; width: 100%; font-size: 16px; border-radius: 6px;}
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; }
+
+        /* 精美密碼驗證框與錯誤提示框樣式 */
+        #password-modal, #alert-modal {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #2b2b2b; padding: 25px 30px; border-radius: 12px; color: white; z-index: 10001;
+            width: 280px; box-shadow: 0 10px 30px rgba(0,0,0,0.9); text-align: center; border: 1px solid #444;
+        }
+        #alert-modal { z-index: 10002; width: 300px; }
+        
+        #password-modal h3, #alert-modal h3 { margin-top: 0; color: #FF9800; border-bottom: 1px solid #555; padding-bottom: 10px; font-size: 18px; }
+        #download-password { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #555; background: #1a1a1a; color: white; text-align: center; font-size: 20px; letter-spacing: 5px; box-sizing: border-box; }
+        #download-password:focus { outline: none; border-color: #FF9800; }
+        
+        .install-guide {
+            background: rgba(255,255,255,0.05); border-radius: 8px; padding: 15px;
+            margin-top: 15px; font-size: 13px; color: #ccc; line-height: 1.6;
+            border: 1px dashed rgba(255,255,255,0.2);
+        }
+        .install-guide-title { color: #4CAF50; font-weight: bold; font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; }
+        .copy-url { background: #111; color: #fff; padding: 2px 6px; border-radius: 4px; border: 1px solid #444; user-select: all; font-family: monospace; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen p-1 md:p-1.5">
+<body>
 
-<div id="toastContainer" class="fixed bottom-4 right-4 z-[10005] flex flex-col gap-2 pointer-events-none no-print"></div>
+    <div id="player"></div>
 
-<div id="alarmContainer" class="fixed top-2 left-1/2 -translate-x-1/2 z-[10008] w-full max-w-xl pointer-events-none no-print"></div>
-
-<div id="adminApp" class="max-w-[2400px] mx-auto print-compact">
-    <!-- 登入遮罩 -->
-    <div id="loginOverlay" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex items-center justify-center z-[10010] no-print transition-all duration-500">
-        <div class="bg-white p-8 rounded-[2rem] shadow-2xl w-full max-w-sm text-center border-t-8 border-blue-600">
-            <h2 class="text-xl font-black mb-1 text-slate-800 italic uppercase tracking-tighter">管理主控台</h2>
-            <p class="text-[9px] text-slate-400 mb-6 font-bold uppercase">中清行館監控站 V1.9.4</p>
-            <div class="relative mb-4">
-                <input type="password" id="loginInput" placeholder="輸入管理密碼" class="w-full p-3 border-2 rounded-xl text-center text-lg font-bold outline-none focus:border-blue-500 shadow-inner">
-            </div>
-            <button onclick="handleLogin()" id="loginBtn" class="w-full bg-blue-600 text-white font-black py-3 rounded-xl active:scale-95 transition hover:bg-blue-700 shadow-lg mb-2 cursor-pointer">進入監控系統</button>
-            <p id="loginStatus" class="text-[9px] text-slate-400 font-mono uppercase tracking-widest italic">System Ready</p>
-        </div>
-    </div>
-
-    <header class="flex justify-between items-end mb-1.5 px-1 no-print">
-        <div>
-            <h1 class="text-lg font-black text-slate-900 uppercase leading-none">服務稽核報表 <span id="connTag" class="text-[8px] bg-slate-200 px-1 py-0.5 rounded ml-1 font-mono italic text-slate-400">OFFLINE</span></h1>
-            <p class="text-slate-400 text-[8px] font-bold italic">V1.9.4 Line Alert (Anonymous)</p>
-        </div>
-        <div class="flex gap-1.5 items-center">
-            <button onclick="openLogHistory()" class="bg-slate-800 text-green-400 border border-green-900/30 px-2.5 py-0.5 rounded-lg font-black shadow-sm text-[10px] hover:bg-black transition cursor-pointer flex items-center gap-1">
-                <span class="text-[8px] animate-pulse">●</span> 查看日誌 HISTORY
-            </button>
-            <div id="lineStatusTag" class="bg-blue-50 text-blue-600 text-[8px] px-2 py-0.5 rounded border border-blue-200 font-black italic">LINE: STANDBY</div>
-            <button onclick="exportReport()" class="bg-white border px-2.5 py-0.5 rounded-lg font-black shadow-sm text-[10px] hover:bg-slate-50 transition cursor-pointer">匯出報表</button>
-            <button onclick="signOutAdmin()" class="bg-slate-100 px-2 py-0.5 rounded-lg font-bold text-slate-400 text-[9px] hover:text-red-400 cursor-pointer">登出</button>
-        </div>
-    </header>
-
-    <section class="bg-white p-1.5 rounded-xl shadow-sm border mb-1.5 no-print grid grid-cols-2 md:grid-cols-5 gap-1.5 items-end">
-        <div><label class="block text-[8px] font-bold text-slate-400 mb-0.5 uppercase">開始日期</label><input type="date" id="filterStart" onchange="filterData()" class="w-full px-1.5 py-0.5 bg-slate-50 border rounded text-[10px] font-bold"></div>
-        <div><label class="block text-[8px] font-bold text-slate-400 mb-0.5 uppercase">結束日期</label><input type="date" id="filterEnd" onchange="filterData()" class="w-full px-1.5 py-0.5 bg-slate-50 border rounded text-[10px] font-bold"></div>
-        <div><label class="block text-[8px] font-bold text-slate-400 mb-0.5 uppercase">篩選師傅</label><select id="filterMasseur" onchange="filterData()" class="w-full px-1.5 py-0.5 bg-slate-50 border rounded text-[10px] font-bold"><option value="all">所有師傅</option></select></div>
-        <div><label class="block text-[8px] font-bold text-slate-400 mb-0.5 uppercase">稽核狀態分類</label><select id="filterStatus" onchange="filterData()" class="w-full px-1.5 py-0.5 bg-blue-50 border border-blue-100 rounded text-[10px] font-black text-blue-700">
-            <option value="all">所有數據 (ALL)</option>
-            <option value="normal">正常數據 (NORMAL)</option>
-            <option value="critical">異常待處置 (PENDING)</option>
-            <option value="resolved">處理完成 (RESOLVED)</option>
-        </select></div>
-        <button onclick="resetFilters()" class="bg-slate-800 text-white font-black py-1 rounded text-[10px] hover:bg-slate-700 cursor-pointer">重置篩選</button>
-    </section>
-
-    <div class="flex gap-1.5 mb-1.5 no-print">
-        <div class="bg-white px-3 py-1 rounded-xl shadow-sm border flex flex-col justify-center min-w-[130px]">
-            <p class="text-slate-400 text-[8px] font-bold uppercase leading-none mb-1">本期總量 (<span id="totalDateDisplay" class="text-blue-500 font-black">-</span>)</p>
-            <div class="flex items-center gap-2">
-                <h3 id="statTotal" class="text-lg font-black italic text-blue-600 leading-none">0</h3>
-                <div id="loadingSpin" class="animate-spin text-blue-600 text-[8px]">⌛</div>
-            </div>
-        </div>
-        <div id="alarmCountBox" class="bg-white px-3 py-1 rounded-xl shadow-sm border-2 border-red-50 flex flex-col justify-center min-w-[80px]">
-            <p class="text-slate-400 text-[8px] font-bold uppercase leading-none mb-1 text-red-400">異常待處置</p>
-            <h3 id="activeAlarmNum" class="text-lg font-black italic text-red-500 leading-none">0</h3>
-        </div>
-        <div class="bg-white px-3 py-1 rounded-xl shadow-sm border flex-1 flex flex-col justify-center overflow-hidden">
-            <p class="text-slate-400 text-[8px] font-bold uppercase leading-none mb-1">表現統計 (★ / 📝)</p>
-            <div id="masseurStatsList" class="flex gap-1.5 overflow-x-auto custom-scroll pb-0.5 items-center"></div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-[1550px] compact-table">
-                <thead>
-                    <tr class="text-[7.5px] font-black text-slate-400 uppercase border-b bg-slate-50/50">
-                        <th class="w-6 text-center">序</th>
-                        <th class="w-16">系統/服務時間</th>
-                        <th class="w-10 text-center">師傅</th>
-                        <th class="q-col text-green-700 bg-green-50/20">Q1 介紹</th>
-                        <th class="q-col text-green-700 bg-green-50/20">Q2 力道</th>
-                        <th class="q-col text-green-700 bg-green-50/20">Q3 異味</th>
-                        <th class="q-col text-green-700 bg-green-50/20">Q4 時間</th>
-                        <th class="q-col text-green-700 bg-green-50/20">Q5 禮貌</th>
-                        <th class="q-col text-green-700 bg-green-50/20">Q6 觸碰</th>
-                        <th class="q-col text-green-700 bg-green-50/20">Q7 禁動</th>
-                        <th class="q-col text-red-700 bg-red-50/20">Q8 打卡</th>
-                        <th class="q-col text-red-700 bg-red-50/20">Q9 名片</th>
-                        <th class="q-col text-red-700 bg-red-50/20">Q10 老點</th>
-                        <th class="w-14 text-center">行銷反饋</th>
-                        <th class="w-10 text-center">狀態</th>
-                        <th class="min-w-[120px]">管理備註</th>
-                        <th class="w-16 no-print text-center">操作</th>
-                        <th class="w-20">顧客資訊</th>
-                    </tr>
-                </thead>
-                <tbody id="reportTableBody" class="text-[8.5px] divide-y"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="detailModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm modal-inactive z-[10015] items-center justify-center p-4 transition-all duration-300 no-print">
-        <div class="bg-white w-full max-w-xl rounded-[2rem] shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
-            <div class="p-5 border-b flex justify-between items-center bg-white">
-                <h3 class="text-lg font-black italic text-slate-800"><span id="modalId" class="bg-blue-600 text-white px-2 py-0.5 rounded text-xs mr-2 not-italic">00</span>數據管理</h3>
-                <div class="flex gap-2">
-                    <button id="modalGMapBtn" class="bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-[10px] font-black border border-amber-100 hover:bg-amber-100 transition">🌟 5星評論引導</button>
-                    <button onclick="closeModal('detailModal')" class="w-8 h-8 bg-slate-100 rounded-full font-bold hover:bg-slate-200 cursor-pointer">✕</button>
-                </div>
-            </div>
-            <div id="modalContent" class="p-5 space-y-2.5 overflow-y-auto flex-1"></div>
-            <div class="p-5 bg-slate-50 border-t space-y-2.5">
-                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">管理者處置說明</p>
-                <textarea id="adminRemarkInput" rows="2" placeholder="請填寫處理情況..." class="w-full p-3 border rounded-xl text-sm outline-none bg-white focus:border-blue-500"></textarea>
-                <div class="flex gap-2">
-                    <button id="resolveBtn" class="flex-1 bg-blue-600 text-white font-black py-3 rounded-xl shadow-md active:scale-95 transition hover:bg-blue-700 shadow-lg cursor-pointer">標記處理完成</button>
-                    <button onclick="closeModal('detailModal')" class="px-4 bg-slate-200 text-slate-600 font-bold rounded-xl cursor-pointer hover:bg-slate-300">取消</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 日誌歷史記錄 -->
-    <div id="logHistoryModal" class="fixed inset-0 bg-black/90 backdrop-blur-sm modal-inactive z-[10020] items-center justify-center p-4 transition-all duration-300 no-print">
-        <div class="bg-slate-900 w-full max-w-md rounded-[2rem] shadow-2xl border border-slate-800 overflow-hidden flex flex-col">
-            <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900">
-                <h3 class="text-lg font-black italic text-green-400 uppercase tracking-tighter">Connection History Log</h3>
-                <button onclick="closeModal('logHistoryModal')" class="w-8 h-8 bg-slate-800 text-slate-400 rounded-full font-bold hover:bg-slate-700 cursor-pointer">✕</button>
-            </div>
-            <div id="historyLogList" class="p-5 space-y-2 overflow-y-auto flex-1 font-mono text-[10px] text-green-500/80 leading-relaxed custom-scroll"></div>
-        </div>
-    </div>
-</div>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserLocalPersistence, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, onSnapshot, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    // --- Firebase 安全配置 ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyCuytMbR0wfPk0vChxqI66Zci0uJtGiizE",
-        authDomain: "survey-c3aa5.firebaseapp.com",
-        projectId: "survey-c3aa5",
-        storageBucket: "survey-c3aa5.firebasestorage.app",
-        messagingSenderId: "874594469122",
-        appId: "1:874594469122:web:2b2c1208b20d2095b9ae1b"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    
-    const collectionPath = ['apps', 'zhongqing-v1', 'surveys'];
-    const G_REVIEW_URL = "https://www.google.com/maps/search/?api=1&query=中清行館";
-
-    // ================== LINE NOTIFY 設置 ==================
-    const LINE_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbysBohjrhzX9D0NcaBJIPdgYE2iWTNiFqOMJZ49KvyV6UZuisavplfGj7bSe0okqj0CDA/exec";
-    let isFirstSnapshot = true; 
-    // ======================================================
-
-    let rawData = [];
-    let syncStarted = false;
-    let revealedIds = new Set();
-    let currentDocId = null;
-    let logArchive = [];
-    let titleAlertInterval = null;
-
-    // 負向關鍵字清單
-    const negKeywords = ["完全沒問", "完全不問", "味道很重", "感覺很差", "言語不當", "非常危險", "完全沒說", "沒有給名片", "絕對不會", "不願意"];
-    const labels = { q1: "Q1. 開始介紹", q2: "Q2. 力道調整", q3: "Q3. 異味/煙味", q4: "Q4. 時間掌握", q5: "Q5. 服務禮貌", q6: "Q6. 肢體觸碰", q7: "Q7. 禁止動作", q8: "Q8. 打卡推廣", q9: "Q9. 提供名片", q10: "Q10. 老點意願" };
-
-    const maskName = (n) => !n ? '-' : (n.length<=1 ? n : (n.length===2 ? n[0]+'*' : n[0]+'*'.repeat(n.length-2)+n[n.length-1]));
-    const maskPhone = (p) => !p ? '' : String(p).replace(/\s/g, '').substring(0,3)+'****'+String(p).slice(-3);
-    const formatId = (id) => String(id).padStart(2, '0');
-
-    // === 新增 LINE 推播非同步函式 ===
-    async function sendLineAlert(data) {
-        if (!LINE_WEBHOOK_URL) return;
+    <div id="info-box">
+        <h2>📌 門店自動巡檢 V1.5</h2>
+        <div class="info-row"><div class="info-label">🏪 門店：</div><div class="info-value" id="store-name">讀取中...</div></div>
+        <div class="info-row"><div class="info-label">📅 目前：</div><div class="info-value" id="current-time">讀取中...</div></div>
+        <div class="info-row"><div class="info-label">⏰ 下次：</div><div class="info-value" id="next-schedule-time" style="color:#FF9800;">計算中...</div></div>
+        <div class="info-row"><div class="info-label">🎬 排程：</div><div class="info-value" id="video-schedule">載入中...</div></div>
+        <div class="info-row"><div class="info-label">▶ 已播：</div><div class="info-value" id="total-play-time">0 分鐘</div></div>
+        <div class="info-row"><div class="info-label">⏱ 影片：</div><div class="info-value"><span id="video-current-time">00:00</span></div></div>
+        <div class="info-row"><div class="info-label">📸 截圖：</div><div class="info-value" id="screenshot-count">0 張</div></div>
+        <div id="status-log">系統待命中...</div>
+        <button id="test-btn" onclick="takeAndUploadScreenshot('手動測試')">馬上測試一鍵截圖</button>
         
-        const customerName = maskName(data.customerName);
-        const masseurId = formatId(data.masseurId);
-        const time = data.serviceDate || new Date().toLocaleString('zh-TW');
+        <div class="copyright-text">
+            原點數位科技 © 2026 All rights reserved.
+        </div>
+    </div>
 
-        const msg = `\n⚠️ 【服務異常稽核通報】\n師傅：${masseurId}\n顧客：${customerName}\n時間：${time}\n系統已記錄異常資料(Q1-Q7)，請盡速登入主控台進行處置。`;
+    <div id="overlay"></div>
+    
+    <!-- 系統設定選單 -->
+    <div id="settings-modal">
+        <h3 style="margin-top:0; border-bottom: 1px solid #444; padding-bottom: 10px;">⚙️ 系統進階設定</h3>
+        <label>門店名稱：</label>
+        <input type="text" id="input-store-name" class="modal-input" placeholder="例如：中清店">
+        <label>接收端 Google URL：</label>
+        <input type="text" id="input-gas-url" class="modal-input" placeholder="貼上 /exec 結尾的網址">
+        <label>每日開播時間 (HH:mm, 逗號分隔)：</label>
+        <input type="text" id="input-play-times" class="modal-input" placeholder="例如：12:00, 18:00">
+        <label>截圖排程秒數 (逗號分隔)：</label>
+        <input type="text" id="input-capture-times" class="modal-input" placeholder="例如：60, 1750">
+        <label>滿時自動停止並縮小 (分鐘)：</label>
+        <input type="number" id="input-stop-time" class="modal-input" placeholder="例如：30">
+        
+        <button class="modal-btn" onclick="saveSettings()">儲存並重新載入</button>
+        
+        <button class="modal-btn" onclick="showPasswordModal('DOWNLOAD')" style="background: #FF9800; margin-top: 15px;">📥 點我下載外掛安裝檔 (.crx)</button>
+        
+        <div class="install-guide">
+            <div class="install-guide-title">💡 擴充功能安裝步驟：</div>
+            <div>1️⃣ 複製並前往網址： <span class="copy-url">chrome://extensions/</span></div>
+            <div>2️⃣ 開啟右上角的 <b>「開發人員模式」</b></div>
+            <div>3️⃣ 將剛下載的 <b>Extension.crx</b> 檔案<b>直接拖曳</b>進畫面中</div>
+        </div>
 
-        try {
-            document.getElementById('lineStatusTag').innerText = "LINE: SENDING...";
-            await fetch(LINE_WEBHOOK_URL, {
-                method: 'POST',
-                mode: 'no-cors', // 避免前端跨域錯誤
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: msg })
+        <button class="modal-btn" onclick="closeSettings()" style="background:#666; margin-top:15px;">取消關閉</button>
+    </div>
+
+    <!-- 密碼驗證框 -->
+    <div id="password-modal">
+        <h3>🔒 權限驗證</h3>
+        <p style="font-size: 13px; color: #ccc; margin-bottom: 15px;">請輸入授權碼以執行此操作</p>
+        <input type="password" id="download-password" placeholder="輸入密碼" onkeypress="handlePasswordKey(event)">
+        <p id="password-error" style="color: #f44336; font-size: 13px; display: none; margin-top: -10px; margin-bottom: 10px;">❌ 密碼錯誤，請重新輸入</p>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="checkPassword()" style="flex: 1; background: #4CAF50; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer;">確認</button>
+            <button onclick="closePasswordModal()" style="flex: 1; background: #666; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer;">取消</button>
+        </div>
+    </div>
+
+    <!-- 精美錯誤提示對話框 -->
+    <div id="alert-modal">
+        <h3 style="color: #f44336;">⚠️ 系統提示</h3>
+        <p id="alert-message" style="font-size: 15px; color: #ddd; margin-bottom: 25px; line-height: 1.6; white-space: pre-wrap;"></p>
+        <button onclick="closeAlertModal()" style="width: 100%; background: #4CAF50; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 16px;">了解</button>
+    </div>
+    
+    <a id="hidden-download-link" href="https://script.google.com/d/1YkEjGvwK9eSI35C-6gHj7VvPo64k4zraaOEwCI8fTCkC64jrrjHr-w_0/edit?usp=drive_link" target="_blank" style="display: none;"></a>
+
+    <script>
+        // --- 07/01 ~ 09/30 完整播放清單庫 ---
+        const playlistSchedule = {
+            "07/01": { title: "讓客人說Yes !優質的銷售心法 下集", id: "PLCV-Y48MR1Jd-DqEGEVW0txYmxFOpEmGz" },
+            "07/02": { title: "敢於挑戰夢想 上集", id: "PLCV-Y48MR1JcVZKK-xxhyRIo0recmZoJT" },
+            "07/03": { title: "敢於挑戰夢想 下集", id: "PLCV-Y48MR1Je4gmZw6gGSBWXFmgTiFN4b" },
+            "07/04": { title: "態度決勝負 上集", id: "PLCV-Y48MR1JexttsFgAYwdcxvK5gJG8qZ" },
+            "07/05": { title: "態度決勝負 下集", id: "PLCV-Y48MR1JfZVCEEjgHSIQeJiutTd1SI" },
+            "07/06": { title: "成功優質生活的五Ｑ必勝法則 上集", id: "PLCV-Y48MR1JcXXO9pouB_LTAYNTp9RaVH" },
+            "07/07": { title: "成功優質生活的五Ｑ必勝法則 下集", id: "PLCV-Y48MR1JfRcSGSs76msFc7PxGyL9DZ" },
+            "07/08": { title: "現代人職場大贏家法則 上集", id: "PLCV-Y48MR1JdUTJ0O4Rj5i8fu0ptsK0vt" },
+            "07/09": { title: "現代人職場大贏家法則 下集", id: "PLCV-Y48MR1JcE6f2iHnl6NBAPI5S_aWwE" },
+            "07/10": { title: "從關係中找回生命的核心價值 上集", id: "PLCV-Y48MR1JcBJKaDWk5fQvQk4ZTWLAi8" },
+            "07/11": { title: "從關係中找回生命的核心價值 下集", id: "PLCV-Y48MR1Jd4QMf17fX30a5AJLjw25A9" },
+            "07/12": { title: "不感動也難-新時代的人際吸引力 上集", id: "PLCV-Y48MR1JeN18nT82cA3TFtKi9xx5KL" },
+            "07/13": { title: "不感動也難-新時代的人際吸引力 下集", id: "PLCV-Y48MR1JfhG7m1IgyOGyLsItrRTFgY" },
+            "07/14": { title: "揪感心的服務-好客由你來創造 上集", id: "PLCV-Y48MR1JcqLgqA4gq2c-D4fOF2uChr" },
+            "07/15": { title: "揪感心的服務-好客由你來創造 下集", id: "PLCV-Y48MR1JdsMfSKMVCSOOyuUCpm7CC3" },
+            "07/16": { title: "如何在逆境中創造優勢 上集", id: "PLCV-Y48MR1JfgoDMBcThxIgW93hqvs-v_" },
+            "07/17": { title: "如何在逆境中創造優勢 下集", id: "PLCV-Y48MR1Jf-w_hZ3mtH2C_brw9WTqzm" },
+            "07/18": { title: "好聲音溝通力-把話說好，讓溝通更有效率 上集", id: "PLCV-Y48MR1Jdb2pjUqzusMOfQby3Llq5l" },
+            "07/19": { title: "好聲音溝通力-把話說好，讓溝通更有效率 下集", id: "PLCV-Y48MR1Jfw5PaIEadYpASQSYKHFny8" },
+            "07/20": { title: "好聲音形象力-用聲音創造好形象 上集", id: "PLCV-Y48MR1Jcemhkp5LUYZRL1S539FWLL" },
+            "07/21": { title: "好聲音形象力-用聲音創造好形象 下集", id: "PLCV-Y48MR1JcgZ04uRg2yUVp4OQKTiCEW" },
+            "07/22": { title: "高獲利的銷售技能與販賣技巧 上集", id: "PLCV-Y48MR1Jfm2y2IT0xBfJstkR8ud9jJ" },
+            "07/23": { title: "高獲利的銷售技能與販賣技巧 下集", id: "PLCV-Y48MR1JcJVKDyl4yk1cVjB3dg_UOK" },
+            "07/24": { title: "超級顧客的服務管理與VIP經營 上集", id: "PLCV-Y48MR1JdLBYLz1uUDX6_lAw2XcbEt" },
+            "07/25": { title: "超級顧客的服務管理與VIP經營 下集", id: "PLCV-Y48MR1JdTwXz15k5On8GWPFpQO6mY" },
+            "07/26": { title: "最有溫度的感動行銷 上集", id: "PLCV-Y48MR1JdU7SJDKjQZfeNn7agRTM6p" },
+            "07/27": { title: "最有溫度的感動行銷 下集", id: "PLCV-Y48MR1JdDq7jp2Ia9ASq31rzDAY3z" },
+            "07/28": { title: "打動人心的顧客經營祕訣 上集", id: "PLCV-Y48MR1JdvOgifjZAZiQVx1o1mtwYo" },
+            "07/29": { title: "打動人心的顧客經營祕訣 下集", id: "PLCV-Y48MR1Jfj3zhvGDoj449HPeYWlqlW" },
+            "07/30": { title: "如何經營一個美滿的家 上半部", id: "PLCV-Y48MR1JfoPcxRduD2X6DHEs0-vHz-" },
+            "07/31": { title: "如何經營一個美滿的家 下半部", id: "PLCV-Y48MR1JfhoOu-uwe_l0L17_htAKBs" },
+            
+            // 8月
+            "08/01": { title: "如何成為卓越的上班族 上半部", id: "PLCV-Y48MR1Jdn2OHxmCDXk60S6wj7FFLb" },
+            "08/02": { title: "如何成為卓越的上班族 下半部", id: "PLCV-Y48MR1JdRXg7LtatMu_pkA26xckL_" },
+            "08/03": { title: "突破現狀.自我成長 上半部", id: "PLCV-Y48MR1JdeHiauGYq9un0r0sIjzXje" },
+            "08/04": { title: "突破現狀.自我成長 下半部", id: "PLCV-Y48MR1Jd7sTN6AGyVkeMmWWnFIBsX" },
+            "08/05": { title: "如何創造好心情 上半部", id: "PLCV-Y48MR1JeOyl1b2_fP5ECaBCBNHEHd" },
+            "08/06": { title: "如何創造好心情 下半部", id: "PLCV-Y48MR1JfrtpJUyv3VkeAyNpnnPiyz" },
+            "08/07": { title: "如何提升銷售戰力 第一部第一~三集", id: "PLCV-Y48MR1JfO6qO9chPztCeJ47eXp5ss" },
+            "08/08": { title: "如何提升銷售戰力 第一部第四集 第二部第一~二集", id: "PLCV-Y48MR1JeI-1T_RTdMFUEKpMW8dGyf" },
+            "08/09": { title: "如何提升銷售戰力 第二部第三~四集 第三部第一集", id: "PLCV-Y48MR1JelWTnLOjMLMLdkjlYc3QHU" },
+            "08/10": { title: "如何提升銷售戰力 第三部第二~四集", id: "PLCV-Y48MR1JcbT8xfkUtkKmyV5DThX3pj" },
+            "08/11": { title: "如何做好溝通與管理 上半部", id: "PLCV-Y48MR1JevkHsb0MSIcAD4Qbvpw8wu" },
+            "08/12": { title: "如何做好溝通與管理 下半部", id: "PLCV-Y48MR1JdYMHnhmYUGXSDBvJuFJsLx" },
+            "08/13": { title: "淺談愛情.婚姻.工作觀 上半部", id: "PLCV-Y48MR1JfIAqZOi6MxMsTpKEM3wFD6" },
+            "08/14": { title: "淺談愛情.婚姻.工作觀 中半部", id: "PLCV-Y48MR1JdnIaOUAuz1XrxD7duPO--R" },
+            "08/15": { title: "淺談愛情.婚姻.工作觀 下半部", id: "PLCV-Y48MR1JfWxt1d7-r8BKJ2-IrOrifI" },
+            "08/16": { title: "如何做好人際運作 上集", id: "PLCV-Y48MR1JeM9PCvM55oA61iMmwzmV2R" },
+            "08/17": { title: "如何做好人際運作 下集", id: "PLCV-Y48MR1Je9mMuZT8XkwYtkx-0MKh74" },
+            "08/18": { title: "如何把話說得更好 上集", id: "PLCV-Y48MR1JfMb8FiyJGbuqI4ujWUxwGF" },
+            "08/19": { title: "如何把話說得更好 下集", id: "PLCV-Y48MR1JeSK02btsQkVMPJBLQHC4E2" },
+            "08/20": { title: "生活有藍天 悟出希望來 上集", id: "PLCV-Y48MR1Jegjy6GVBvoPoLeyG2PToa7" },
+            "08/21": { title: "生活有藍天 悟出希望來 下集", id: "PLCV-Y48MR1JcNAQgwAGwp5OmSFnCd3zBW" },
+            "08/22": { title: "台灣諺語看人生 第一~二集", id: "PLCV-Y48MR1Jce-WgGFR5M86yc7PuKhcv_" },
+            "08/23": { title: "台灣諺語看人生 第三~四集", id: "PLCV-Y48MR1JcQt7fPrZnVsPB5SNcbM1-t" },
+            "08/24": { title: "話歲月-春花秋月何時了 第一~二集", id: "PLCV-Y48MR1JdpFos_o6_eagANUWURP7fG" },
+            "08/25": { title: "話歲月-春花秋月何時了 第三~四集", id: "PLCV-Y48MR1JdG75gEOqcNjyohKUAaY1p8" },
+            "08/26": { title: "論世事-無可奈何花落去 第一~二集", id: "PLCV-Y48MR1JckP5pjwMHJ7AhMb1uFeA7F" },
+            "08/27": { title: "論世事-無可奈何花落去 第三~四集", id: "PLCV-Y48MR1JddKSMwwkPCkl7m9Dit-Uw1" },
+            "08/28": { title: "台灣諺語論世事 第一~二集", id: "PLCV-Y48MR1Jfiw3WP9B0PTgsZwvQIM20q" },
+            "08/29": { title: "台灣諺語論世事 第三~四集", id: "PLCV-Y48MR1JcH1CVfNHhvBFZ7z2DaJbhs" },
+            "08/30": { title: "台灣諺語談理財 第一~二集", id: "PLCV-Y48MR1JdSLyqYGXRKmM6sQOXtEiJQ" },
+            "08/31": { title: "台灣諺語談理財 第三~四集", id: "PLCV-Y48MR1JejKNg_9N7MCeHzdewiJ8Kc" },
+    
+            // 9月
+            "09/01": { title: "談人生-莫使金樽空對月 第一~二集", id: "PLCV-Y48MR1JeIo0_laxp34URRFVkArEf1" },
+            "09/02": { title: "談人生-莫使金樽空對月 第三~四集", id: "PLCV-Y48MR1JcQXb4tIt3ocqvdcd5TFuSq" },
+            "09/03": { title: "說愛情-問世間情為何物 第一~二集", id: "PLCV-Y48MR1JddDxh_Hff6rUWPKvHzC9nK" },
+            "09/04": { title: "說愛情-問世間情為何物 第三~四集", id: "PLCV-Y48MR1JfCSnm_a5-1R3SiUO5Br_U2" },
+            "09/05": { title: "說服要領與抱怨處理(一)", id: "PLCV-Y48MR1Jc-Yo_MyKCAjFVdDEDWjq2l" },
+            "09/06": { title: "說服要領與抱怨處理(二)", id: "PLCV-Y48MR1JdOhzRgVUlqMD5AZagCzDsH" },
+            "09/07": { title: "說服要領與抱怨處理(三)", id: "PLCV-Y48MR1JcAYo8RXv8JOXHFkmfRVJjF" },
+            "09/08": { title: "如何提升服務品質(一)", id: "PLCV-Y48MR1JcD1gtr7UIdCsABZe1jRJqk" },
+            "09/09": { title: "如何提升服務品質(二)", id: "PLCV-Y48MR1JekyZUkbC1ls_6DwJr0JW72" },
+            "09/10": { title: "如何提升服務品質(三)", id: "PLCV-Y48MR1JdG18NQiq20lmH01fWuk5f9" },
+            "09/11": { title: "EQ與情緒管理(一)", id: "PLCV-Y48MR1JcDXEf7M964LQUnVfYf6Ga-" },
+            "09/12": { title: "EQ與情緒管理(二)", id: "PLCV-Y48MR1JcXb7UXfBOwlW--wWX-nksO" },
+            "09/13": { title: "EQ與情緒管理(三)", id: "PLCV-Y48MR1JerTwfydMUIMQ7SGZmXLkt4" },
+            "09/14": { title: "人脈成功致富學(一)", id: "PLCV-Y48MR1JcdIPszHxdAtGnDkewer9Bp" },
+            "09/15": { title: "人脈成功致富學(二)", id: "PLCV-Y48MR1JfLU8KguBbuEA1lRCDEnF1s" },
+            "09/16": { title: "人脈成功致富學(三)", id: "PLCV-Y48MR1JfuwkNqx5MV01u5rnnULy8D" },
+            "09/17": { title: "如何做一個快樂的現代人(一)", id: "PLCV-Y48MR1JedSEJ5QXuZA9Pajp2QbpPO" },
+            "09/18": { title: "如何做一個快樂的現代人(二)", id: "PLCV-Y48MR1JccZ43cRlgoB-FL6wbIEVLk" },
+            "09/19": { title: "如何做一個快樂的現代人(三)", id: "PLCV-Y48MR1JejNXjyHoxAQORWhCAdXPpA" },
+            "09/20": { title: "如何創造魅力與影響力(一)", id: "PLCV-Y48MR1JdjchNQSRMhWl0NgD1HOLzZ" },
+            "09/21": { title: "如何創造魅力與影響力(二)", id: "PLCV-Y48MR1Jfb15VhmhL1D4WYkfQb9zO1" },
+            "09/22": { title: "吸引力法則 心想事成的方法(一)", id: "PLCV-Y48MR1JfUbw5WAEbG2SEQ72Af9Ynl" },
+            "09/23": { title: "吸引力法則 心想事成的方法(二)", id: "PLCV-Y48MR1JdfS9RPqMGTLQNsvY8LbSSC" },
+            "09/24": { title: "吸引力法則 心想事成的方法(三)", id: "PLCV-Y48MR1JeDDQtS9vFXgX5sDJdxmg0-" },
+            "09/25": { title: "幽默口才成功學(一)", id: "PLCV-Y48MR1JeRrd03M5vjI61vLnaN_pzq" },
+            "09/26": { title: "幽默口才成功學(二)", id: "PLCV-Y48MR1JfGnAh4cK0cJjLvTyw7acTE" },
+            "09/27": { title: "幽默口才成功學(三)", id: "PLCV-Y48MR1JfM9VgfxgWB4yip7iF67t5k" },
+            "09/28": { title: "換個腦袋 出路無限(一)", id: "PLCV-Y48MR1JecLnd3e-wpH9UZzgbN-ihL" },
+            "09/29": { title: "換個腦袋 出路無限(二)", id: "PLCV-Y48MR1JdSSewV8mwnVn264uDiVv4v" },
+            "09/30": { title: "換個腦袋 出路無限(三)", id: "PLCV-Y48MR1JeahnPgzdFJTOezmNtUAziE" }
+        };
+
+        // --- 預設與自訂參數處理 ---
+        let storeName = localStorage.getItem("storeName") || "請輸入店名";
+        let gasUrl = localStorage.getItem("gasUrl") || "https://script.google.com/macros/s/AKfycbxteseOvZiS-GuDTzfmp4MYTJEQe6bi7XwYKYRoJeIjrCATEfOIowdQsM2QslC63_C3/exec";
+        let playTimesStr = localStorage.getItem("playTimes") || "12:00, 18:00, 00:00";
+        let captureTimesStr = localStorage.getItem("captureTimes") || "60, 1750";
+        let stopTimeStr = localStorage.getItem("stopTime") || "30";
+
+        const dailySchedules = playTimesStr.split(",").map(s => s.trim());
+        const scheduleSeconds = captureTimesStr.split(",").map(s => parseInt(s.trim()));
+        const PLAY_DURATION_LIMIT = parseInt(stopTimeStr) * 60;
+        
+        let hasTriggered = {};
+        let player, playStartTime = null, screenshotCount = 0;
+        let isTaskCompleted = true; 
+        let lastTriggeredSchedule = null; 
+        let hasReloadedToday = false; 
+        let isEmergencyExit = false;
+
+        // --- UI 初始化 ---
+        document.getElementById("store-name").innerText = storeName;
+        document.getElementById("input-store-name").value = storeName;
+        document.getElementById("input-gas-url").value = gasUrl;
+        document.getElementById("input-play-times").value = playTimesStr;
+        document.getElementById("input-capture-times").value = captureTimesStr;
+        document.getElementById("input-stop-time").value = stopTimeStr;
+
+        // ======== 精美提示對話框呼叫函數 ========
+        function customAlert(msg) {
+            document.getElementById('alert-message').innerText = msg;
+            document.getElementById('alert-modal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+
+        function closeAlertModal() {
+            document.getElementById('alert-modal').style.display = 'none';
+            if (document.getElementById('settings-modal').style.display !== 'block' && 
+                document.getElementById('password-modal').style.display !== 'block') {
+                document.getElementById('overlay').style.display = 'none';
+            }
+        }
+        
+        if (storeName === "請輸入店名") {
+            customAlert("若初次設定 請依照流程安裝設定\n如有問題請洽工程師");
+            document.getElementById("store-name").style.color = "#f44336";
+        }
+
+        // --- 遺言機制 (異常關閉/緊急停止 分流) ---
+        window.addEventListener('beforeunload', function (e) {
+            let action = isEmergencyExit ? "🛑 緊急停止" : "⚠️ 系統異常關閉";
+            let payload = JSON.stringify({
+                type: "LINE_NOTIFY",
+                storeName: storeName,
+                action: action,
+                videoTitle: document.getElementById("video-schedule").innerText,
+                time: new Date().toLocaleTimeString('zh-TW', { hour12: false })
             });
-            logToUI(`LINE 警報推播成功: 師傅 ${masseurId}`, 'bg-green-600 text-white');
-            document.getElementById('lineStatusTag').innerText = "LINE: SENT ✅";
-            setTimeout(() => { document.getElementById('lineStatusTag').innerText = "LINE: ACTIVE"; }, 3000);
-        } catch (err) {
-            logToUI(`LINE 推播失敗: ${err.message}`, 'bg-red-900 text-white');
-            document.getElementById('lineStatusTag').innerText = "LINE: ERROR ❌";
-        }
-    }
+            navigator.sendBeacon(gasUrl, payload);
+        });
 
-    function updateBrowserTabStatus(pendingCount) {
-        if (pendingCount > 0) {
-            if (!titleAlertInterval) {
-                let showAlt = false;
-                titleAlertInterval = setInterval(() => {
-                    document.title = showAlt ? `(⚠️ 待處理: ${pendingCount}) 稽核警告` : `【管理中心】中清行館`;
-                    showAlt = !showAlt;
-                }, 1500);
+        // --- 彈出設定視窗 (ESC/Alt+F4 監聽與密碼) ---
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape" || (event.altKey && event.key === "F4")) {
+                isEmergencyExit = true; 
             }
-        } else {
-            if (titleAlertInterval) {
-                clearInterval(titleAlertInterval);
-                titleAlertInterval = null;
+            if (event.key === "Escape") {
+                if (document.getElementById('settings-modal').style.display === 'block') {
+                    closeSettings();
+                } else if (document.getElementById('password-modal').style.display !== 'block' && 
+                           document.getElementById('alert-modal').style.display !== 'block') {
+                    showPasswordModal('ESC');
+                }
             }
-            document.title = "稽核監控中心 - 中清行館 V1.9.4";
-        }
-    }
+        });
 
-    function logToUI(msg, colorClass = 'bg-slate-900 text-green-400') {
-        const time = new Date().toLocaleTimeString();
-        const fullMsg = `[${time}] ${msg}`;
-        logArchive.unshift(fullMsg);
-        if (logArchive.length > 50) logArchive.pop();
-        const historyList = document.getElementById('historyLogList');
-        if (historyList) historyList.innerHTML = logArchive.map(log => `<div>${log}</div>`).join('');
-
-        const toastContainer = document.getElementById('toastContainer');
-        if (toastContainer) {
-            const toast = document.createElement('div');
-            toast.className = `toast-entry px-4 py-2 rounded-xl shadow-lg border border-white/10 flex items-center gap-2 text-[10px] font-bold ${colorClass}`;
-            toast.innerHTML = `<span>●</span> ${msg}`;
-            toastContainer.prepend(toast);
-            setTimeout(() => {
-                toast.classList.add('toast-fade');
-                setTimeout(() => toast.remove(), 600);
-            }, 5000);
-        }
-    }
-
-    window.openLogHistory = () => document.getElementById('logHistoryModal').classList.replace('modal-inactive', 'modal-active');
-
-    function setDefaultDateToCurrentMonth() {
-        const now = new Date();
-        const firstDay = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        document.getElementById('filterStart').value = firstDay;
-        document.getElementById('filterEnd').value = today;
-    }
-
-    window.handleLogin = async () => { 
-        const loginBtn = document.getElementById('loginBtn');
-        const loginStatus = document.getElementById('loginStatus');
-        if (document.getElementById('loginInput').value === 'admin888') { 
-            try {
-                loginBtn.disabled = true;
-                loginStatus.innerText = "驗證中...";
-                await setPersistence(auth, browserLocalPersistence);
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else { await signInAnonymously(auth); }
-                sessionStorage.setItem('adminVerified', 'true');
-                hideLoginUI();
-                startSync();
-            } catch (err) { 
-                loginBtn.disabled = false; 
-                loginStatus.innerText = "驗證失敗";
-                logToUI(`Login Error: ${err.message}`, 'bg-red-900 text-white');
+        function saveSettings() {
+            let inputStoreName = document.getElementById("input-store-name").value.trim();
+            if (inputStoreName === "" || inputStoreName === "請輸入店名") {
+                customAlert("請輸入正確的門店名稱！\n不可為空白或預設名稱。");
+                return;
             }
-        } else { 
-            alert("密碼錯誤"); 
+            localStorage.setItem("storeName", inputStoreName);
+            localStorage.setItem("gasUrl", document.getElementById("input-gas-url").value.trim());
+            localStorage.setItem("playTimes", document.getElementById("input-play-times").value.trim());
+            localStorage.setItem("captureTimes", document.getElementById("input-capture-times").value.trim());
+            localStorage.setItem("stopTime", document.getElementById("input-stop-time").value.trim());
+            location.reload();
         }
-    };
 
-    function hideLoginUI() {
-        const overlay = document.getElementById('loginOverlay');
-        if (overlay) {
-            overlay.classList.add('opacity-0', 'pointer-events-none');
-            setTimeout(() => { overlay.style.display = 'none'; }, 500);
+        function closeSettings() {
+            document.getElementById('settings-modal').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+            closePasswordModal(); 
         }
-    }
 
-    onAuthStateChanged(auth, (user) => { 
-        if (user && sessionStorage.getItem('adminVerified') === 'true') {
-            document.getElementById('connTag').innerText = "CONNECTED";
-            document.getElementById('connTag').className = "text-[8px] bg-green-500 text-white px-1 py-0.5 rounded font-black italic";
-            hideLoginUI();
-            startSync();
+        // --- 密碼驗證邏輯 ---
+        let passwordContext = ""; 
+
+        function showPasswordModal(context) {
+            passwordContext = context;
+            document.getElementById('password-modal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('download-password').value = ''; 
+            document.getElementById('password-error').style.display = 'none'; 
+            document.getElementById('download-password').focus(); 
         }
-    });
 
-    window.signOutAdmin = async () => {
-        sessionStorage.removeItem('adminVerified');
-        await signOut(auth);
-        location.reload();
-    };
+        function closePasswordModal() {
+            document.getElementById('password-modal').style.display = 'none';
+            if (passwordContext === "ESC" && document.getElementById('alert-modal').style.display !== 'block') {
+                document.getElementById('overlay').style.display = 'none';
+            }
+        }
 
-    function startSync() {
-        if (!auth.currentUser || sessionStorage.getItem('adminVerified') !== 'true' || syncStarted) return;
-        syncStarted = true;
-        logToUI("Snapshot Listener Active.");
+        function checkPassword() {
+            let pwd = document.getElementById('download-password').value;
+            if (pwd === "8888") {
+                document.getElementById('password-modal').style.display = 'none';
+                if (passwordContext === "ESC") {
+                    document.getElementById('settings-modal').style.display = 'block';
+                    document.getElementById('test-btn').style.display = 'block'; 
+                } else if (passwordContext === "DOWNLOAD") {
+                    document.getElementById('hidden-download-link').click(); 
+                    showLog("✅ 授權成功，正在開啟外掛連結...", "#4CAF50");
+                }
+            } else {
+                document.getElementById('password-error').style.display = 'block';
+                document.getElementById('download-password').value = ''; 
+                document.getElementById('download-password').focus(); 
+            }
+        }
 
-        onSnapshot(collection(db, ...collectionPath), (sn) => {
-            logToUI(`Sync: Found ${sn.size} records.`, 'bg-blue-900 text-white');
+        function handlePasswordKey(event) {
+            if (event.key === "Enter") {
+                checkPassword();
+            }
+        }
 
-            // 判斷是否有新資料新增且為異常，觸發 LINE 通知
-            if (!isFirstSnapshot) {
-                sn.docChanges().forEach(change => {
-                    if (change.type === 'added') {
-                        const d = { id: change.doc.id, ...change.doc.data() };
-                        // 異常判定 (與原系統邏輯相符，排除 Q8、Q9)
-                        const isCriticalAlarm = Object.entries(d.ratings || {}).some(([k, v]) => !['q8', 'q9'].includes(k) && negKeywords.includes(v));
-                        if (isCriticalAlarm && d.adminStatus !== 'resolved') {
-                            sendLineAlert(d);
-                        }
-                    }
+        // --- 日期與清單動態對應邏輯 ---
+        function getTodayKey() {
+            let today = new Date();
+            let month = (today.getMonth() + 1).toString().padStart(2, '0');
+            let day = today.getDate().toString().padStart(2, '0');
+            return `${month}/${day}`;
+        }
+        
+        const dateKey = getTodayKey();
+        const currentPlaylistData = playlistSchedule[dateKey];
+        const targetPlaylistId = currentPlaylistData ? currentPlaylistData.id : "PLCV-Y48MR1Jdn2OHxmCDXk60S6wj7FFLb";
+        const targetTitle = currentPlaylistData ? currentPlaylistData.title : "本日無排程(預設)";
+        document.getElementById("video-schedule").innerText = `[${dateKey}] ${targetTitle}`;
+
+        // --- YouTube API 載入 ---
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                playerVars: { 
+                    'autoplay': 1, 
+                    'controls': 0, 
+                    'loop': 1, 
+                    'mute': 1, 
+                    'listType': 'playlist',
+                    'list': targetPlaylistId
+                }
+            });
+        }
+
+        // --- 排程預測與日期顯示 ---
+        function updateNextSchedule(now) {
+            let currentMinutes = now.getHours() * 60 + now.getMinutes();
+            let sortedSchedules = dailySchedules.map(t => {
+                let parts = t.split(":");
+                return {
+                    h: parseInt(parts[0]),
+                    m: parseInt(parts[1]),
+                    totalMinutes: parseInt(parts[0]) * 60 + parseInt(parts[1]),
+                    str: t
+                };
+            }).sort((a,b) => a.totalMinutes - b.totalMinutes);
+            
+            let next = sortedSchedules.find(s => s.totalMinutes > currentMinutes);
+            
+            if (next) {
+                let month = (now.getMonth() + 1).toString().padStart(2, '0');
+                let day = now.getDate().toString().padStart(2, '0');
+                document.getElementById("next-schedule-time").innerText = `${month}/${day} ${next.str}`;
+            } else {
+                let tomorrow = new Date(now);
+                tomorrow.setDate(now.getDate() + 1);
+                let month = (tomorrow.getMonth() + 1).toString().padStart(2, '0');
+                let day = tomorrow.getDate().toString().padStart(2, '0');
+                document.getElementById("next-schedule-time").innerText = `${month}/${day} ${sortedSchedules[0].str} (明日)`;
+            }
+        }
+
+        // --- Kiosk 全螢幕監控迴圈 (每 5 秒) ---
+        setInterval(() => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log("正在等待使用者互動以進入全螢幕...");
                 });
             }
-            isFirstSnapshot = false;
+        }, 5000);
 
-            rawData = sn.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            updateDropdown(); 
-            filterData();
-            const spin = document.getElementById('loadingSpin');
-            if(spin) spin.classList.add('hidden');
-        }, (err) => {
-            syncStarted = false;
-            logToUI(`Sync Error: ${err.code} - ${err.message}`, 'bg-red-900 text-white');
-        });
-    }
-
-    window.filterData = () => {
-        const start = document.getElementById('filterStart').value;
-        const end = document.getElementById('filterEnd').value;
-        const mas = document.getElementById('filterMasseur').value;
-        const status = document.getElementById('filterStatus').value;
-
-        const dateDisp = document.getElementById('totalDateDisplay');
-        if(dateDisp) dateDisp.innerText = start || '未設定';
-
-        let filtered = rawData.filter(d => {
-            const date = d.serviceDate || (d.createdAt ? new Date(d.createdAt.seconds*1000).toISOString().split('T')[0] : '');
-            const matchTime = (!start || date >= start) && (!end || date <= end);
-            const matchMas = (mas === 'all' || String(d.masseurId) === mas);
+        // --- 主時鐘與播放排程觸發迴圈 (每 1 秒) ---
+        setInterval(() => {
+            let now = new Date();
             
-            // 警報判定：不包含 Q8 與 Q9
-            const isCriticalAlarm = Object.entries(d.ratings || {}).some(([k, v]) => !['q8', 'q9'].includes(k) && negKeywords.includes(v));
-            const isRes = d.adminStatus === 'resolved';
+            // 擷取月、日、時間，更新畫面上的「目前時間」
+            let mStr = (now.getMonth() + 1).toString().padStart(2, '0');
+            let dStr = now.getDate().toString().padStart(2, '0');
+            let timeStr = now.toLocaleTimeString('zh-TW', { hour12: false });
+            let currentHHmm = timeStr.substring(0, 5); 
 
-            let matchStatus = true;
-            if (status === 'normal') matchStatus = !isCriticalAlarm;
-            if (status === 'critical') matchStatus = isCriticalAlarm && !isRes;
-            if (status === 'resolved') matchStatus = isRes;
+            document.getElementById("current-time").innerText = `${mStr}/${dStr} ${timeStr}`;
+            updateNextSchedule(now);
 
-            return matchTime && matchMas && matchStatus;
-        }).sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+            // 更新影片當前時間
+            if(player && player.getCurrentTime) {
+                let cSec = Math.floor(player.getCurrentTime());
+                let m = Math.floor(cSec / 60).toString().padStart(2, '0');
+                let s = (cSec % 60).toString().padStart(2, '0');
+                document.getElementById("video-current-time").innerText = `${m}:${s}`;
+            }
 
-        updateMasseurStats(filtered);
-        updateAlarmUI(rawData); 
-        renderTable(filtered);
-    };
-
-    function updateMasseurStats(data) {
-        const stats = {};
-        data.forEach(d => {
-            if(!stats[d.masseurId]) stats[d.masseurId] = { s:0, f:0 };
-            if(d.marketingAction==='Reviewed') stats[d.masseurId].s++;
-            if(d.suggestions && d.suggestions.length > 3) stats[d.masseurId].f++;
-        });
-        document.getElementById('masseurStatsList').innerHTML = Object.entries(stats).map(([id, s]) => `
-            <div class="flex items-center gap-1 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full shrink-0">
-                <span class="text-[9px] font-black text-blue-800 italic">#${formatId(id)}</span>
-                <span class="text-[10px] font-black text-amber-600">${s.s}★</span>
-                <span class="text-[10px] font-black text-blue-500">${s.f}📝</span>
-            </div>`).join('');
-    }
-
-    function updateAlarmUI(allData) {
-        // 警報清單：排除 Q8 與 Q9
-        const pending = allData.filter(d => Object.entries(d.ratings || {}).some(([k, v]) => !['q8', 'q9'].includes(k) && negKeywords.includes(v)) && d.adminStatus !== 'resolved');
-        const activeNum = document.getElementById('activeAlarmNum');
-        if(activeNum) activeNum.innerText = pending.length;
-        
-        updateBrowserTabStatus(pending.length);
-
-        const container = document.getElementById('alarmContainer');
-        if (pending.length > 0) {
-            const d = pending[0];
-            container.innerHTML = `
-                <div class="m-2 pointer-events-auto">
-                    <div class="alarm-banner text-white px-4 py-1.5 rounded-xl flex justify-between items-center shadow-lg border-2 border-white">
-                        <div class="flex items-center gap-2">
-                            <span class="text-base animate-bounce">⚠️</span>
-                            <div><p class="font-black text-[11px]">師傅 ${formatId(d.masseurId)} 稽核異常！</p><p class="text-[8px] opacity-90">${maskName(d.customerName)} | 待處理：${pending.length} 筆</p></div>
-                        </div>
-                        <button onclick="window.showDetail('${d.id}', 'ALRT')" class="bg-white text-red-600 px-2 py-0.5 rounded-lg font-black text-[9px] shadow-sm cursor-pointer hover:bg-slate-100 transition">管理處置</button>
-                    </div>
-                </div>`;
-        } else { container.innerHTML = ''; }
-    }
-
-    function renderTable(data) {
-        const statTotal = document.getElementById('statTotal');
-        if(statTotal) statTotal.innerText = data.length;
-        const body = document.getElementById('reportTableBody');
-        if (data.length === 0) {
-            body.innerHTML = '<tr><td colspan="18" class="py-10 text-center text-slate-400 font-bold italic font-mono uppercase tracking-widest">No matching records found</td></tr>';
-            return;
-        }
-        body.innerHTML = data.map((d, i) => {
-            const r = d.ratings || {};
-            // 警報判定（決定狀態標籤顏色）：不含 Q8, Q9
-            const isCriticalAlarm = Object.entries(r).some(([k, v]) => !['q8', 'q9'].includes(k) && negKeywords.includes(v));
-            
-            const isResolved = d.adminStatus === 'resolved';
-            const isRevealed = revealedIds.has(d.id);
-            const ts = d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleString('zh-TW',{hour12:false,month:'numeric',day:'numeric',hour:'numeric',minute:'numeric'}) : 'Sync';
-            
-            return `<tr>
-                <td class="text-center font-black text-slate-300">${i+1}</td>
-                <td class="font-mono text-[6.5px] text-slate-400">系:${ts}<br>服:${d.serviceDate || '-'}</td>
-                <td class="text-center"><span class="bg-slate-800 text-white px-1 py-0.5 rounded text-[9px] font-black italic">${formatId(d.masseurId)}</span></td>
-                ${Object.keys(labels).map(k => {
-                    const v = r[k] || '-';
-                    const isNeg = negKeywords.includes(v);
-                    
-                    // 視覺警示：所有欄位（含 Q8, Q9）遇到負向時都顯示紅色背景
-                    const color = isNeg ? 'text-red-700 bg-red-50 font-black' : (v==='-' ? 'text-slate-200' : 'text-slate-600');
-                    
-                    return `<td class="q-col ${color}">${v}</td>`;
-                }).join('')}
-                <td class="text-center text-[7px]">${d.marketingAction==='Reviewed'?'<span class="text-amber-500 font-bold">★ 評論</span>':'-'}</td>
-                <td class="text-center"><span class="text-[6.5px] px-1 py-0.5 rounded-full font-black text-white ${isResolved?'bg-blue-600':(isCriticalAlarm?'bg-red-600 animate-pulse':'bg-green-600')}">${isResolved?'完成':(isCriticalAlarm?'異常':'正常')}</span></td>
-                <td class="italic text-slate-500 truncate text-[7.5px]">${d.adminRemark || '待處置...'}</td>
-                <td class="no-print text-center py-1">
-                    <div class="flex flex-col gap-1 items-center">
-                        <button onclick="window.showDetail('${d.id}', ${i+1})" class="w-full bg-slate-100 text-slate-800 px-1 py-0.5 rounded text-[7px] font-black hover:bg-blue-600 hover:text-white transition">管理</button>
-                        <button onclick="window.open(G_REVIEW_URL)" class="w-full bg-amber-50 text-amber-600 px-1 py-0.5 rounded text-[7px] font-black border border-amber-100 hover:bg-amber-100 transition">5星</button>
-                    </div>
-                </td>
-                <td class="p-1">
-                    <div class="flex items-center gap-1">
-                        <div class="flex-1 min-w-0">
-                            <p class="font-bold text-slate-700 leading-none truncate">${isRevealed ? d.customerName : maskName(d.customerName)}</p>
-                            <p class="text-[7px] text-slate-400 leading-tight">${isRevealed ? d.customerPhone : maskPhone(d.customerPhone)}</p>
-                        </div>
-                        <button onclick="window.toggleReveal('${d.id}')" class="no-print p-0.5 cursor-pointer">${isRevealed ? '👁️‍🗨️' : '👁️'}</button>
-                    </div>
-                </td>
-            </tr>`;
-        }).join('');
-    }
-
-    window.showDetail = (docId, seq) => {
-        const item = rawData.find(d => String(d.id) === String(docId));
-        if(!item) return;
-        currentDocId = docId;
-        document.getElementById('modalId').innerText = seq;
-        document.getElementById('adminRemarkInput').value = item.adminRemark || "";
-        const r = item.ratings || {};
-        const isRevealed = revealedIds.has(docId);
-        
-        document.getElementById('modalContent').innerHTML = `
-            <div class="grid grid-cols-2 gap-2">
-                <div class="bg-slate-50 p-3 rounded-xl border"><p class="text-[8px] text-slate-400 font-black mb-0.5">師傅 ID</p><p class="text-xl font-black text-blue-600">${formatId(item.masseurId)}</p></div>
-                <div class="bg-slate-50 p-3 rounded-xl border">
-                    <p class="text-[8px] text-slate-400 font-black mb-0.5 uppercase">顧客資訊</p>
-                    <p class="text-lg font-bold">${isRevealed ? item.customerName : maskName(item.customerName)}</p>
-                    <p class="text-[10px] text-slate-400">${isRevealed ? item.customerPhone : maskPhone(item.customerPhone)}</p>
-                </div>
-            </div>
-            <div class="space-y-1 mt-2">${Object.keys(labels).map(k => {
-                const isNeg = negKeywords.includes(r[k]);
-                // 視覺警示：彈窗內所有負向欄位皆顯示紅色
-                const bgClass = isNeg ? 'bg-red-50 border-red-200' : 'bg-white';
-                const textClass = isNeg ? 'text-red-600' : 'text-blue-600';
+            // 1. 觸發開播與放大機制
+            if (dailySchedules.includes(currentHHmm) && currentHHmm !== lastTriggeredSchedule && isTaskCompleted) {
+                lastTriggeredSchedule = currentHHmm;
                 
-                return `
-                <div class="flex justify-between items-center px-3 py-1.5 border rounded-lg ${bgClass}">
-                    <span class="text-slate-500 font-bold text-[10px]">${labels[k]}</span>
-                    <span class="font-black text-[10px] ${textClass}">${r[k] || '-'}</span>
-                </div>`}).join('')}</div>
-            <div class="bg-amber-50 p-3 rounded-xl border border-amber-100 mt-2">
-                <p class="text-[8px] font-black text-amber-600 mb-0.5">建議回饋</p>
-                <p class="text-xs text-slate-700 italic">"${item.suggestions || "無填寫建議。"}"</p>
-            </div>`;
+                showLog(`到達排程時間！自動放大視窗並開始...`, "#4CAF50");
+                window.postMessage({ type: "REQUEST_MAXIMIZE" }, "*"); 
+                
+                playStartTime = now.getTime();
+                isTaskCompleted = false;
+
+                sendLineNotification("🟢 開始播放");
+                
+                scheduleSeconds.forEach(sec => hasTriggered[sec] = false);
+                screenshotCount = 0;
+                document.getElementById("screenshot-count").innerText = `0 張`;
+                
+                setTimeout(() => { if (player && player.playVideo) player.playVideo(); }, 1500);
+            }
+
+            // 2. 播放中狀態計算
+            if (playStartTime && !isTaskCompleted) {
+                let elapsedSeconds = Math.floor((now.getTime() - playStartTime) / 1000);
+                document.getElementById("total-play-time").innerText = Math.floor(elapsedSeconds / 60) + " 分鐘";
+
+                scheduleSeconds.forEach(targetSec => {
+                    if (elapsedSeconds >= targetSec && !hasTriggered[targetSec]) {
+                        hasTriggered[targetSec] = true;
+                        let typeStr = targetSec < 60 ? `${targetSec}秒` : `${targetSec/60}分鐘`;
+                        takeAndUploadScreenshot(`排程: ${typeStr}`);
+                    }
+                });
+
+                // 3. 結束與縮小機制
+                if (elapsedSeconds >= PLAY_DURATION_LIMIT) {
+                    isTaskCompleted = true; 
+                    sendLineNotification("🔴 結束播放");
+
+                    if (player && typeof player.pauseVideo === 'function') player.pauseVideo();
+                    showLog(`✅ 任務完成，縮小中...`, "#4CAF50");
+                    
+                    setTimeout(() => {
+                        window.postMessage({ type: "REQUEST_MINIMIZE" }, "*");
+                    }, 3000); 
+                }
+            }
+
+            // 4. 每日跨夜自動重整更新當日影片
+            if (currentHHmm === "03:00" && !hasReloadedToday) {
+                hasReloadedToday = true;
+                location.reload(); 
+            }
+            if (currentHHmm === "04:00") {
+                hasReloadedToday = false; 
+            }
+        }, 1000);
+
+        function showLog(msg, color = "#ffeb3b") {
+            const logEl = document.getElementById("status-log");
+            logEl.style.color = color;
+            logEl.innerText = msg;
+        }
+
+        // --- 外掛截圖與上傳機制 ---
+        function takeAndUploadScreenshot(type = "自動截圖") {
+            showLog(`[${type}] 呼叫外掛截圖中...`, "#03A9F4");
+            window.postMessage({ type: "REQUEST_CAPTURE" }, "*");
+
+            let captureTimeout = setTimeout(() => {
+                showLog(`[${type}] 截圖失敗：未偵測到擴充功能！`, "#f44336");
+            }, 3000);
+
+            function captureListener(event) {
+                if (event.source !== window || !event.data) return;
+                if (event.data.type === "RECEIVE_CAPTURE") {
+                    clearTimeout(captureTimeout); 
+                    window.removeEventListener("message", captureListener);
+
+                    let imgData = event.data.dataUrl;
+                    if(!imgData) {
+                        showLog(`[${type}] 擷取失敗，無畫面。`, "#f44336");
+                        return;
+                    }
+                    showLog(`[${type}] 擷取成功，上傳雲端中...`, "#ffeb3b");
+                    
+                    let now = new Date();
+                    let dateStr = (now.getMonth() + 1).toString().padStart(2, '0') + "/" + now.getDate().toString().padStart(2, '0');
+                    let timeStr = now.toLocaleTimeString('zh-TW', { hour12: false });
+                    let fullTimestamp = `${dateStr} ${timeStr}`;
+
+                    uploadToCloud(imgData, type, fullTimestamp);
+                }
+            }
+            window.addEventListener("message", captureListener);
+        }
+
+        function uploadToCloud(base64Data, type, fullTimestamp) {
+            let payload = {
+                image: base64Data,
+                storeName: storeName,
+                time: fullTimestamp, 
+                type: type,
+                videoTitle: document.getElementById("video-schedule").innerText
+            };
+
+            fetch(gasUrl, {
+                method: "POST",
+                mode: "no-cors", 
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                screenshotCount++;
+                document.getElementById("screenshot-count").innerText = `${screenshotCount} 張`;
+                showLog(`[${type}] 上傳成功！`, "#4CAF50");
+            })
+            .catch(err => {
+                showLog(`[${type}] 上傳遭遇網路問題。`, "#f44336");
+            });
+        }
+
+        // --- 背景 LINE 通知發送模組 ---
+        function sendLineNotification(actionStatus) {
+            let now = new Date();
+            let timeStr = now.toLocaleTimeString('zh-TW', { hour12: false });
+            let videoTitle = document.getElementById("video-schedule").innerText;
+
+            let payload = {
+                type: "LINE_NOTIFY", 
+                storeName: storeName,
+                action: actionStatus, 
+                videoTitle: videoTitle,
+                time: timeStr
+            };
+
+            fetch(gasUrl, {
+                method: "POST",
+                mode: "no-cors", 
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(payload)
+            }).catch(err => console.log("LINE通知請求發送失敗", err));
+        }
+
+        // --- 拖曳防衝突設計 (支援自由縮放) ---
+        const infoBox = document.getElementById("info-box");
+        let isDragging = false, offsetX, offsetY;
+        infoBox.addEventListener("mousedown", (e) => {
+            if(e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
             
-        document.getElementById('modalGMapBtn').onclick = () => window.open(G_REVIEW_URL);
-        document.getElementById('detailModal').classList.replace('modal-inactive', 'modal-active');
-    };
+            let rect = infoBox.getBoundingClientRect();
+            if (e.clientX > rect.right - 25 && e.clientY > rect.bottom - 25) return; 
 
-    window.closeModal = (id) => document.getElementById(id).classList.replace('modal-active', 'modal-inactive');
-    
-    window.updateDropdown = () => {
-        const ids = [...new Set(rawData.map(d => String(d.masseurId)))].sort((a,b) => parseInt(a)-parseInt(b));
-        document.getElementById('filterMasseur').innerHTML = '<option value="all">所有師傅</option>' + ids.map(id => `<option value="${id}">${formatId(id)}</option>`).join('');
-    };
-
-    window.toggleReveal = (id) => {
-        revealedIds.has(id) ? revealedIds.delete(id) : revealedIds.add(id);
-        filterData();
-    };
-
-    document.getElementById('resolveBtn').onclick = async () => {
-        if(!currentDocId) return;
-        try {
-            const docRef = doc(db, ...collectionPath, currentDocId);
-            await updateDoc(docRef, { 
-                adminStatus: 'resolved', 
-                adminRemark: document.getElementById('adminRemarkInput').value || "已處理。", 
-                handledAt: serverTimestamp() 
-            });
-            closeModal('detailModal');
-            logToUI(`已完成處理：${currentDocId}`, 'bg-green-700 text-white');
-        } catch (e) { 
-            alert("更新失敗"); 
-            logToUI(`更新錯誤: ${e.message}`, 'bg-red-700 text-white');
-        }
-    };
-
-    window.resetFilters = () => { 
-        setDefaultDateToCurrentMonth();
-        document.getElementById('filterMasseur').value = 'all'; 
-        document.getElementById('filterStatus').value = 'all'; 
-        filterData();
-    };
-
-    window.exportReport = () => window.print();
-
-    window.onload = () => {
-        setDefaultDateToCurrentMonth();
-        const loginInp = document.getElementById('loginInput');
-        if(loginInp) {
-            loginInp.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') handleLogin();
-            });
-        }
-        logToUI("System: Logic V1.9.4 (Anonymous Auth) + LINE Ready.");
-        
-        if(sessionStorage.getItem('adminVerified') === 'true') {
-            if(LINE_WEBHOOK_URL) document.getElementById('lineStatusTag').innerText = "LINE: ACTIVE";
-            hideLoginUI();
-            startSync();
-        }
-    };
-</script>
+            isDragging = true;
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            infoBox.style.cursor = "grabbing";
+        });
+        document.addEventListener("mousemove", (e) => {
+            if (!isDragging) return;
+            infoBox.style.left = (e.clientX - offsetX) + "px";
+            infoBox.style.top = (e.clientY - offsetY) + "px";
+        });
+        document.addEventListener("mouseup", () => {
+            isDragging = false;
+            infoBox.style.cursor = "move";
+        });
+    </script>
 </body>
 </html>
