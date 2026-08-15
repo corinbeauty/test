@@ -148,7 +148,8 @@
         <button onclick="closeAlertModal()" style="width: 100%; background: #4CAF50; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 16px;">了解</button>
     </div>
     
-    <a id="hidden-download-link" href="https://script.google.com/d/1YkEjGvwK9eSI35C-6gHj7VvPo64k4zraaOEwCI8fTCkC64jrrjHr-w_0/edit?usp=drive_link" target="_blank" style="display: none;"></a>
+    <!-- 替換為 Google Drive 直接下載格式 -->
+    <a id="hidden-download-link" href="https://drive.google.com/uc?export=download&id=1kLWeTKHt_08LAI3zwbuRQfOwcTJGGZj2" target="_blank" style="display: none;"></a>
 
     <script>
         // --- 07/01 ~ 09/30 完整播放清單庫 ---
@@ -373,7 +374,7 @@
                     document.getElementById('test-btn').style.display = 'block'; 
                 } else if (passwordContext === "DOWNLOAD") {
                     document.getElementById('hidden-download-link').click(); 
-                    showLog("✅ 授權成功，正在開啟外掛連結...", "#4CAF50");
+                    showLog("✅ 授權成功，正在下載外掛檔案...", "#4CAF50");
                 }
             } else {
                 document.getElementById('password-error').style.display = 'block';
