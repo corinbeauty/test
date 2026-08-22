@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>昆蟲射擊</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; -webkit-tap-highlight-color: transparent; }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
     width: 100%;
     height: 100%;
@@ -13,6 +13,7 @@
     overflow: hidden;
     font-family: 'Segoe UI', system-ui, sans-serif;
     color: #fff;
+    touch-action: none;
   }
   #game-container {
     position: relative;
@@ -25,7 +26,6 @@
   canvas {
     display: block;
     background: #000;
-    /* 由 JS 控制實際顯示尺寸 */
   }
   #ui {
     position: absolute;
@@ -68,66 +68,70 @@
     position: absolute;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background: rgba(0,0,0,0.93);
+    background: rgba(0,0,0,0.94);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
-    z-index: 30;
+    z-index: 50;
+    pointer-events: auto;
   }
   .screen h1 {
-    font-size: 42px;
-    margin-bottom: 28px;
+    font-size: 40px;
+    margin-bottom: 30px;
     background: linear-gradient(90deg, #00ccff, #0066ff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
   .diff-btn {
     display: block;
-    width: 220px;
-    padding: 14px 0;
-    margin: 10px 0;
+    width: 230px;
+    padding: 16px 0;
+    margin: 11px 0;
     font-size: 18px;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     color: white;
     cursor: pointer;
-    transition: transform 0.15s;
+    pointer-events: auto;
+    user-select: none;
+    -webkit-user-select: none;
   }
-  .diff-btn:active { transform: scale(0.96); }
   #btn-easy   { background: linear-gradient(135deg, #00cc88, #009966); }
   #btn-normal { background: linear-gradient(135deg, #00aaff, #0066cc); }
   #btn-hard   { background: linear-gradient(135deg, #ff5555, #cc2222); }
   #leaderboard-btn {
-    margin-top: 24px;
-    padding: 10px 28px;
+    margin-top: 26px;
+    padding: 12px 32px;
     font-size: 15px;
     background: linear-gradient(135deg, #aa66ff, #6644cc);
     border: none;
     border-radius: 8px;
     color: white;
     cursor: pointer;
+    pointer-events: auto;
   }
   #name-input {
-    padding: 10px 14px;
+    padding: 11px 14px;
     font-size: 16px;
     border-radius: 6px;
     border: 2px solid #00aaff;
     background: #111;
     color: white;
-    margin: 12px 0 16px;
+    margin: 14px 0 16px;
     width: 200px;
     text-align: center;
   }
   button {
-    padding: 11px 28px;
+    padding: 12px 28px;
     font-size: 16px;
     border: none;
     border-radius: 8px;
     color: white;
-    margin: 5px;
+    margin: 6px;
     cursor: pointer;
+    pointer-events: auto;
   }
   #restart-btn { background: linear-gradient(135deg, #00aaff, #0066cc); }
   #save-score-btn { background: linear-gradient(135deg, #00cc88, #009966); }
@@ -164,7 +168,7 @@
       <div id="boss-hp"></div>
     </div>
 
-    <!-- 開始畫面：只有標題 + 難度選擇 -->
+    <!-- 開始畫面 -->
     <div id="start-screen" class="screen">
       <h1>🐛 昆蟲射擊</h1>
       <button class="diff-btn" id="btn-easy">簡單　分數 ×1</button>
@@ -194,18 +198,24 @@
 /* ========== 音效 ========== */
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
-function initAudio() { if (!audioCtx) audioCtx = new AudioCtx(); }
+function initAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+}
 function playTone(freq, type, duration, volume = 0.1, slide = 0) {
   if (!audioCtx) return;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-  if (slide) osc.frequency.linearRampToValueAtTime(freq + slide, audioCtx.currentTime + duration);
-  gain.gain.setValueAtTime(volume, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-  osc.connect(gain); gain.connect(audioCtx.destination);
-  osc.start(); osc.stop(audioCtx.currentTime + duration);
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    if (slide) osc.frequency.linearRampToValueAtTime(freq + slide, audioCtx.currentTime + duration);
+    gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch(e) {}
 }
 function sfxShoot() { playTone(920, 'square', 0.06, 0.06); playTone(1400, 'square', 0.04, 0.03); }
 function sfxHit() { playTone(220, 'sawtooth', 0.1, 0.09, -70); }
@@ -219,12 +229,23 @@ function sfxHurt() { playTone(140, 'square', 0.2, 0.12, -40); }
 let bgOsc = null;
 function startBGM() {
   if (!audioCtx || bgOsc) return;
-  bgOsc = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  bgOsc.type = 'sine'; bgOsc.frequency.value = 50; g.gain.value = 0.022;
-  bgOsc.connect(g); g.connect(audioCtx.destination); bgOsc.start();
+  try {
+    bgOsc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    bgOsc.type = 'sine';
+    bgOsc.frequency.value = 50;
+    g.gain.value = 0.022;
+    bgOsc.connect(g);
+    g.connect(audioCtx.destination);
+    bgOsc.start();
+  } catch(e) {}
 }
-function stopBGM() { if (bgOsc) { bgOsc.stop(); bgOsc = null; } }
+function stopBGM() {
+  if (bgOsc) {
+    try { bgOsc.stop(); } catch(e) {}
+    bgOsc = null;
+  }
+}
 
 /* ========== 遊戲變數 ========== */
 const canvas = document.getElementById('gameCanvas');
@@ -251,10 +272,9 @@ let shield = false;
 let shieldTimer = 0;
 let shootCooldown = 0;
 let shotLevel = 1;
-let scoreMultiplier = 1;   // 難度分數倍率
+let scoreMultiplier = 1;
 let difficulty = 'normal';
 
-// 觸控移動
 let touchX = null;
 let isTouching = false;
 
@@ -266,14 +286,13 @@ const player = {
   speed: 6.5
 };
 
-/* ========== 畫面縮放 ========== */
+/* ========== 畫面自動縮放 ========== */
 function resizeCanvas() {
-  const container = document.getElementById('game-container');
   const winW = window.innerWidth;
   const winH = window.innerHeight;
   const scale = Math.min(winW / BASE_W, winH / BASE_H);
-  canvas.style.width = (BASE_W * scale) + 'px';
-  canvas.style.height = (BASE_H * scale) + 'px';
+  canvas.style.width = Math.floor(BASE_W * scale) + 'px';
+  canvas.style.height = Math.floor(BASE_H * scale) + 'px';
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
@@ -314,12 +333,11 @@ function drawPlayer() {
   if (shield) {
     ctx.beginPath();
     ctx.arc(0, 0, 40, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(0,255,210,${0.35 + Math.sin(frame*0.14)*0.25})`;
+    ctx.strokeStyle = `rgba(0,255,210,${0.35 + Math.sin(frame * 0.14) * 0.25})`;
     ctx.lineWidth = 3.5;
     ctx.stroke();
   }
 
-  // 火焰
   const flameLen = 16 + Math.random() * 12;
   const grad = ctx.createLinearGradient(0, 10, 0, 10 + flameLen);
   grad.addColorStop(0, '#ffaa00');
@@ -331,7 +349,6 @@ function drawPlayer() {
   ctx.quadraticCurveTo(0, 12 + flameLen, 9, 12);
   ctx.fill();
 
-  // 機身
   const bodyGrad = ctx.createLinearGradient(-20, -25, 20, 20);
   bodyGrad.addColorStop(0, '#66e0ff');
   bodyGrad.addColorStop(0.45, '#00aaff');
@@ -352,7 +369,6 @@ function drawPlayer() {
   ctx.closePath();
   ctx.fill();
 
-  // 高光
   ctx.shadowBlur = 0;
   ctx.fillStyle = 'rgba(255,255,255,0.32)';
   ctx.beginPath();
@@ -362,7 +378,6 @@ function drawPlayer() {
   ctx.closePath();
   ctx.fill();
 
-  // 駕駛艙
   ctx.fillStyle = 'rgba(180,240,255,0.7)';
   ctx.beginPath();
   ctx.ellipse(0, -5, 6, 7, 0, 0, Math.PI * 2);
@@ -384,15 +399,13 @@ function drawBullets() {
   ctx.shadowBlur = 0;
 }
 
-/* ========== 昆蟲敵人繪製 ========== */
 function drawInsect(e) {
   ctx.save();
   ctx.translate(e.x + e.width / 2, e.y + e.height / 2);
-  ctx.rotate(Math.sin(frame * e.wingSpeed) * 0.15); // 微微擺動
+  ctx.rotate(Math.sin(frame * e.wingSpeed) * 0.15);
 
   const r = e.width / 2;
 
-  // 翅膀（半透明）
   ctx.globalAlpha = 0.45;
   ctx.fillStyle = e.wingColor;
   ctx.beginPath();
@@ -401,7 +414,6 @@ function drawInsect(e) {
   ctx.fill();
   ctx.globalAlpha = 1;
 
-  // 身體
   ctx.fillStyle = e.color;
   ctx.shadowBlur = 8;
   ctx.shadowColor = e.color;
@@ -409,12 +421,10 @@ function drawInsect(e) {
   ctx.ellipse(0, 0, r * 0.55, r * 0.85, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // 頭部
   ctx.beginPath();
   ctx.arc(0, -r * 0.7, r * 0.38, 0, Math.PI * 2);
   ctx.fill();
 
-  // 觸角
   ctx.strokeStyle = e.color;
   ctx.lineWidth = 1.5;
   ctx.beginPath();
@@ -424,7 +434,6 @@ function drawInsect(e) {
   ctx.quadraticCurveTo(r * 0.5, -r * 1.4, r * 0.35, -r * 1.5);
   ctx.stroke();
 
-  // 眼睛
   ctx.fillStyle = '#fff';
   ctx.beginPath();
   ctx.arc(-r * 0.15, -r * 0.75, r * 0.12, 0, Math.PI * 2);
@@ -436,7 +445,6 @@ function drawInsect(e) {
   ctx.arc(r * 0.15, -r * 0.75, r * 0.06, 0, Math.PI * 2);
   ctx.fill();
 
-  // 腳
   ctx.strokeStyle = e.color;
   ctx.lineWidth = 1.8;
   for (let i = -1; i <= 1; i++) {
@@ -457,7 +465,6 @@ function drawEnemies() {
     const e = enemies[i];
     drawInsect(e);
     e.y += e.speed;
-    // 輕微左右晃動
     e.x += Math.sin(frame * 0.05 + e.phase) * 0.6;
     if (e.y > BASE_H + 50) enemies.splice(i, 1);
   }
@@ -470,7 +477,6 @@ function drawBoss() {
   ctx.translate(b.x + b.width / 2, b.y + b.height / 2);
   ctx.rotate(Math.sin(frame * 0.02) * 0.06);
 
-  // 巨大昆蟲
   ctx.fillStyle = '#cc2244';
   ctx.shadowBlur = 22;
   ctx.shadowColor = '#ff0000';
@@ -478,7 +484,6 @@ function drawBoss() {
   ctx.ellipse(0, 0, 55, 40, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // 翅膀
   ctx.globalAlpha = 0.4;
   ctx.fillStyle = '#ff6688';
   ctx.beginPath();
@@ -487,13 +492,11 @@ function drawBoss() {
   ctx.fill();
   ctx.globalAlpha = 1;
 
-  // 頭
   ctx.fillStyle = '#aa1133';
   ctx.beginPath();
   ctx.arc(0, -35, 22, 0, Math.PI * 2);
   ctx.fill();
 
-  // 眼睛
   ctx.fillStyle = '#ffff00';
   ctx.beginPath();
   ctx.arc(-12, -38, 8, 0, Math.PI * 2);
@@ -508,7 +511,7 @@ function drawBoss() {
   b.y += Math.sin(frame * 0.03) * 0.6;
 
   if (frame % 42 === 0) {
-    enemies.push(createInsect(b.x + b.width/2 - 15, b.y + b.height, true));
+    enemies.push(createInsect(b.x + b.width / 2 - 15, b.y + b.height, true));
   }
 }
 
@@ -544,7 +547,9 @@ function drawParticles() {
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
     ctx.fill();
-    p.x += p.vx; p.y += p.vy; p.life--;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life--;
     if (p.life <= 0) particles.splice(i, 1);
   }
   ctx.globalAlpha = 1;
@@ -553,18 +558,18 @@ function drawParticles() {
 /* ========== 邏輯 ========== */
 function createInsect(x, y, fromBoss = false) {
   const types = [
-    { color: '#44aa44', wingColor: '#aaffaa', wingSpeed: 0.25 }, // 綠蠅
-    { color: '#885522', wingColor: '#ccaa66', wingSpeed: 0.18 }, // 甲蟲
-    { color: '#aa44aa', wingColor: '#ffaaff', wingSpeed: 0.3 },  // 飛蛾
-    { color: '#2288cc', wingColor: '#88ddff', wingSpeed: 0.35 }, // 蚊子
-    { color: '#cc6622', wingColor: '#ffcc88', wingSpeed: 0.22 }  // 黃蜂
+    { color: '#44aa44', wingColor: '#aaffaa', wingSpeed: 0.25 },
+    { color: '#885522', wingColor: '#ccaa66', wingSpeed: 0.18 },
+    { color: '#aa44aa', wingColor: '#ffaaff', wingSpeed: 0.3 },
+    { color: '#2288cc', wingColor: '#88ddff', wingSpeed: 0.35 },
+    { color: '#cc6622', wingColor: '#ffcc88', wingSpeed: 0.22 }
   ];
   const t = types[Math.floor(Math.random() * types.length)];
   const size = fromBoss ? 26 : 28 + Math.random() * 20;
-  const speedBase = difficulty === 'hard' ? 2.8 : difficulty === 'easy' ? 1.6 : 2.2;
+  const speedBase = difficulty === 'hard' ? 2.8 : (difficulty === 'easy' ? 1.6 : 2.2);
   return {
-    x: x ?? Math.random() * (BASE_W - size),
-    y: y ?? -size,
+    x: (x !== undefined && x !== null) ? x : Math.random() * (BASE_W - size),
+    y: (y !== undefined && y !== null) ? y : -size,
     width: size,
     height: size,
     speed: speedBase + Math.random() * 1.8 + Math.floor(score / 1200) * 0.3,
@@ -650,7 +655,7 @@ function activatePower(type) {
     shieldTimer = 360;
   } else {
     sfxPowerBomb();
-    enemies.forEach(e => createExplosion(e.x + e.width/2, e.y + e.height/2, e.color));
+    enemies.forEach(e => createExplosion(e.x + e.width / 2, e.y + e.height / 2, e.color));
     enemies = [];
     if (boss) {
       boss.hp -= 13;
@@ -681,13 +686,12 @@ function defeatBoss() {
 }
 
 function checkCollisions() {
-  // 子彈 vs 昆蟲
   for (let i = bullets.length - 1; i >= 0; i--) {
     const b = bullets[i];
     for (let j = enemies.length - 1; j >= 0; j--) {
       const e = enemies[j];
       if (b.x < e.x + e.width && b.x + b.width > e.x && b.y < e.y + e.height && b.y + b.height > e.y) {
-        createExplosion(e.x + e.width/2, e.y + e.height/2, e.color);
+        createExplosion(e.x + e.width / 2, e.y + e.height / 2, e.color);
         sfxHit();
         dropPowerup(e.x, e.y);
         bullets.splice(i, 1);
@@ -698,7 +702,6 @@ function checkCollisions() {
       }
     }
   }
-  // 子彈 vs Boss
   if (boss) {
     for (let i = bullets.length - 1; i >= 0; i--) {
       const b = bullets[i];
@@ -712,12 +715,11 @@ function checkCollisions() {
       }
     }
   }
-  // 玩家 vs 昆蟲
   for (let i = enemies.length - 1; i >= 0; i--) {
     const e = enemies[i];
     if (player.x < e.x + e.width && player.x + player.width > e.x &&
         player.y < e.y + e.height && player.y + player.height > e.y) {
-      createExplosion(e.x + e.width/2, e.y + e.height/2, e.color);
+      createExplosion(e.x + e.width / 2, e.y + e.height / 2, e.color);
       enemies.splice(i, 1);
       if (shield) { shield = false; shieldTimer = 0; }
       else {
@@ -729,7 +731,6 @@ function checkCollisions() {
       updatePowerStatus();
     }
   }
-  // 玩家 vs Boss
   if (boss && player.x < boss.x + boss.width && player.x + player.width > boss.x &&
       player.y < boss.y + boss.height && player.y + player.height > boss.y) {
     if (shield) { shield = false; shieldTimer = 0; }
@@ -742,7 +743,6 @@ function checkCollisions() {
     player.y = Math.min(player.y + 40, BASE_H - 80);
     updatePowerStatus();
   }
-  // 玩家 vs 道具
   for (let i = powerups.length - 1; i >= 0; i--) {
     const p = powerups[i];
     if (player.x < p.x + p.width && player.x + player.width > p.x &&
@@ -754,14 +754,12 @@ function checkCollisions() {
 }
 
 function updatePlayer() {
-  // 鍵盤
   if ((keys['ArrowLeft'] || keys['a'] || keys['A']) && player.x > 0) player.x -= player.speed;
   if ((keys['ArrowRight'] || keys['d'] || keys['D']) && player.x < BASE_W - player.width) player.x += player.speed;
 
-  // 觸控跟隨
   if (isTouching && touchX !== null) {
     const target = touchX - player.width / 2;
-    player.x += (target - player.x) * 0.25; // 平滑跟隨
+    player.x += (target - player.x) * 0.28;
     player.x = Math.max(0, Math.min(BASE_W - player.width, player.x));
   }
 }
@@ -774,11 +772,18 @@ function updateTimers() {
   if (shootCooldown > 0) shootCooldown--;
   if (doubleShotTimer > 0) {
     doubleShotTimer--;
-    if (doubleShotTimer <= 0) { doubleShot = false; shotLevel = 1; updatePowerStatus(); }
+    if (doubleShotTimer <= 0) {
+      doubleShot = false;
+      shotLevel = 1;
+      updatePowerStatus();
+    }
   }
   if (shieldTimer > 0) {
     shieldTimer--;
-    if (shieldTimer <= 0) { shield = false; updatePowerStatus(); }
+    if (shieldTimer <= 0) {
+      shield = false;
+      updatePowerStatus();
+    }
   }
 }
 
@@ -797,7 +802,6 @@ function gameLoop() {
   checkCollisions();
   updateTimers();
 
-  // 觸控時自動射擊
   if (isTouching) shoot();
 
   if (!boss) {
@@ -805,7 +809,7 @@ function gameLoop() {
     if (enemySpawnTimer >= enemySpawnInterval) {
       spawnEnemy();
       enemySpawnTimer = 0;
-      const base = difficulty === 'hard' ? 55 : difficulty === 'easy' ? 95 : 75;
+      const base = difficulty === 'hard' ? 55 : (difficulty === 'easy' ? 95 : 75);
       enemySpawnInterval = Math.max(22, base - Math.floor(score / 400) * 3);
     }
   }
@@ -818,10 +822,12 @@ function gameLoop() {
 /* ========== 遊戲流程 ========== */
 function startGame(diff) {
   difficulty = diff;
-  scoreMultiplier = diff === 'easy' ? 1 : diff === 'normal' ? 1.5 : 2;
+  scoreMultiplier = diff === 'easy' ? 1 : (diff === 'normal' ? 1.5 : 2);
 
   initAudio();
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
   startBGM();
 
   document.getElementById('start-screen').classList.add('hidden');
@@ -829,16 +835,25 @@ function startGame(diff) {
   document.getElementById('leaderboard-screen').classList.add('hidden');
   document.getElementById('boss-bar').style.display = 'none';
 
-  score = 0; lives = 3;
-  bullets = []; enemies = []; particles = []; powerups = [];
-  boss = null; doubleShot = false; shield = false; shotLevel = 1;
-  doubleShotTimer = 0; shieldTimer = 0;
+  score = 0;
+  lives = 3;
+  bullets = [];
+  enemies = [];
+  particles = [];
+  powerups = [];
+  boss = null;
+  doubleShot = false;
+  shield = false;
+  shotLevel = 1;
+  doubleShotTimer = 0;
+  shieldTimer = 0;
   enemySpawnTimer = 0;
-  enemySpawnInterval = diff === 'hard' ? 55 : diff === 'easy' ? 95 : 75;
+  enemySpawnInterval = diff === 'hard' ? 55 : (diff === 'easy' ? 95 : 75);
   nextBossScore = 1400;
   player.x = BASE_W / 2 - 25;
   frame = 0;
-  isTouching = false; touchX = null;
+  isTouching = false;
+  touchX = null;
 
   document.getElementById('score').textContent = '0';
   updateLives();
@@ -857,12 +872,13 @@ function endGame() {
 
 /* ========== 排行榜 ========== */
 function getLeaderboard() {
-  try { return JSON.parse(localStorage.getItem('insectShooterLB') || '[]'); } catch { return []; }
+  try { return JSON.parse(localStorage.getItem('insectShooterLB') || '[]'); }
+  catch { return []; }
 }
 function saveScore() {
-  const name = document.getElementById('name-input').value.trim() || '無名';
+  const name = (document.getElementById('name-input').value.trim() || '無名').substring(0, 6);
   let list = getLeaderboard();
-  list.push({ name: name.substring(0, 6), score });
+  list.push({ name, score });
   list.sort((a, b) => b.score - a.score);
   list = list.slice(0, 5);
   localStorage.setItem('insectShooterLB', JSON.stringify(list));
@@ -871,25 +887,58 @@ function saveScore() {
 function showLeaderboard() {
   const list = getLeaderboard();
   const ul = document.getElementById('leaderboard-list');
-  ul.innerHTML = list.length === 0 ? '<li style="justify-content:center">尚無紀錄</li>' : '';
-  list.forEach((item, i) => {
-    const li = document.createElement('li');
-    li.innerHTML = `<span>#${i+1} \( {item.name}</span><span> \){item.score}</span>`;
-    ul.appendChild(li);
-  });
+  ul.innerHTML = '';
+  if (list.length === 0) {
+    ul.innerHTML = '<li style="justify-content:center">尚無紀錄</li>';
+  } else {
+    list.forEach((item, i) => {
+      const li = document.createElement('li');
+      li.innerHTML = `<span>#${i + 1} \( {item.name}</span><span> \){item.score}</span>`;
+      ul.appendChild(li);
+    });
+  }
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('game-over').classList.add('hidden');
   document.getElementById('leaderboard-screen').classList.remove('hidden');
 }
 
-/* ========== 事件 ========== */
+/* ========== 事件綁定（強化手機相容） ========== */
+function bindButton(id, handler) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const fn = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handler();
+  };
+  el.addEventListener('click', fn);
+  el.addEventListener('touchend', fn, { passive: false });
+}
+
+bindButton('btn-easy', () => startGame('easy'));
+bindButton('btn-normal', () => startGame('normal'));
+bindButton('btn-hard', () => startGame('hard'));
+bindButton('leaderboard-btn', showLeaderboard);
+bindButton('save-score-btn', saveScore);
+bindButton('restart-btn', () => {
+  document.getElementById('game-over').classList.add('hidden');
+  document.getElementById('start-screen').classList.remove('hidden');
+});
+bindButton('back-btn', () => {
+  document.getElementById('leaderboard-screen').classList.add('hidden');
+  document.getElementById('start-screen').classList.remove('hidden');
+});
+
 document.addEventListener('keydown', e => {
   keys[e.key] = true;
-  if (e.key === ' ' && gameRunning) { e.preventDefault(); shoot(); }
+  if (e.key === ' ' && gameRunning) {
+    e.preventDefault();
+    shoot();
+  }
 });
 document.addEventListener('keyup', e => keys[e.key] = false);
 
-// 觸控：拖曳移動 + 按住射擊
+/* 觸控移動 + 射擊 */
 canvas.addEventListener('touchstart', e => {
   e.preventDefault();
   if (!gameRunning) return;
@@ -911,14 +960,14 @@ canvas.addEventListener('touchend', e => {
   e.preventDefault();
   isTouching = false;
   touchX = null;
-});
+}, { passive: false });
 
 canvas.addEventListener('touchcancel', () => {
   isTouching = false;
   touchX = null;
 });
 
-// 滑鼠支援（電腦測試用）
+/* 滑鼠支援 */
 canvas.addEventListener('mousedown', e => {
   if (!gameRunning) return;
   isTouching = true;
@@ -932,6 +981,12 @@ canvas.addEventListener('mousemove', e => {
   const scaleX = BASE_W / rect.width;
   touchX = (e.clientX - rect.left) * scaleX;
 });
-canvas.addEventListener('mouseup', () => { isTouching = false; touchX = null; });
+canvas.addEventListener('mouseup', () => {
+  isTouching = false;
+  touchX = null;
+});
 
-document.getElementById('btn-easy').add
+initStars();
+</script>
+</body>
+</html>
