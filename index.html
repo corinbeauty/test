@@ -3,426 +3,628 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>一人公司 × AI員工｜程式工作流</title>
+  <title>一人公司 AI員工辦公室｜互動模擬</title>
   <style>
     :root {
       --bg: #0f172a;
-      --card: #1e293b;
+      --floor: #1e293b;
+      --desk: #334155;
       --accent: #38bdf8;
       --accent2: #a78bfa;
       --text: #e2e8f0;
       --muted: #94a3b8;
       --success: #4ade80;
-      --border: #334155;
+      --warning: #fbbf24;
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.6;
       min-height: 100vh;
-    }
-
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 40px 20px 80px;
+      overflow-x: hidden;
     }
 
     header {
       text-align: center;
-      margin-bottom: 50px;
+      padding: 24px 16px 12px;
     }
 
     header h1 {
-      font-size: 2.4rem;
-      font-weight: 700;
+      font-size: 1.8rem;
       background: linear-gradient(90deg, var(--accent), var(--accent2));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 12px;
+      margin-bottom: 6px;
     }
 
-    header p {
-      color: var(--muted);
-      font-size: 1.1rem;
-    }
+    header p { color: var(--muted); font-size: 0.95rem; }
 
-    .badge {
-      display: inline-block;
-      background: rgba(56, 189, 248, 0.15);
-      color: var(--accent);
-      padding: 4px 12px;
-      border-radius: 999px;
-      font-size: 0.85rem;
-      margin-top: 16px;
-    }
-
-    /* 虛擬團隊 */
-    .team {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 16px;
-      margin-bottom: 50px;
-    }
-
-    .role {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px 16px;
-      text-align: center;
-      transition: transform 0.2s, border-color 0.2s;
-    }
-
-    .role:hover {
-      transform: translateY(-4px);
-      border-color: var(--accent);
-    }
-
-    .role .icon {
-      font-size: 1.8rem;
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 12px;
       margin-bottom: 8px;
     }
 
-    .role h3 {
-      font-size: 1rem;
+    .btn {
+      background: var(--desk);
+      border: 1px solid #475569;
+      color: var(--text);
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .btn:hover { background: #475569; border-color: var(--accent); }
+    .btn.active { background: var(--accent); color: #0f172a; border-color: var(--accent); }
+
+    /* 辦公室容器 */
+    .office-wrapper {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 16px 40px;
+    }
+
+    .office {
+      position: relative;
+      width: 100%;
+      height: 620px;
+      background: 
+        linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px),
+        linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      background-color: var(--floor);
+      border: 2px solid #334155;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(0,0,0,0.4);
+    }
+
+    /* 作業區 */
+    .zone {
+      position: absolute;
+      border: 2px dashed rgba(56,189,248,0.25);
+      border-radius: 12px;
+      background: rgba(56,189,248,0.04);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 8px;
+      transition: background 0.3s, border-color 0.3s;
+    }
+
+    .zone.highlight {
+      background: rgba(56,189,248,0.12);
+      border-color: var(--accent);
+    }
+
+    .zone-label {
+      font-size: 0.75rem;
+      color: var(--accent);
+      font-weight: 600;
+      letter-spacing: 0.5px;
       margin-bottom: 4px;
     }
 
-    .role p {
+    /* 桌子 + 電腦 */
+    .desk {
+      width: 110px;
+      height: 70px;
+      background: linear-gradient(180deg, #475569, #334155);
+      border-radius: 8px;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      border: 1px solid #64748b;
+    }
+
+    .monitor {
+      position: absolute;
+      top: -28px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70px;
+      height: 42px;
+      background: #0f172a;
+      border: 3px solid #64748b;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: var(--success);
+      box-shadow: 0 0 12px rgba(56,189,248,0.3);
+    }
+
+    .monitor::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      width: 16px;
+      height: 8px;
+      background: #64748b;
+      border-radius: 0 0 3px 3px;
+    }
+
+    .keyboard {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 12px;
+      background: #1e293b;
+      border-radius: 3px;
+      border: 1px solid #475569;
+    }
+
+    .chair {
+      width: 36px;
+      height: 36px;
+      background: #1e293b;
+      border: 2px solid #475569;
+      border-radius: 50% 50% 40% 40%;
+      margin-top: 6px;
+      position: relative;
+    }
+
+    .chair::before {
+      content: '';
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 28px;
+      height: 10px;
+      background: #334155;
+      border-radius: 4px;
+    }
+
+    /* 人物 */
+    .person {
+      position: absolute;
+      width: 56px;
+      height: 72px;
+      cursor: grab;
+      z-index: 20;
+      transition: transform 0.15s;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .person:active { cursor: grabbing; }
+    .person.dragging { z-index: 50; transform: scale(1.08); }
+
+    .avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin: 0 auto;
+      border: 3px solid;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      background: #1e293b;
+    }
+
+    .person-name {
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-top: 4px;
+      white-space: nowrap;
+      background: rgba(15,23,42,0.85);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .person-role {
+      text-align: center;
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    /* 狀態指示 */
+    .status {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--floor);
+    }
+
+    .status.working { background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .status.idle { background: var(--warning); }
+    .status.offline { background: #64748b; }
+
+    /* 資訊面板 */
+    .info-panel {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      background: rgba(15,23,42,0.92);
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      z-index: 30;
+    }
+
+    .info-panel strong { color: var(--accent); }
+
+    .legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
       font-size: 0.8rem;
       color: var(--muted);
     }
 
-    .role.you {
-      border-color: var(--accent2);
-      background: linear-gradient(145deg, #1e293b, #2e1065);
+    .legend span::before {
+      content: '';
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 4px;
     }
 
-    /* 工作流階段 */
-    .workflow {
-      position: relative;
-    }
+    .legend .working::before { background: var(--success); }
+    .legend .idle::before { background: var(--warning); }
 
-    .stage {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px;
-      margin-bottom: 24px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .stage::before {
-      content: attr(data-num);
+    /* 右側任務提示 */
+    .task-tip {
       position: absolute;
-      top: -10px;
-      right: 20px;
-      font-size: 4rem;
-      font-weight: 800;
-      color: rgba(56, 189, 248, 0.08);
-      line-height: 1;
+      top: 12px;
+      right: 12px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid var(--accent2);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.8rem;
+      max-width: 200px;
+      z-index: 25;
     }
 
-    .stage h2 {
-      font-size: 1.35rem;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .stage h2 span {
-      background: var(--accent);
-      color: #0f172a;
-      font-size: 0.75rem;
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-weight: 600;
-    }
-
-    .stage .desc {
-      color: var(--muted);
-      margin-bottom: 16px;
-      font-size: 0.95rem;
-    }
-
-    .stage ul {
-      list-style: none;
-      padding-left: 0;
-    }
-
-    .stage li {
-      padding: 6px 0;
-      padding-left: 22px;
-      position: relative;
-      font-size: 0.95rem;
-    }
-
-    .stage li::before {
-      content: "→";
-      position: absolute;
-      left: 0;
-      color: var(--accent);
-    }
-
-    .input-output {
-      display: flex;
-      gap: 20px;
-      margin-top: 16px;
-      flex-wrap: wrap;
-    }
-
-    .io {
-      flex: 1;
-      min-width: 200px;
-      background: rgba(15, 23, 42, 0.6);
-      border-radius: 10px;
-      padding: 12px 16px;
-      font-size: 0.9rem;
-    }
-
-    .io strong {
-      color: var(--accent);
-      display: block;
+    .task-tip h4 {
+      color: var(--accent2);
       margin-bottom: 4px;
+      font-size: 0.85rem;
     }
 
-    /* 日常節奏 */
-    .daily {
-      margin-top: 50px;
-    }
-
-    .daily h2 {
-      font-size: 1.5rem;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: var(--card);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    th, td {
-      padding: 14px 18px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-    }
-
-    th {
-      background: #0f172a;
-      color: var(--accent);
-      font-weight: 600;
-    }
-
-    tr:last-child td {
-      border-bottom: none;
-    }
-
-    /* Footer */
     footer {
       text-align: center;
-      margin-top: 60px;
+      padding: 20px;
       color: var(--muted);
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
 
-    footer a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    @media (max-width: 600px) {
-      header h1 {
-        font-size: 1.8rem;
-      }
-      .stage {
-        padding: 20px;
-      }
+    @media (max-width: 700px) {
+      .office { height: 520px; }
+      .desk { width: 90px; height: 60px; }
+      .monitor { width: 58px; height: 36px; font-size: 0.6rem; }
+      .person { width: 48px; height: 64px; }
+      .avatar { width: 40px; height: 40px; font-size: 1.2rem; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>一人公司 × AI員工</h1>
-      <p>程式開發完整工作流</p>
-      <div class="badge">你只做決策與最終審核 · AI負責執行</div>
-    </header>
+  <header>
+    <h1>一人公司 · AI員工辦公室</h1>
+    <p>拖曳人物到不同作業區 · 模擬真實協作</p>
+  </header>
 
-    <!-- 虛擬團隊 -->
-    <section class="team">
-      <div class="role">
-        <div class="icon">📋</div>
-        <h3>產品經理</h3>
-        <p>需求澄清 · PRD</p>
-      </div>
-      <div class="role">
-        <div class="icon">🏗️</div>
-        <h3>架構師</h3>
-        <p>技術選型 · 系統設計</p>
-      </div>
-      <div class="role">
-        <div class="icon">💻</div>
-        <h3>資深工程師</h3>
-        <p>寫碼 · 重構 · 測試</p>
-      </div>
-      <div class="role">
-        <div class="icon">🔍</div>
-        <h3>QA</h3>
-        <p>測試 · Bug報告</p>
-      </div>
-      <div class="role">
-        <div class="icon">🚀</div>
-        <h3>DevOps</h3>
-        <p>部署 · 監控</p>
-      </div>
-      <div class="role you">
-        <div class="icon">👑</div>
-        <h3>你（CEO）</h3>
-        <p>決策 · 最終Merge</p>
-      </div>
-    </section>
-
-    <!-- 工作流 -->
-    <section class="workflow">
-      <div class="stage" data-num="01">
-        <h2>需求輸入 <span>你 → 產品經理</span></h2>
-        <p class="desc">用自然語言描述想法，產品經理負責整理成清晰規格。</p>
-        <ul>
-          <li>產出 User Story 與完整 PRD</li>
-          <li>定義功能優先級與成功指標</li>
-          <li>明確標註 Non-Goals（不做什麼）</li>
-          <li>初步技術可行性判斷</li>
-        </ul>
-        <div class="input-output">
-          <div class="io"><strong>輸入</strong>你的想法描述</div>
-          <div class="io"><strong>輸出</strong>PRD + User Story</div>
-        </div>
-      </div>
-
-      <div class="stage" data-num="02">
-        <h2>技術規劃 <span>產品經理 → 架構師</span></h2>
-        <p class="desc">根據 PRD 產出系統設計與技術方案。</p>
-        <ul>
-          <li>系統架構圖（文字或 Mermaid）</li>
-          <li>技術棧建議（前後端、資料庫、第三方）</li>
-          <li>API 設計草案與資料模型</li>
-          <li>複雜度與風險點評估</li>
-        </ul>
-        <div class="input-output">
-          <div class="io"><strong>輸入</strong>PRD</div>
-          <div class="io"><strong>輸出</strong>架構文件 + API 設計</div>
-        </div>
-      </div>
-
-      <div class="stage" data-num="03">
-        <h2>任務拆解 <span>架構師 → 工程師</span></h2>
-        <p class="desc">把功能拆成可在 1–2 小時內完成的小任務。</p>
-        <ul>
-          <li>產生任務清單（含依賴與優先級）</li>
-          <li>建議使用 GitHub Issues / Linear 管理</li>
-          <li>每個任務都有明確的完成定義</li>
-        </ul>
-      </div>
-
-      <div class="stage" data-num="04">
-        <h2>程式開發 <span>資深工程師主導</span></h2>
-        <p class="desc">標準開發循環，可在 Cursor 中一鍵執行。</p>
-        <ul>
-          <li>讀取任務與相關程式碼</li>
-          <li>實作功能 + 單元測試</li>
-          <li>自我 Review（扮演另一位工程師檢查）</li>
-          <li>產出完整 PR 描述</li>
-          <li>你只做最終 Code Review 與 Merge</li>
-        </ul>
-        <div class="input-output">
-          <div class="io"><strong>輸入</strong>任務描述 + 現有程式碼</div>
-          <div class="io"><strong>輸出</strong>可合併的 PR</div>
-        </div>
-      </div>
-
-      <div class="stage" data-num="05">
-        <h2>測試與品質 <span>QA Agent</span></h2>
-        <p class="desc">自動生成測試案例並產出報告。</p>
-        <ul>
-          <li>單元測試 + 整合測試 + 邊界案例</li>
-          <li>跑測試並產生報告</li>
-          <li>發現問題直接開 Issue 回工程師</li>
-          <li>你只看通過率與關鍵 Bug</li>
-        </ul>
-      </div>
-
-      <div class="stage" data-num="06">
-        <h2>部署與上線 <span>DevOps Agent</span></h2>
-        <p class="desc">自動化 CI/CD、環境設定與監控。</p>
-        <ul>
-          <li>處理部署、環境變數、資料庫遷移</li>
-          <li>產出部署檢查清單與回滾方案</li>
-          <li>上線後自動收集日誌與錯誤</li>
-        </ul>
-      </div>
-
-      <div class="stage" data-num="07">
-        <h2>迭代與監控 <span>全 Agent 協作</span></h2>
-        <p class="desc">持續優化，形成閉環。</p>
-        <ul>
-          <li>每週自動產出使用數據摘要</li>
-          <li>錯誤與效能報告</li>
-          <li>下一批優先改進建議</li>
-          <li>你決定下一輪需求，回到第 1 階段</li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- 日常節奏 -->
-    <section class="daily">
-      <h2>建議日常節奏</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>時間</th>
-            <th>你做什麼</th>
-            <th>AI員工在幹什麼</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>早上 30 分鐘</td>
-            <td>確認昨日產出、決定今日優先任務</td>
-            <td>產品經理整理需求、工程師繼續寫碼</td>
-          </tr>
-          <tr>
-            <td>白天</td>
-            <td>只處理關鍵決策與最終 Review</td>
-            <td>全自動開發循環</td>
-          </tr>
-          <tr>
-            <td>晚上 20 分鐘</td>
-            <td>看部署結果與數據摘要</td>
-            <td>產生隔日任務清單</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <footer>
-      <p>一人公司 · AI員工工作流 · 專為獨立開發者設計</p>
-      <p style="margin-top:8px;font-size:0.8rem;">可直接複製此 HTML 使用，或告訴我需要調整的部分</p>
-    </footer>
+  <div class="controls">
+    <button class="btn" onclick="resetPositions()">重置位置</button>
+    <button class="btn" onclick="randomWork()">隨機分配工作</button>
+    <button class="btn" id="toggleStatus" onclick="toggleAllStatus()">全部設為工作中</button>
   </div>
+
+  <div class="office-wrapper">
+    <div class="office" id="office">
+
+      <!-- 作業區 -->
+      <div class="zone" id="zone-pm" style="left:30px; top:40px; width:180px; height:160px;">
+        <div class="zone-label">📋 產品規劃區</div>
+        <div class="desk">
+          <div class="monitor">PRD</div>
+          <div class="keyboard"></div>
+        </div>
+        <div class="chair"></div>
+      </div>
+
+      <div class="zone" id="zone-arch" style="left:240px; top:40px; width:180px; height:160px;">
+        <div class="zone-label">🏗️ 架構設計區</div>
+        <div class="desk">
+          <div class="monitor">ARCH</div>
+          <div class="keyboard"></div>
+        </div>
+        <div class="chair"></div>
+      </div>
+
+      <div class="zone" id="zone-dev" style="left:450px; top:40px; width:200px; height:160px;">
+        <div class="zone-label">💻 程式開發區</div>
+        <div class="desk">
+          <div class="monitor">CODE</div>
+          <div class="keyboard"></div>
+        </div>
+        <div class="chair"></div>
+      </div>
+
+      <div class="zone" id="zone-qa" style="left:30px; top:230px; width:180px; height:160px;">
+        <div class="zone-label">🔍 測試品管區</div>
+        <div class="desk">
+          <div class="monitor">TEST</div>
+          <div class="keyboard"></div>
+        </div>
+        <div class="chair"></div>
+      </div>
+
+      <div class="zone" id="zone-ops" style="left:240px; top:230px; width:180px; height:160px;">
+        <div class="zone-label">🚀 部署維運區</div>
+        <div class="desk">
+          <div class="monitor">OPS</div>
+          <div class="keyboard"></div>
+        </div>
+        <div class="chair"></div>
+      </div>
+
+      <div class="zone" id="zone-ceo" style="left:450px; top:230px; width:200px; height:160px;">
+        <div class="zone-label">👑 決策中樞</div>
+        <div class="desk" style="border-color: var(--accent2);">
+          <div class="monitor" style="border-color: var(--accent2); color: var(--accent2);">CEO</div>
+          <div class="keyboard"></div>
+        </div>
+        <div class="chair"></div>
+      </div>
+
+      <!-- 人物（可拖曳） -->
+      <div class="person" id="p1" data-name="小艾" data-role="產品經理" style="left:70px; top:130px;">
+        <div class="avatar" style="border-color:#38bdf8;">🧠</div>
+        <div class="status working"></div>
+        <div class="person-name">小艾</div>
+        <div class="person-role">產品經理</div>
+      </div>
+
+      <div class="person" id="p2" data-name="阿圖" data-role="架構師" style="left:280px; top:130px;">
+        <div class="avatar" style="border-color:#a78bfa;">🗺️</div>
+        <div class="status working"></div>
+        <div class="person-name">阿圖</div>
+        <div class="person-role">架構師</div>
+      </div>
+
+      <div class="person" id="p3" data-name="碼哥" data-role="資深工程師" style="left:500px; top:130px;">
+        <div class="avatar" style="border-color:#4ade80;">💻</div>
+        <div class="status working"></div>
+        <div class="person-name">碼哥</div>
+        <div class="person-role">資深工程師</div>
+      </div>
+
+      <div class="person" id="p4" data-name="測測" data-role="QA" style="left:70px; top:320px;">
+        <div class="avatar" style="border-color:#fbbf24;">🔍</div>
+        <div class="status idle"></div>
+        <div class="person-name">測測</div>
+        <div class="person-role">QA</div>
+      </div>
+
+      <div class="person" id="p5" data-name="運維君" data-role="DevOps" style="left:280px; top:320px;">
+        <div class="avatar" style="border-color:#f472b6;">🚀</div>
+        <div class="status working"></div>
+        <div class="person-name">運維君</div>
+        <div class="person-role">DevOps</div>
+      </div>
+
+      <div class="person" id="p6" data-name="你" data-role="CEO" style="left:510px; top:320px;">
+        <div class="avatar" style="border-color:#c084fc; background:#2e1065;">👑</div>
+        <div class="status working"></div>
+        <div class="person-name">你</div>
+        <div class="person-role">CEO</div>
+      </div>
+
+      <!-- 任務提示 -->
+      <div class="task-tip">
+        <h4>目前任務</h4>
+        <div id="currentTask">拖曳人物到對應作業區開始協作</div>
+      </div>
+
+      <!-- 底部資訊 -->
+      <div class="info-panel">
+        <div>
+          <strong>操作：</strong>滑鼠拖曳人物移動 · 點擊人物可切換工作狀態
+        </div>
+        <div class="legend">
+          <span class="working">工作中</span>
+          <span class="idle">待命中</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    一人公司 AI員工辦公室模擬器 · 可自由命名與移動角色
+  </footer>
+
+  <script>
+    // ===== 拖曳功能 =====
+    const office = document.getElementById('office');
+    let activePerson = null;
+    let offsetX = 0, offsetY = 0;
+
+    document.querySelectorAll('.person').forEach(person => {
+      person.addEventListener('mousedown', startDrag);
+      person.addEventListener('touchstart', startDrag, { passive: false });
+
+      // 點擊切換狀態
+      person.addEventListener('click', (e) => {
+        if (person.dataset.dragged === 'true') {
+          person.dataset.dragged = 'false';
+          return;
+        }
+        const status = person.querySelector('.status');
+        if (status.classList.contains('working')) {
+          status.classList.remove('working');
+          status.classList.add('idle');
+        } else {
+          status.classList.remove('idle');
+          status.classList.add('working');
+        }
+        updateTaskTip();
+      });
+    });
+
+    function startDrag(e) {
+      e.preventDefault();
+      activePerson = e.currentTarget;
+      activePerson.classList.add('dragging');
+      activePerson.dataset.dragged = 'false';
+
+      const rect = activePerson.getBoundingClientRect();
+      const officeRect = office.getBoundingClientRect();
+
+      if (e.type === 'mousedown') {
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+      } else {
+        offsetX = e.touches[0].clientX - rect.left;
+        offsetY = e.touches[0].clientY - rect.top;
+      }
+
+      document.addEventListener('mousemove', onDrag);
+      document.addEventListener('mouseup', endDrag);
+      document.addEventListener('touchmove', onDrag, { passive: false });
+      document.addEventListener('touchend', endDrag);
+    }
+
+    function onDrag(e) {
+      if (!activePerson) return;
+      e.preventDefault();
+      activePerson.dataset.dragged = 'true';
+
+      const officeRect = office.getBoundingClientRect();
+      let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+      let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+      let x = clientX - officeRect.left - offsetX;
+      let y = clientY - officeRect.top - offsetY;
+
+      // 邊界限制
+      x = Math.max(0, Math.min(x, office.clientWidth - activePerson.offsetWidth));
+      y = Math.max(0, Math.min(y, office.clientHeight - activePerson.offsetHeight - 60));
+
+      activePerson.style.left = x + 'px';
+      activePerson.style.top = y + 'px';
+
+      // 高亮所在區域
+      highlightZone(x + activePerson.offsetWidth / 2, y + 30);
+    }
+
+    function endDrag() {
+      if (activePerson) {
+        activePerson.classList.remove('dragging');
+        document.querySelectorAll('.zone').forEach(z => z.classList.remove('highlight'));
+        updateTaskTip();
+      }
+      activePerson = null;
+      document.removeEventListener('mousemove', onDrag);
+      document.removeEventListener('mouseup', endDrag);
+      document.removeEventListener('touchmove', onDrag);
+      document.removeEventListener('touchend', endDrag);
+    }
+
+    function highlightZone(x, y) {
+      document.querySelectorAll('.zone').forEach(zone => {
+        const r = zone.getBoundingClientRect();
+        const officeRect = office.getBoundingClientRect();
+        const zx = r.left - officeRect.left;
+        const zy = r.top - officeRect.top;
+        if (x >= zx && x <= zx + r.width && y >= zy && y <= zy + r.height) {
+          zone.classList.add('highlight');
+        } else {
+          zone.classList.remove('highlight');
+        }
+      });
+    }
+
+    // ===== 工具功能 =====
+    function resetPositions() {
+      const positions = [
+        { id: 'p1', left: 70, top: 130 },
+        { id: 'p2', left: 280, top: 130 },
+        { id: 'p3', left: 500, top: 130 },
+        { id: 'p4', left: 70, top: 320 },
+        { id: 'p5', left: 280, top: 320 },
+        { id: 'p6', left: 510, top: 320 }
+      ];
+      positions.forEach(p => {
+        const el = document.getElementById(p.id);
+        el.style.left = p.left + 'px';
+        el.style.top = p.top + 'px';
+      });
+      updateTaskTip();
+    }
+
+    function randomWork() {
+      const zones = [
+        { left: 70, top: 130 },
+        { left: 280, top: 130 },
+        { left: 500, top: 130 },
+        { left: 70, top: 320 },
+        { left: 280, top: 320 },
+        { left: 510, top: 320 }
+      ];
+      // 打亂
+      for (let i = zones.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [zones[i], zones[j]] = [zones[j], zones[i]];
+      }
+      document.querySelectorAll('.person').forEach((p, i) => {
+        p.style.left = zones[i].left + 'px';
+        p.style.top = zones[i].top + 'px';
+        const status = p.querySelector('.status');
+        status.className = 'status ' + (Math.random() > 0.3 ? 'working' : 'idle');
+      });
+      updateTaskTip();
+    }
+
+    let allWorking = true;
+    function toggleAllStatus() {
+      allWorking = !allWorking;
+      document.querySelectorAll('.status').forEach(s => {
+        s.className = 'status ' + (allWorking ? 'working' : 'idle');
+      });
+      document.getElementById('toggleStatus').textContent = allWorking ? '全部設為待命' : '全部設為工作中';
+      updateTaskTip();
+    }
+
+    function updateTaskTip() {
+      const working = [...document.querySelectorAll('.person')].filter(p => 
+        p.querySelector('.status').classList.contains('working')
+      );
+      const names = working.map(p => p.dataset.name).join('、');
+      document.getElementById('currentTask').textContent = 
+        working.length ? `${names} 正在處理任務中` : '目前沒有人在工作，拖曳人物開始吧';
+    }
+
+    // 初始化
+    updateTaskTip();
+  </script>
 </body>
 </html>
