@@ -5,51 +5,60 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>昆蟲射擊</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; -webkit-tap-highlight-color: transparent; }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
   html, body {
     width: 100%;
     height: 100%;
-    background: #050510;
+    background: #000;
     overflow: hidden;
+    position: fixed;
     font-family: 'Segoe UI', system-ui, sans-serif;
     color: #fff;
   }
   #game-container {
     position: absolute;
     top: 0; left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%; height: 100%;
+    background: #000;
   }
   canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100% !important;
+    height: 100% !important;
     display: block;
     background: #000;
-    width: 100%;
-    height: 100%;
   }
   #ui {
     position: absolute;
-    top: env(safe-area-inset-top, 10px);
-    left: env(safe-area-inset-left, 12px);
-    font-size: 14px;
+    top: max(10px, env(safe-area-inset-top));
+    left: 12px;
+    font-size: 15px;
     line-height: 1.5;
     text-shadow: 0 0 6px #00aaff;
     pointer-events: none;
-    z-index: 10;
-    margin-top: 10px;
-    margin-left: 10px;
+    z-index: 20;
   }
   #boss-bar {
     position: absolute;
-    top: calc(env(safe-area-inset-top, 10px) + 10px);
+    top: max(10px, env(safe-area-inset-top));
     left: 50%;
     transform: translateX(-50%);
-    width: 240px;
+    width: min(260px, 70vw);
     height: 14px;
     background: #222;
     border: 2px solid #ff4444;
     border-radius: 4px;
     display: none;
-    z-index: 10;
+    z-index: 20;
   }
   #boss-hp {
     height: 100%;
@@ -69,16 +78,17 @@
     position: absolute;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background: rgba(0,0,0,0.93);
+    background: rgba(0,0,0,0.94);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
-    z-index: 30;
+    z-index: 50;
+    pointer-events: auto;
   }
   .screen h1 {
-    font-size: 42px;
+    font-size: clamp(32px, 8vw, 44px);
     margin-bottom: 28px;
     background: linear-gradient(90deg, #00ccff, #0066ff);
     -webkit-background-clip: text;
@@ -86,23 +96,22 @@
   }
   .diff-btn {
     display: block;
-    width: 220px;
-    padding: 14px 0;
-    margin: 10px 0;
+    width: min(240px, 80vw);
+    padding: 16px 0;
+    margin: 12px 0;
     font-size: 18px;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     color: white;
     cursor: pointer;
-    transition: transform 0.15s;
+    pointer-events: auto;
   }
-  .diff-btn:active { transform: scale(0.96); }
   #btn-easy   { background: linear-gradient(135deg, #00cc88, #009966); }
   #btn-normal { background: linear-gradient(135deg, #00aaff, #0066cc); }
   #btn-hard   { background: linear-gradient(135deg, #ff5555, #cc2222); }
   #leaderboard-btn {
     margin-top: 24px;
-    padding: 10px 28px;
+    padding: 12px 32px;
     font-size: 15px;
     background: linear-gradient(135deg, #aa66ff, #6644cc);
     border: none;
@@ -111,33 +120,31 @@
     cursor: pointer;
   }
   #name-input {
-    padding: 10px 14px;
+    padding: 12px 14px;
     font-size: 16px;
     border-radius: 6px;
     border: 2px solid #00aaff;
     background: #111;
     color: white;
-    margin: 12px 0 16px;
-    width: 200px;
+    margin: 14px 0 16px;
+    width: min(220px, 80vw);
     text-align: center;
   }
   button {
-    padding: 11px 28px;
+    padding: 12px 28px;
     font-size: 16px;
     border: none;
     border-radius: 8px;
     color: white;
-    margin: 5px;
+    margin: 6px;
     cursor: pointer;
-    -webkit-user-select: none;
-    user-select: none;
   }
   #restart-btn { background: linear-gradient(135deg, #00aaff, #0066cc); }
   #save-score-btn { background: linear-gradient(135deg, #00cc88, #009966); }
   #back-btn { background: #444; }
   #leaderboard-list {
     list-style: none;
-    width: 260px;
+    width: min(280px, 85vw);
     margin: 16px 0 20px;
     text-align: left;
   }
@@ -167,7 +174,6 @@
       <div id="boss-hp"></div>
     </div>
 
-    <!-- 開始畫面：只有標題 + 難度選擇 -->
     <div id="start-screen" class="screen">
       <h1>🐛 昆蟲射擊</h1>
       <button class="diff-btn" id="btn-easy">簡單　分數 ×1</button>
@@ -182,7 +188,7 @@
       <input type="text" id="name-input" placeholder="輸入名字 (最多6字)" maxlength="6">
       <div>
         <button id="save-score-btn">儲存分數</button>
-        <button id="restart-btn">返回主選單</button>
+        <button id="restart-btn">再玩一次</button>
       </div>
     </div>
 
@@ -194,31 +200,67 @@
   </div>
 
 <script>
-/* ========== 全螢幕 API 請求 ========== */
-function requestFullScreen() {
-  const docEl = document.documentElement;
-  if (docEl.requestFullscreen) {
-    docEl.requestFullscreen().catch(err => console.log(err));
-  } else if (docEl.webkitRequestFullscreen) { /* Safari */
-    docEl.webkitRequestFullscreen().catch(err => console.log(err));
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let BASE_W = 800;
+let BASE_H = 600;
+let viewW = 800;
+let viewH = 600;
+let scaleX = 1;
+let scaleY = 1;
+
+/* ========== 震動回饋 ========== */
+function vibrate(pattern) {
+  if (navigator.vibrate) {
+    try {
+      navigator.vibrate(pattern);
+    } catch (e) {}
   }
 }
+
+/* ========== 全螢幕適配 ========== */
+function resize() {
+  viewW = window.innerWidth;
+  viewH = window.innerHeight;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = viewW * dpr;
+  canvas.height = viewH * dpr;
+  canvas.style.width = viewW + 'px';
+  canvas.style.height = viewH + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const ratio = Math.min(viewW / BASE_W, viewH / BASE_H);
+  scaleX = ratio;
+  scaleY = ratio;
+  window.offsetX = (viewW - BASE_W * scaleX) / 2;
+  window.offsetY = (viewH - BASE_H * scaleY) / 2;
+}
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 100));
+resize();
 
 /* ========== 音效 ========== */
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
-function initAudio() { if (!audioCtx) audioCtx = new AudioCtx(); }
+function initAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+}
 function playTone(freq, type, duration, volume = 0.1, slide = 0) {
   if (!audioCtx) return;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-  if (slide) osc.frequency.linearRampToValueAtTime(freq + slide, audioCtx.currentTime + duration);
-  gain.gain.setValueAtTime(volume, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-  osc.connect(gain); gain.connect(audioCtx.destination);
-  osc.start(); osc.stop(audioCtx.currentTime + duration);
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    if (slide) osc.frequency.linearRampToValueAtTime(freq + slide, audioCtx.currentTime + duration);
+    gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch(e) {}
 }
 function sfxShoot() { playTone(920, 'square', 0.06, 0.06); playTone(1400, 'square', 0.04, 0.03); }
 function sfxHit() { playTone(220, 'sawtooth', 0.1, 0.09, -70); }
@@ -232,21 +274,25 @@ function sfxHurt() { playTone(140, 'square', 0.2, 0.12, -40); }
 let bgOsc = null;
 function startBGM() {
   if (!audioCtx || bgOsc) return;
-  bgOsc = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  bgOsc.type = 'sine'; bgOsc.frequency.value = 50; g.gain.value = 0.022;
-  bgOsc.connect(g); g.connect(audioCtx.destination); bgOsc.start();
+  try {
+    bgOsc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    bgOsc.type = 'sine';
+    bgOsc.frequency.value = 50;
+    g.gain.value = 0.02;
+    bgOsc.connect(g);
+    g.connect(audioCtx.destination);
+    bgOsc.start();
+  } catch(e) {}
 }
-function stopBGM() { if (bgOsc) { bgOsc.stop(); bgOsc = null; } }
+function stopBGM() {
+  if (bgOsc) {
+    try { bgOsc.stop(); } catch(e) {}
+    bgOsc = null;
+  }
+}
 
 /* ========== 遊戲變數 ========== */
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-
-// 動態畫布尺寸
-let BASE_W = window.innerWidth;
-let BASE_H = window.innerHeight;
-
 let gameRunning = false;
 let score = 0;
 let lives = 3;
@@ -270,49 +316,44 @@ let shotLevel = 1;
 let scoreMultiplier = 1;
 let difficulty = 'normal';
 
-// 觸控移動
 let touchX = null;
 let isTouching = false;
 
 const player = {
   x: BASE_W / 2 - 25,
-  y: BASE_H - 100, // 距離底部高一點，避免被手指遮擋
+  y: BASE_H - 80,
   width: 50,
   height: 42,
   speed: 6.5
 };
 
-/* ========== 畫面縮放 (動態全螢幕) ========== */
-function resizeCanvas() {
-  BASE_W = window.innerWidth;
-  BASE_H = window.innerHeight;
-  canvas.width = BASE_W;
-  canvas.height = BASE_H;
-  
-  // 保持玩家在螢幕範圍內且貼齊底部
-  player.y = BASE_H - 100;
-  if (player.x > BASE_W - player.width) player.x = BASE_W - player.width;
+function screenToGameX(clientX) {
+  const rect = canvas.getBoundingClientRect();
+  const x = (clientX - rect.left) / (rect.width / viewW);
+  return (x - window.offsetX) / scaleX;
 }
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas(); // 初始化時呼叫一次
 
-/* ========== 初始化 ========== */
 function initStars() {
   stars = [];
-  // 根據螢幕寬度決定星星數量，確保全螢幕下看起來不空曠
-  const starCount = Math.floor((BASE_W * BASE_H) / 4000); 
-  for (let i = 0; i < starCount; i++) {
+  for (let i = 0; i < 140; i++) {
     stars.push({
       x: Math.random() * BASE_W,
       y: Math.random() * BASE_H,
-      size: Math.random() * 2 + 0.3,
-      speed: Math.random() * 1.8 + 0.3
+      size: Math.random() * 2.2 + 0.3,
+      speed: Math.random() * 1.9 + 0.3
     });
   }
 }
-initStars();
 
-/* ========== 繪圖 ========== */
+function beginDraw() {
+  ctx.save();
+  ctx.translate(window.offsetX, window.offsetY);
+  ctx.scale(scaleX, scaleY);
+}
+function endDraw() {
+  ctx.restore();
+}
+
 function drawStars() {
   ctx.fillStyle = '#fff';
   stars.forEach(s => {
@@ -321,7 +362,10 @@ function drawStars() {
     ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
     ctx.fill();
     s.y += s.speed;
-    if (s.y > BASE_H) { s.y = 0; s.x = Math.random() * BASE_W; }
+    if (s.y > BASE_H) {
+      s.y = 0;
+      s.x = Math.random() * BASE_W;
+    }
   });
   ctx.globalAlpha = 1;
 }
@@ -335,12 +379,11 @@ function drawPlayer() {
   if (shield) {
     ctx.beginPath();
     ctx.arc(0, 0, 40, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(0,255,210,${0.35 + Math.sin(frame*0.14)*0.25})`;
+    ctx.strokeStyle = `rgba(0,255,210,${0.35 + Math.sin(frame * 0.14) * 0.25})`;
     ctx.lineWidth = 3.5;
     ctx.stroke();
   }
 
-  // 火焰
   const flameLen = 16 + Math.random() * 12;
   const grad = ctx.createLinearGradient(0, 10, 0, 10 + flameLen);
   grad.addColorStop(0, '#ffaa00');
@@ -352,7 +395,6 @@ function drawPlayer() {
   ctx.quadraticCurveTo(0, 12 + flameLen, 9, 12);
   ctx.fill();
 
-  // 機身
   const bodyGrad = ctx.createLinearGradient(-20, -25, 20, 20);
   bodyGrad.addColorStop(0, '#66e0ff');
   bodyGrad.addColorStop(0.45, '#00aaff');
@@ -373,7 +415,6 @@ function drawPlayer() {
   ctx.closePath();
   ctx.fill();
 
-  // 高光
   ctx.shadowBlur = 0;
   ctx.fillStyle = 'rgba(255,255,255,0.32)';
   ctx.beginPath();
@@ -383,7 +424,6 @@ function drawPlayer() {
   ctx.closePath();
   ctx.fill();
 
-  // 駕駛艙
   ctx.fillStyle = 'rgba(180,240,255,0.7)';
   ctx.beginPath();
   ctx.ellipse(0, -5, 6, 7, 0, 0, Math.PI * 2);
@@ -405,15 +445,12 @@ function drawBullets() {
   ctx.shadowBlur = 0;
 }
 
-/* ========== 昆蟲敵人繪製 ========== */
 function drawInsect(e) {
   ctx.save();
   ctx.translate(e.x + e.width / 2, e.y + e.height / 2);
   ctx.rotate(Math.sin(frame * e.wingSpeed) * 0.15);
-
   const r = e.width / 2;
 
-  // 翅膀（半透明）
   ctx.globalAlpha = 0.45;
   ctx.fillStyle = e.wingColor;
   ctx.beginPath();
@@ -422,7 +459,6 @@ function drawInsect(e) {
   ctx.fill();
   ctx.globalAlpha = 1;
 
-  // 身體
   ctx.fillStyle = e.color;
   ctx.shadowBlur = 8;
   ctx.shadowColor = e.color;
@@ -430,12 +466,10 @@ function drawInsect(e) {
   ctx.ellipse(0, 0, r * 0.55, r * 0.85, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // 頭部
   ctx.beginPath();
   ctx.arc(0, -r * 0.7, r * 0.38, 0, Math.PI * 2);
   ctx.fill();
 
-  // 觸角
   ctx.strokeStyle = e.color;
   ctx.lineWidth = 1.5;
   ctx.beginPath();
@@ -445,7 +479,6 @@ function drawInsect(e) {
   ctx.quadraticCurveTo(r * 0.5, -r * 1.4, r * 0.35, -r * 1.5);
   ctx.stroke();
 
-  // 眼睛
   ctx.fillStyle = '#fff';
   ctx.beginPath();
   ctx.arc(-r * 0.15, -r * 0.75, r * 0.12, 0, Math.PI * 2);
@@ -457,7 +490,6 @@ function drawInsect(e) {
   ctx.arc(r * 0.15, -r * 0.75, r * 0.06, 0, Math.PI * 2);
   ctx.fill();
 
-  // 腳
   ctx.strokeStyle = e.color;
   ctx.lineWidth = 1.8;
   for (let i = -1; i <= 1; i++) {
@@ -468,7 +500,6 @@ function drawInsect(e) {
     ctx.lineTo(r * 0.9, i * r * 0.5 + r * 0.2);
     ctx.stroke();
   }
-
   ctx.restore();
   ctx.shadowBlur = 0;
 }
@@ -524,7 +555,7 @@ function drawBoss() {
   b.y += Math.sin(frame * 0.03) * 0.6;
 
   if (frame % 42 === 0) {
-    enemies.push(createInsect(b.x + b.width/2 - 15, b.y + b.height, true));
+    enemies.push(createInsect(b.x + b.width / 2 - 15, b.y + b.height, true));
   }
 }
 
@@ -560,7 +591,9 @@ function drawParticles() {
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
     ctx.fill();
-    p.x += p.vx; p.y += p.vy; p.life--;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life--;
     if (p.life <= 0) particles.splice(i, 1);
   }
   ctx.globalAlpha = 1;
@@ -571,16 +604,16 @@ function createInsect(x, y, fromBoss = false) {
   const types = [
     { color: '#44aa44', wingColor: '#aaffaa', wingSpeed: 0.25 },
     { color: '#885522', wingColor: '#ccaa66', wingSpeed: 0.18 },
-    { color: '#aa44aa', wingColor: '#ffaaff', wingSpeed: 0.3 }, 
+    { color: '#aa44aa', wingColor: '#ffaaff', wingSpeed: 0.3 },
     { color: '#2288cc', wingColor: '#88ddff', wingSpeed: 0.35 },
-    { color: '#cc6622', wingColor: '#ffcc88', wingSpeed: 0.22 } 
+    { color: '#cc6622', wingColor: '#ffcc88', wingSpeed: 0.22 }
   ];
   const t = types[Math.floor(Math.random() * types.length)];
   const size = fromBoss ? 26 : 28 + Math.random() * 20;
-  const speedBase = difficulty === 'hard' ? 2.8 : difficulty === 'easy' ? 1.6 : 2.2;
+  const speedBase = difficulty === 'hard' ? 2.8 : (difficulty === 'easy' ? 1.6 : 2.2);
   return {
-    x: x ?? Math.random() * (BASE_W - size),
-    y: y ?? -size,
+    x: (x !== undefined && x !== null) ? x : Math.random() * (BASE_W - size),
+    y: (y !== undefined && y !== null) ? y : -size,
     width: size,
     height: size,
     speed: speedBase + Math.random() * 1.8 + Math.floor(score / 1200) * 0.3,
@@ -593,6 +626,7 @@ function shoot() {
   if (shootCooldown > 0) return;
   shootCooldown = doubleShot ? 7 : 12;
   sfxShoot();
+  vibrate(12);                    // 射擊短震動
   const cx = player.x + player.width / 2;
   if (shotLevel === 1) {
     bullets.push({ x: cx - 3, y: player.y, width: 6, height: 15, speed: 13.5, color: '#ffff00' });
@@ -623,6 +657,7 @@ function spawnBoss() {
   document.getElementById('boss-bar').style.display = 'block';
   updateBossBar();
   sfxBoss();
+  vibrate([80, 40, 80, 40, 120]); // Boss 出現震動
 }
 
 function updateBossBar() {
@@ -657,16 +692,19 @@ function dropPowerup(x, y) {
 function activatePower(type) {
   if (type === 'double') {
     sfxPowerDouble();
+    vibrate(35);                  // 道具震動
     if (shotLevel < 3) shotLevel++;
     doubleShot = true;
     doubleShotTimer = 480;
   } else if (type === 'shield') {
     sfxPowerShield();
+    vibrate(40);
     shield = true;
     shieldTimer = 360;
   } else {
     sfxPowerBomb();
-    enemies.forEach(e => createExplosion(e.x + e.width/2, e.y + e.height/2, e.color));
+    vibrate([60, 30, 60, 30, 80]); // 炸彈強力震動
+    enemies.forEach(e => createExplosion(e.x + e.width / 2, e.y + e.height / 2, e.color));
     enemies = [];
     if (boss) {
       boss.hp -= 13;
@@ -689,6 +727,7 @@ function updatePowerStatus() {
 function defeatBoss() {
   createExplosion(boss.x + 60, boss.y + 40, '#ff0000', 40);
   sfxExplosion();
+  vibrate([100, 50, 100, 50, 150]); // Boss 擊敗震動
   score += Math.floor(800 * scoreMultiplier);
   document.getElementById('score').textContent = score;
   boss = null;
@@ -702,8 +741,9 @@ function checkCollisions() {
     for (let j = enemies.length - 1; j >= 0; j--) {
       const e = enemies[j];
       if (b.x < e.x + e.width && b.x + b.width > e.x && b.y < e.y + e.height && b.y + b.height > e.y) {
-        createExplosion(e.x + e.width/2, e.y + e.height/2, e.color);
+        createExplosion(e.x + e.width / 2, e.y + e.height / 2, e.color);
         sfxHit();
+        vibrate(25);              // 擊中震動
         dropPowerup(e.x, e.y);
         bullets.splice(i, 1);
         enemies.splice(j, 1);
@@ -721,6 +761,7 @@ function checkCollisions() {
         boss.hp--;
         createExplosion(b.x, b.y, '#ffaa00', 5);
         sfxHit();
+        vibrate(20);
         updateBossBar();
         if (boss.hp <= 0) defeatBoss();
       }
@@ -730,18 +771,36 @@ function checkCollisions() {
     const e = enemies[i];
     if (player.x < e.x + e.width && player.x + player.width > e.x &&
         player.y < e.y + e.height && player.y + player.height > e.y) {
-      createExplosion(e.x + e.width/2, e.y + e.height/2, e.color);
+      createExplosion(e.x + e.width / 2, e.y + e.height / 2, e.color);
       enemies.splice(i, 1);
-      if (shield) { shield = false; shieldTimer = 0; }
-      else { lives--; sfxHurt(); updateLives(); if (lives <= 0) endGame(); }
+      if (shield) {
+        shield = false;
+        shieldTimer = 0;
+        vibrate(30);
+      } else {
+        lives--;
+        sfxHurt();
+        vibrate([50, 40, 50]);     // 受傷強烈震動
+        updateLives();
+        if (lives <= 0) endGame();
+      }
       updatePowerStatus();
     }
   }
   if (boss && player.x < boss.x + boss.width && player.x + player.width > boss.x &&
       player.y < boss.y + boss.height && player.y + player.height > boss.y) {
-    if (shield) { shield = false; shieldTimer = 0; }
-    else { lives--; sfxHurt(); updateLives(); if (lives <= 0) endGame(); }
-    player.y = Math.min(player.y + 40, BASE_H - 100);
+    if (shield) {
+      shield = false;
+      shieldTimer = 0;
+      vibrate(30);
+    } else {
+      lives--;
+      sfxHurt();
+      vibrate([50, 40, 50]);
+      updateLives();
+      if (lives <= 0) endGame();
+    }
+    player.y = Math.min(player.y + 40, BASE_H - 80);
     updatePowerStatus();
   }
   for (let i = powerups.length - 1; i >= 0; i--) {
@@ -758,10 +817,9 @@ function updatePlayer() {
   if ((keys['ArrowLeft'] || keys['a'] || keys['A']) && player.x > 0) player.x -= player.speed;
   if ((keys['ArrowRight'] || keys['d'] || keys['D']) && player.x < BASE_W - player.width) player.x += player.speed;
 
-  // 觸控平滑跟隨 (針對全螢幕修正)
   if (isTouching && touchX !== null) {
     const target = touchX - player.width / 2;
-    player.x += (target - player.x) * 0.35; // 提高反應速度
+    player.x += (target - player.x) * 0.3;
     player.x = Math.max(0, Math.min(BASE_W - player.width, player.x));
   }
 }
@@ -774,18 +832,28 @@ function updateTimers() {
   if (shootCooldown > 0) shootCooldown--;
   if (doubleShotTimer > 0) {
     doubleShotTimer--;
-    if (doubleShotTimer <= 0) { doubleShot = false; shotLevel = 1; updatePowerStatus(); }
+    if (doubleShotTimer <= 0) {
+      doubleShot = false;
+      shotLevel = 1;
+      updatePowerStatus();
+    }
   }
   if (shieldTimer > 0) {
     shieldTimer--;
-    if (shieldTimer <= 0) { shield = false; updatePowerStatus(); }
+    if (shieldTimer <= 0) {
+      shield = false;
+      updatePowerStatus();
+    }
   }
 }
 
-/* ========== 主迴圈 ========== */
 function gameLoop() {
   if (!gameRunning) return;
-  ctx.clearRect(0, 0, BASE_W, BASE_H);
+
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, viewW, viewH);
+
+  beginDraw();
   drawStars();
   updatePlayer();
   drawPlayer();
@@ -794,6 +862,8 @@ function gameLoop() {
   drawBoss();
   drawPowerups();
   drawParticles();
+  endDraw();
+
   checkCollisions();
   updateTimers();
 
@@ -804,7 +874,7 @@ function gameLoop() {
     if (enemySpawnTimer >= enemySpawnInterval) {
       spawnEnemy();
       enemySpawnTimer = 0;
-      const base = difficulty === 'hard' ? 55 : difficulty === 'easy' ? 95 : 75;
+      const base = difficulty === 'hard' ? 55 : (difficulty === 'easy' ? 95 : 75);
       enemySpawnInterval = Math.max(22, base - Math.floor(score / 400) * 3);
     }
   }
@@ -814,35 +884,44 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-/* ========== 遊戲流程 ========== */
 function startGame(diff) {
-  // 嘗試觸發行動裝置原生的全螢幕模式
-  requestFullScreen();
-
   difficulty = diff;
-  scoreMultiplier = diff === 'easy' ? 1 : diff === 'normal' ? 1.5 : 2;
+  scoreMultiplier = diff === 'easy' ? 1 : (diff === 'normal' ? 1.5 : 2);
 
   initAudio();
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
   startBGM();
+
+  const elem = document.documentElement;
+  if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
+  else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
 
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('game-over').classList.add('hidden');
   document.getElementById('leaderboard-screen').classList.add('hidden');
   document.getElementById('boss-bar').style.display = 'none';
 
-  score = 0; lives = 3;
-  bullets = []; enemies = []; particles = []; powerups = [];
-  boss = null; doubleShot = false; shield = false; shotLevel = 1;
-  doubleShotTimer = 0; shieldTimer = 0;
+  score = 0;
+  lives = 3;
+  bullets = [];
+  enemies = [];
+  particles = [];
+  powerups = [];
+  boss = null;
+  doubleShot = false;
+  shield = false;
+  shotLevel = 1;
+  doubleShotTimer = 0;
+  shieldTimer = 0;
   enemySpawnTimer = 0;
-  enemySpawnInterval = diff === 'hard' ? 55 : diff === 'easy' ? 95 : 75;
+  enemySpawnInterval = diff === 'hard' ? 55 : (diff === 'easy' ? 95 : 75);
   nextBossScore = 1400;
-  
-  resizeCanvas(); // 重置畫面與玩家位置
   player.x = BASE_W / 2 - 25;
   frame = 0;
-  isTouching = false; touchX = null;
+  isTouching = false;
+  touchX = null;
 
   document.getElementById('score').textContent = '0';
   updateLives();
@@ -855,18 +934,19 @@ function startGame(diff) {
 function endGame() {
   gameRunning = false;
   stopBGM();
+  vibrate([100, 50, 100, 50, 200]); // 遊戲結束長震動
   document.getElementById('final-score').textContent = score;
   document.getElementById('game-over').classList.remove('hidden');
 }
 
-/* ========== 排行榜 ========== */
 function getLeaderboard() {
-  try { return JSON.parse(localStorage.getItem('insectShooterLB') || '[]'); } catch { return []; }
+  try { return JSON.parse(localStorage.getItem('insectShooterLB') || '[]'); }
+  catch { return []; }
 }
 function saveScore() {
-  const name = document.getElementById('name-input').value.trim() || '無名';
+  const name = (document.getElementById('name-input').value.trim() || '無名').substring(0, 6);
   let list = getLeaderboard();
-  list.push({ name: name.substring(0, 6), score });
+  list.push({ name, score });
   list.sort((a, b) => b.score - a.score);
   list = list.slice(0, 5);
   localStorage.setItem('insectShooterLB', JSON.stringify(list));
@@ -875,83 +955,95 @@ function saveScore() {
 function showLeaderboard() {
   const list = getLeaderboard();
   const ul = document.getElementById('leaderboard-list');
-  ul.innerHTML = list.length === 0 ? '<li style="justify-content:center">尚無紀錄</li>' : '';
-  list.forEach((item, i) => {
-    const li = document.createElement('li');
-    li.innerHTML = `<span>#${i+1} ${item.name}</span><span> ${item.score}</span>`;
-    ul.appendChild(li);
-  });
+  ul.innerHTML = '';
+  if (list.length === 0) {
+    ul.innerHTML = '<li style="justify-content:center">尚無紀錄</li>';
+  } else {
+    list.forEach((item, i) => {
+      const li = document.createElement('li');
+      li.innerHTML = `<span>#${i + 1} \( {item.name}</span><span> \){item.score}</span>`;
+      ul.appendChild(li);
+    });
+  }
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('game-over').classList.add('hidden');
   document.getElementById('leaderboard-screen').classList.remove('hidden');
 }
 
-/* ========== 事件 ========== */
+function bindButton(id, handler) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const fn = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handler();
+  };
+  el.addEventListener('click', fn);
+  el.addEventListener('touchend', fn, { passive: false });
+}
+
+bindButton('btn-easy', () => startGame('easy'));
+bindButton('btn-normal', () => startGame('normal'));
+bindButton('btn-hard', () => startGame('hard'));
+bindButton('leaderboard-btn', showLeaderboard);
+bindButton('save-score-btn', saveScore);
+bindButton('restart-btn', () => {
+  document.getElementById('game-over').classList.add('hidden');
+  document.getElementById('start-screen').classList.remove('hidden');
+});
+bindButton('back-btn', () => {
+  document.getElementById('leaderboard-screen').classList.add('hidden');
+  document.getElementById('start-screen').classList.remove('hidden');
+});
+
 document.addEventListener('keydown', e => {
   keys[e.key] = true;
-  if (e.key === ' ' && gameRunning) { e.preventDefault(); shoot(); }
+  if (e.key === ' ' && gameRunning) {
+    e.preventDefault();
+    shoot();
+  }
 });
 document.addEventListener('keyup', e => keys[e.key] = false);
 
-// 觸控最佳化：1:1螢幕對應 (全螢幕無需計算比例縮放)
 canvas.addEventListener('touchstart', e => {
   e.preventDefault();
   if (!gameRunning) return;
   isTouching = true;
-  touchX = e.touches[0].clientX;
+  touchX = screenToGameX(e.touches[0].clientX);
 }, { passive: false });
 
 canvas.addEventListener('touchmove', e => {
   e.preventDefault();
   if (!gameRunning || !isTouching) return;
-  touchX = e.touches[0].clientX;
+  touchX = screenToGameX(e.touches[0].clientX);
 }, { passive: false });
 
 canvas.addEventListener('touchend', e => {
   e.preventDefault();
   isTouching = false;
   touchX = null;
-});
+}, { passive: false });
 
 canvas.addEventListener('touchcancel', () => {
   isTouching = false;
   touchX = null;
 });
 
-// 滑鼠支援（電腦測試用）
 canvas.addEventListener('mousedown', e => {
   if (!gameRunning) return;
   isTouching = true;
-  touchX = e.clientX;
+  touchX = screenToGameX(e.clientX);
 });
 canvas.addEventListener('mousemove', e => {
   if (!isTouching) return;
-  touchX = e.clientX;
+  touchX = screenToGameX(e.clientX);
 });
-canvas.addEventListener('mouseup', () => { isTouching = false; touchX = null; });
-canvas.addEventListener('mouseleave', () => { isTouching = false; touchX = null; });
-
-/* ========== UI 按鈕事件 ========== */
-document.getElementById('btn-easy').addEventListener('click', () => startGame('easy'));
-document.getElementById('btn-normal').addEventListener('click', () => startGame('normal'));
-document.getElementById('btn-hard').addEventListener('click', () => startGame('hard'));
-document.getElementById('leaderboard-btn').addEventListener('click', showLeaderboard);
-document.getElementById('save-score-btn').addEventListener('click', saveScore);
-
-document.getElementById('restart-btn').addEventListener('click', () => {
-  document.getElementById('game-over').classList.add('hidden');
-  document.getElementById('start-screen').classList.remove('hidden');
+canvas.addEventListener('mouseup', () => {
+  isTouching = false;
+  touchX = null;
 });
 
-document.getElementById('back-btn').addEventListener('click', () => {
-  document.getElementById('leaderboard-screen').classList.add('hidden');
-  document.getElementById('start-screen').classList.remove('hidden');
-});
-
-// 初始進入網頁時，先繪製一次背景星星
-ctx.clearRect(0, 0, BASE_W, BASE_H);
-drawStars();
-
+initStars();
 </script>
 </body>
 </html>
