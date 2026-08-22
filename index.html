@@ -2,53 +2,66 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>昆蟲射擊</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
   html, body {
     width: 100%;
     height: 100%;
-    background: #050510;
+    background: #000;
     overflow: hidden;
+    position: fixed;
     font-family: 'Segoe UI', system-ui, sans-serif;
     color: #fff;
-    touch-action: none;
   }
   #game-container {
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    background: #000;
   }
   canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
     display: block;
     background: #000;
   }
   #ui {
     position: absolute;
-    top: 10px;
+    top: max(10px, env(safe-area-inset-top));
     left: 12px;
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.5;
     text-shadow: 0 0 6px #00aaff;
     pointer-events: none;
-    z-index: 10;
+    z-index: 20;
   }
   #boss-bar {
     position: absolute;
-    top: 10px;
+    top: max(10px, env(safe-area-inset-top));
     left: 50%;
     transform: translateX(-50%);
-    width: 240px;
+    width: min(260px, 70vw);
     height: 14px;
     background: #222;
     border: 2px solid #ff4444;
     border-radius: 4px;
     display: none;
-    z-index: 10;
+    z-index: 20;
   }
   #boss-hp {
     height: 100%;
@@ -78,31 +91,29 @@
     pointer-events: auto;
   }
   .screen h1 {
-    font-size: 40px;
-    margin-bottom: 30px;
+    font-size: clamp(32px, 8vw, 44px);
+    margin-bottom: 28px;
     background: linear-gradient(90deg, #00ccff, #0066ff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
   .diff-btn {
     display: block;
-    width: 230px;
+    width: min(240px, 80vw);
     padding: 16px 0;
-    margin: 11px 0;
+    margin: 12px 0;
     font-size: 18px;
     border: none;
     border-radius: 12px;
     color: white;
     cursor: pointer;
     pointer-events: auto;
-    user-select: none;
-    -webkit-user-select: none;
   }
   #btn-easy   { background: linear-gradient(135deg, #00cc88, #009966); }
   #btn-normal { background: linear-gradient(135deg, #00aaff, #0066cc); }
   #btn-hard   { background: linear-gradient(135deg, #ff5555, #cc2222); }
   #leaderboard-btn {
-    margin-top: 26px;
+    margin-top: 24px;
     padding: 12px 32px;
     font-size: 15px;
     background: linear-gradient(135deg, #aa66ff, #6644cc);
@@ -110,17 +121,16 @@
     border-radius: 8px;
     color: white;
     cursor: pointer;
-    pointer-events: auto;
   }
   #name-input {
-    padding: 11px 14px;
+    padding: 12px 14px;
     font-size: 16px;
     border-radius: 6px;
     border: 2px solid #00aaff;
     background: #111;
     color: white;
     margin: 14px 0 16px;
-    width: 200px;
+    width: min(220px, 80vw);
     text-align: center;
   }
   button {
@@ -131,14 +141,13 @@
     color: white;
     margin: 6px;
     cursor: pointer;
-    pointer-events: auto;
   }
   #restart-btn { background: linear-gradient(135deg, #00aaff, #0066cc); }
   #save-score-btn { background: linear-gradient(135deg, #00cc88, #009966); }
   #back-btn { background: #444; }
   #leaderboard-list {
     list-style: none;
-    width: 260px;
+    width: min(280px, 85vw);
     margin: 16px 0 20px;
     text-align: left;
   }
@@ -155,7 +164,7 @@
 </head>
 <body>
   <div id="game-container">
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <canvas id="gameCanvas"></canvas>
 
     <div id="ui">
       分數: <span id="score">0</span><br>
@@ -168,7 +177,6 @@
       <div id="boss-hp"></div>
     </div>
 
-    <!-- 開始畫面 -->
     <div id="start-screen" class="screen">
       <h1>🐛 昆蟲射擊</h1>
       <button class="diff-btn" id="btn-easy">簡單　分數 ×1</button>
@@ -195,6 +203,45 @@
   </div>
 
 <script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// 邏輯解析度（保持遊戲手感一致）
+let BASE_W = 800;
+let BASE_H = 600;
+
+// 實際畫布尺寸
+let viewW = 800;
+let viewH = 600;
+let scaleX = 1;
+let scaleY = 1;
+
+/* ========== 全螢幕適配 ========== */
+function resize() {
+  viewW = window.innerWidth;
+  viewH = window.innerHeight;
+
+  // 使用 devicePixelRatio 讓畫面更清晰
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = viewW * dpr;
+  canvas.height = viewH * dpr;
+  canvas.style.width = viewW + 'px';
+  canvas.style.height = viewH + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // 計算縮放比例（讓遊戲內容盡量填滿，保持比例）
+  const ratio = Math.min(viewW / BASE_W, viewH / BASE_H);
+  scaleX = ratio;
+  scaleY = ratio;
+
+  // 置中偏移
+  window.offsetX = (viewW - BASE_W * scaleX) / 2;
+  window.offsetY = (viewH - BASE_H * scaleY) / 2;
+}
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 100));
+resize();
+
 /* ========== 音效 ========== */
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
@@ -234,7 +281,7 @@ function startBGM() {
     const g = audioCtx.createGain();
     bgOsc.type = 'sine';
     bgOsc.frequency.value = 50;
-    g.gain.value = 0.022;
+    g.gain.value = 0.02;
     bgOsc.connect(g);
     g.connect(audioCtx.destination);
     bgOsc.start();
@@ -248,10 +295,6 @@ function stopBGM() {
 }
 
 /* ========== 遊戲變數 ========== */
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const BASE_W = 800, BASE_H = 600;
-
 let gameRunning = false;
 let score = 0;
 let lives = 3;
@@ -286,31 +329,36 @@ const player = {
   speed: 6.5
 };
 
-/* ========== 畫面自動縮放 ========== */
-function resizeCanvas() {
-  const winW = window.innerWidth;
-  const winH = window.innerHeight;
-  const scale = Math.min(winW / BASE_W, winH / BASE_H);
-  canvas.style.width = Math.floor(BASE_W * scale) + 'px';
-  canvas.style.height = Math.floor(BASE_H * scale) + 'px';
+/* ========== 座標轉換（觸控 → 遊戲邏輯座標） ========== */
+function screenToGameX(clientX) {
+  const rect = canvas.getBoundingClientRect();
+  const x = (clientX - rect.left) / (rect.width / viewW);
+  return (x - window.offsetX) / scaleX;
 }
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
 
 /* ========== 初始化 ========== */
 function initStars() {
   stars = [];
-  for (let i = 0; i < 120; i++) {
+  for (let i = 0; i < 140; i++) {
     stars.push({
       x: Math.random() * BASE_W,
       y: Math.random() * BASE_H,
-      size: Math.random() * 2 + 0.3,
-      speed: Math.random() * 1.8 + 0.3
+      size: Math.random() * 2.2 + 0.3,
+      speed: Math.random() * 1.9 + 0.3
     });
   }
 }
 
-/* ========== 繪圖 ========== */
+/* ========== 繪圖（先平移縮放再畫） ========== */
+function beginDraw() {
+  ctx.save();
+  ctx.translate(window.offsetX, window.offsetY);
+  ctx.scale(scaleX, scaleY);
+}
+function endDraw() {
+  ctx.restore();
+}
+
 function drawStars() {
   ctx.fillStyle = '#fff';
   stars.forEach(s => {
@@ -319,7 +367,10 @@ function drawStars() {
     ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
     ctx.fill();
     s.y += s.speed;
-    if (s.y > BASE_H) { s.y = 0; s.x = Math.random() * BASE_W; }
+    if (s.y > BASE_H) {
+      s.y = 0;
+      s.x = Math.random() * BASE_W;
+    }
   });
   ctx.globalAlpha = 1;
 }
@@ -403,7 +454,6 @@ function drawInsect(e) {
   ctx.save();
   ctx.translate(e.x + e.width / 2, e.y + e.height / 2);
   ctx.rotate(Math.sin(frame * e.wingSpeed) * 0.15);
-
   const r = e.width / 2;
 
   ctx.globalAlpha = 0.45;
@@ -455,7 +505,6 @@ function drawInsect(e) {
     ctx.lineTo(r * 0.9, i * r * 0.5 + r * 0.2);
     ctx.stroke();
   }
-
   ctx.restore();
   ctx.shadowBlur = 0;
 }
@@ -759,7 +808,7 @@ function updatePlayer() {
 
   if (isTouching && touchX !== null) {
     const target = touchX - player.width / 2;
-    player.x += (target - player.x) * 0.28;
+    player.x += (target - player.x) * 0.3;
     player.x = Math.max(0, Math.min(BASE_W - player.width, player.x));
   }
 }
@@ -790,7 +839,12 @@ function updateTimers() {
 /* ========== 主迴圈 ========== */
 function gameLoop() {
   if (!gameRunning) return;
-  ctx.clearRect(0, 0, BASE_W, BASE_H);
+
+  // 清空整個螢幕
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, viewW, viewH);
+
+  beginDraw();
   drawStars();
   updatePlayer();
   drawPlayer();
@@ -799,6 +853,8 @@ function gameLoop() {
   drawBoss();
   drawPowerups();
   drawParticles();
+  endDraw();
+
   checkCollisions();
   updateTimers();
 
@@ -829,6 +885,11 @@ function startGame(diff) {
     audioCtx.resume().catch(() => {});
   }
   startBGM();
+
+  // 嘗試進入瀏覽器全螢幕（部分手機有效）
+  const elem = document.documentElement;
+  if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
+  else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
 
   document.getElementById('start-screen').classList.add('hidden');
   document.getElementById('game-over').classList.add('hidden');
@@ -902,7 +963,7 @@ function showLeaderboard() {
   document.getElementById('leaderboard-screen').classList.remove('hidden');
 }
 
-/* ========== 事件綁定（強化手機相容） ========== */
+/* ========== 事件 ========== */
 function bindButton(id, handler) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -938,22 +999,18 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('keyup', e => keys[e.key] = false);
 
-/* 觸控移動 + 射擊 */
+/* 觸控（全螢幕優化） */
 canvas.addEventListener('touchstart', e => {
   e.preventDefault();
   if (!gameRunning) return;
   isTouching = true;
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = BASE_W / rect.width;
-  touchX = (e.touches[0].clientX - rect.left) * scaleX;
+  touchX = screenToGameX(e.touches[0].clientX);
 }, { passive: false });
 
 canvas.addEventListener('touchmove', e => {
   e.preventDefault();
   if (!gameRunning || !isTouching) return;
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = BASE_W / rect.width;
-  touchX = (e.touches[0].clientX - rect.left) * scaleX;
+  touchX = screenToGameX(e.touches[0].clientX);
 }, { passive: false });
 
 canvas.addEventListener('touchend', e => {
@@ -967,19 +1024,15 @@ canvas.addEventListener('touchcancel', () => {
   touchX = null;
 });
 
-/* 滑鼠支援 */
+/* 滑鼠（電腦測試） */
 canvas.addEventListener('mousedown', e => {
   if (!gameRunning) return;
   isTouching = true;
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = BASE_W / rect.width;
-  touchX = (e.clientX - rect.left) * scaleX;
+  touchX = screenToGameX(e.clientX);
 });
 canvas.addEventListener('mousemove', e => {
   if (!isTouching) return;
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = BASE_W / rect.width;
-  touchX = (e.clientX - rect.left) * scaleX;
+  touchX = screenToGameX(e.clientX);
 });
 canvas.addEventListener('mouseup', () => {
   isTouching = false;
