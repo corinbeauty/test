@@ -2,10 +2,10 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>太空射擊 - 完整擴充版</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>太空射擊 - 優化版</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; }
+  * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; -webkit-tap-highlight-color: transparent; }
   body {
     background: #050510;
     display: flex;
@@ -29,8 +29,8 @@
     position: absolute;
     top: 12px;
     left: 16px;
-    font-size: 16px;
-    line-height: 1.6;
+    font-size: 15px;
+    line-height: 1.55;
     text-shadow: 0 0 8px #00aaff;
     pointer-events: none;
     z-index: 10;
@@ -40,9 +40,9 @@
     top: 12px;
     left: 50%;
     transform: translateX(-50%);
-    width: 280px;
-    height: 18px;
-    background: #333;
+    width: 260px;
+    height: 16px;
+    background: #222;
     border: 2px solid #ff4444;
     border-radius: 4px;
     display: none;
@@ -52,47 +52,52 @@
     height: 100%;
     width: 100%;
     background: linear-gradient(90deg, #ff2222, #ff8800);
-    transition: width 0.2s;
+    transition: width 0.15s;
   }
   #boss-label {
     position: absolute;
-    top: -22px;
+    top: -20px;
     width: 100%;
     text-align: center;
-    font-size: 14px;
+    font-size: 13px;
     color: #ff6666;
   }
-  /* 觸控按鈕 */
+  /* 觸控控制 - 加大並優化 */
   #touch-controls {
     position: absolute;
-    bottom: 20px;
+    bottom: 18px;
     left: 0;
     width: 100%;
     display: none;
     justify-content: space-between;
-    padding: 0 20px;
+    padding: 0 16px;
     pointer-events: none;
     z-index: 20;
   }
   .touch-btn {
-    width: 70px;
-    height: 70px;
+    width: 78px;
+    height: 78px;
     border-radius: 50%;
-    background: rgba(0, 150, 255, 0.25);
-    border: 2px solid rgba(0, 180, 255, 0.6);
+    background: rgba(0, 140, 255, 0.28);
+    border: 2px solid rgba(0, 180, 255, 0.7);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
+    font-size: 30px;
     pointer-events: auto;
     user-select: none;
+    transition: background 0.1s;
   }
-  #btn-left, #btn-right { font-size: 32px; }
+  .touch-btn:active, .touch-btn.active {
+    background: rgba(0, 180, 255, 0.55);
+  }
   #btn-shoot {
-    background: rgba(255, 100, 0, 0.3);
-    border-color: rgba(255, 150, 0, 0.7);
+    background: rgba(255, 90, 0, 0.32);
+    border-color: rgba(255, 140, 0, 0.75);
   }
-  /* 畫面覆蓋層 */
+  #btn-shoot:active, #btn-shoot.active {
+    background: rgba(255, 120, 0, 0.6);
+  }
   .screen {
     position: absolute;
     top: 0; left: 0;
@@ -106,49 +111,47 @@
     z-index: 30;
   }
   .screen h1 {
-    font-size: 42px;
-    margin-bottom: 12px;
+    font-size: 40px;
+    margin-bottom: 10px;
     background: linear-gradient(90deg, #00ccff, #0066ff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
-  .screen p { font-size: 16px; color: #aaa; line-height: 1.7; margin-bottom: 24px; }
+  .screen p { font-size: 15px; color: #aaa; line-height: 1.7; margin-bottom: 22px; }
   button {
-    padding: 12px 36px;
-    font-size: 18px;
+    padding: 11px 32px;
+    font-size: 17px;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     color: white;
-    margin: 6px;
-    transition: transform 0.15s, box-shadow 0.15s;
+    margin: 5px;
   }
-  button:hover { transform: scale(1.05); }
   #start-btn { background: linear-gradient(135deg, #00cc88, #009966); }
   #restart-btn { background: linear-gradient(135deg, #00aaff, #0066cc); }
   #leaderboard-btn { background: linear-gradient(135deg, #aa66ff, #6644cc); }
   #back-btn { background: #444; }
   #name-input {
-    padding: 10px 16px;
-    font-size: 18px;
+    padding: 9px 14px;
+    font-size: 17px;
     border-radius: 6px;
     border: 2px solid #00aaff;
     background: #111;
     color: white;
-    margin-bottom: 16px;
-    width: 220px;
+    margin-bottom: 14px;
+    width: 200px;
     text-align: center;
   }
   #leaderboard-list {
     list-style: none;
-    width: 280px;
-    margin: 16px 0 24px;
+    width: 260px;
+    margin: 14px 0 20px;
     text-align: left;
   }
   #leaderboard-list li {
-    padding: 8px 12px;
+    padding: 7px 11px;
     background: rgba(255,255,255,0.05);
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     border-radius: 4px;
     display: flex;
     justify-content: space-between;
@@ -171,28 +174,25 @@
       <div id="boss-hp"></div>
     </div>
 
-    <!-- 觸控控制 -->
     <div id="touch-controls">
-      <div style="display:flex; gap:12px;">
+      <div style="display:flex; gap:14px;">
         <div class="touch-btn" id="btn-left">◀</div>
         <div class="touch-btn" id="btn-right">▶</div>
       </div>
       <div class="touch-btn" id="btn-shoot">🔥</div>
     </div>
 
-    <!-- 開始畫面 -->
     <div id="start-screen" class="screen">
       <h1>🚀 太空射擊</h1>
       <p>
         ← → / A D 移動　空白鍵發射<br>
-        消滅敵人掉落道具　達到分數召喚 Boss<br>
-        支援手機觸控操作
+        敵人外型會隨難度變化<br>
+        支援手機觸控（已優化）
       </p>
       <button id="start-btn">開始遊戲</button>
       <button id="leaderboard-btn">排行榜</button>
     </div>
 
-    <!-- 遊戲結束 -->
     <div id="game-over" class="screen hidden">
       <h1>遊戲結束</h1>
       <p>最終分數: <span id="final-score">0</span></p>
@@ -203,7 +203,6 @@
       </div>
     </div>
 
-    <!-- 排行榜 -->
     <div id="leaderboard-screen" class="screen hidden">
       <h1>🏆 排行榜</h1>
       <ul id="leaderboard-list"></ul>
@@ -212,7 +211,7 @@
   </div>
 
 <script>
-/* ========== 音效系統 (Web Audio API) ========== */
+/* ========== 音效系統 ========== */
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
 
@@ -220,12 +219,13 @@ function initAudio() {
   if (!audioCtx) audioCtx = new AudioCtx();
 }
 
-function playTone(freq, type, duration, volume = 0.1) {
+function playTone(freq, type, duration, volume = 0.1, slide = 0) {
   if (!audioCtx) return;
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   osc.type = type;
-  osc.frequency.value = freq;
+  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  if (slide) osc.frequency.linearRampToValueAtTime(freq + slide, audioCtx.currentTime + duration);
   gain.gain.setValueAtTime(volume, audioCtx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
   osc.connect(gain);
@@ -234,32 +234,46 @@ function playTone(freq, type, duration, volume = 0.1) {
   osc.stop(audioCtx.currentTime + duration);
 }
 
-function sfxShoot() { playTone(880, 'square', 0.08, 0.08); }
-function sfxHit() { playTone(200, 'sawtooth', 0.15, 0.12); }
-function sfxExplosion() { playTone(80, 'sawtooth', 0.3, 0.15); }
-function sfxPower() { playTone(660, 'sine', 0.25, 0.12); playTone(990, 'sine', 0.2, 0.08); }
-function sfxBoss() { playTone(120, 'triangle', 0.4, 0.15); }
-function sfxHurt() { playTone(150, 'square', 0.25, 0.15); }
+function sfxShoot() {
+  playTone(920, 'square', 0.07, 0.07);
+  playTone(1400, 'square', 0.05, 0.04);
+}
+function sfxHit() { playTone(220, 'sawtooth', 0.12, 0.1, -80); }
+function sfxExplosion() {
+  playTone(90, 'sawtooth', 0.28, 0.14, -40);
+  playTone(60, 'triangle', 0.35, 0.08);
+}
+function sfxPowerDouble() {
+  playTone(700, 'sine', 0.18, 0.1);
+  playTone(1050, 'sine', 0.22, 0.08);
+}
+function sfxPowerShield() {
+  playTone(500, 'triangle', 0.3, 0.1);
+  playTone(800, 'sine', 0.25, 0.07);
+}
+function sfxPowerBomb() {
+  playTone(150, 'sawtooth', 0.4, 0.13, -70);
+}
+function sfxBoss() {
+  playTone(110, 'triangle', 0.45, 0.14);
+  playTone(80, 'sawtooth', 0.5, 0.08);
+}
+function sfxHurt() { playTone(140, 'square', 0.22, 0.13, -50); }
 
-/* 簡單背景音樂 (循環低音) */
 let bgOsc = null, bgGain = null;
 function startBGM() {
   if (!audioCtx || bgOsc) return;
   bgOsc = audioCtx.createOscillator();
   bgGain = audioCtx.createGain();
   bgOsc.type = 'sine';
-  bgOsc.frequency.value = 55;
-  bgGain.gain.value = 0.03;
+  bgOsc.frequency.value = 52;
+  bgGain.gain.value = 0.025;
   bgOsc.connect(bgGain);
   bgGain.connect(audioCtx.destination);
   bgOsc.start();
 }
 function stopBGM() {
-  if (bgOsc) {
-    bgOsc.stop();
-    bgOsc = null;
-    bgGain = null;
-  }
+  if (bgOsc) { bgOsc.stop(); bgOsc = null; bgGain = null; }
 }
 
 /* ========== 遊戲變數 ========== */
@@ -277,7 +291,7 @@ let particles = [];
 let powerups = [];
 let boss = null;
 let enemySpawnTimer = 0;
-let enemySpawnInterval = 80;
+let enemySpawnInterval = 78;
 let frame = 0;
 let nextBossScore = 1500;
 let doubleShot = false;
@@ -285,37 +299,133 @@ let doubleShotTimer = 0;
 let shield = false;
 let shieldTimer = 0;
 let shootCooldown = 0;
+let shotLevel = 1; // 1=單發, 2=雙發, 3=三向散射
 
 const player = {
   x: canvas.width / 2 - 25,
   y: canvas.height - 80,
   width: 50,
-  height: 40,
-  speed: 6
+  height: 42,
+  speed: 6.2
 };
 
 /* ========== 初始化 ========== */
 function initStars() {
   stars = [];
-  for (let i = 0; i < 120; i++) {
+  for (let i = 0; i < 130; i++) {
     stars.push({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      size: Math.random() * 2 + 0.4,
-      speed: Math.random() * 1.8 + 0.4
+      size: Math.random() * 2.1 + 0.3,
+      speed: Math.random() * 1.9 + 0.35
     });
   }
 }
 
 function isMobile() {
-  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || window.innerWidth < 800;
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || 
+         ('ontouchstart' in window) || window.innerWidth < 820;
 }
 
-/* ========== 繪圖 ========== */
+/* ========== 繪圖 - 立體機體 ========== */
+function drawPlayer() {
+  const cx = player.x + player.width / 2;
+  const cy = player.y + player.height / 2;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+
+  // 護盾
+  if (shield) {
+    ctx.beginPath();
+    ctx.arc(0, 0, 40, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(0, 255, 210, ${0.35 + Math.sin(frame * 0.14) * 0.25})`;
+    ctx.lineWidth = 3.5;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, 0, 34, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(100, 255, 255, ${0.15 + Math.sin(frame * 0.1) * 0.1})`;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // 引擎火焰（立體感）
+  const flameLen = 18 + Math.random() * 12;
+  const gradFlame = ctx.createLinearGradient(0, 10, 0, 10 + flameLen);
+  gradFlame.addColorStop(0, '#ffaa00');
+  gradFlame.addColorStop(0.5, '#ff4400');
+  gradFlame.addColorStop(1, 'rgba(255,50,0,0)');
+  ctx.fillStyle = gradFlame;
+  ctx.beginPath();
+  ctx.moveTo(-10, 12);
+  ctx.quadraticCurveTo(0, 12 + flameLen, 10, 12);
+  ctx.lineTo(6, 12);
+  ctx.quadraticCurveTo(0, 18, -6, 12);
+  ctx.fill();
+
+  // 機翼陰影
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.beginPath();
+  ctx.moveTo(-26, 8);
+  ctx.lineTo(-8, 4);
+  ctx.lineTo(-8, 14);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(26, 8);
+  ctx.lineTo(8, 4);
+  ctx.lineTo(8, 14);
+  ctx.closePath();
+  ctx.fill();
+
+  // 主機身（漸層立體）
+  const bodyGrad = ctx.createLinearGradient(-20, -25, 20, 20);
+  bodyGrad.addColorStop(0, '#66e0ff');
+  bodyGrad.addColorStop(0.4, '#00aaff');
+  bodyGrad.addColorStop(0.7, '#0077cc');
+  bodyGrad.addColorStop(1, '#004488');
+  ctx.fillStyle = bodyGrad;
+  ctx.shadowBlur = 16;
+  ctx.shadowColor = '#00ccff';
+
+  ctx.beginPath();
+  ctx.moveTo(0, -24);          // 機鼻
+  ctx.lineTo(12, -6);
+  ctx.lineTo(26, 10);          // 右翼尖
+  ctx.lineTo(10, 8);
+  ctx.lineTo(8, 16);           // 右尾
+  ctx.lineTo(-8, 16);          // 左尾
+  ctx.lineTo(-10, 8);
+  ctx.lineTo(-26, 10);         // 左翼尖
+  ctx.lineTo(-12, -6);
+  ctx.closePath();
+  ctx.fill();
+
+  // 高光
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.beginPath();
+  ctx.moveTo(0, -22);
+  ctx.lineTo(7, -5);
+  ctx.lineTo(3, 2);
+  ctx.lineTo(-3, 2);
+  ctx.lineTo(-7, -5);
+  ctx.closePath();
+  ctx.fill();
+
+  // 駕駛艙
+  ctx.fillStyle = 'rgba(180, 240, 255, 0.7)';
+  ctx.beginPath();
+  ctx.ellipse(0, -6, 6, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
 function drawStars() {
   ctx.fillStyle = '#fff';
   stars.forEach(s => {
-    ctx.globalAlpha = 0.6 + Math.random() * 0.4;
+    ctx.globalAlpha = 0.5 + Math.random() * 0.5;
     ctx.beginPath();
     ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
     ctx.fill();
@@ -328,77 +438,83 @@ function drawStars() {
   ctx.globalAlpha = 1;
 }
 
-function drawPlayer() {
-  ctx.save();
-  ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
-
-  // 護盾
-  if (shield) {
-    ctx.beginPath();
-    ctx.arc(0, 0, 38, 0, Math.PI * 2);
-    ctx.strokeStyle = `rgba(0, 255, 200, ${0.4 + Math.sin(frame * 0.15) * 0.3})`;
-    ctx.lineWidth = 3;
-    ctx.stroke();
-  }
-
-  // 船身
-  ctx.fillStyle = '#00ccff';
-  ctx.shadowBlur = 15;
-  ctx.shadowColor = '#00ccff';
-  ctx.beginPath();
-  ctx.moveTo(0, -22);
-  ctx.lineTo(24, 20);
-  ctx.lineTo(8, 12);
-  ctx.lineTo(-8, 12);
-  ctx.lineTo(-24, 20);
-  ctx.closePath();
-  ctx.fill();
-
-  // 引擎火焰
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = `hsl(${30 + Math.random() * 20}, 100%, 55%)`;
-  ctx.beginPath();
-  ctx.moveTo(-9, 12);
-  ctx.lineTo(0, 26 + Math.random() * 10);
-  ctx.lineTo(9, 12);
-  ctx.fill();
-
-  ctx.restore();
-}
-
 function drawBullets() {
-  ctx.fillStyle = '#ffff00';
-  ctx.shadowBlur = 12;
-  ctx.shadowColor = '#ffff00';
   for (let i = bullets.length - 1; i >= 0; i--) {
     const b = bullets[i];
+    ctx.fillStyle = b.color || '#ffff00';
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = b.color || '#ffff00';
     ctx.fillRect(b.x, b.y, b.width, b.height);
     b.y -= b.speed;
-    if (b.y < -20) bullets.splice(i, 1);
+    b.x += b.vx || 0;
+    if (b.y < -25 || b.x < -20 || b.x > canvas.width + 20) bullets.splice(i, 1);
   }
   ctx.shadowBlur = 0;
+}
+
+/* ========== 多樣敵人繪製 ========== */
+function drawEnemyShape(e) {
+  ctx.save();
+  ctx.translate(e.x + e.width / 2, e.y + e.height / 2);
+  ctx.rotate(frame * e.rotSpeed);
+  ctx.fillStyle = e.color;
+  ctx.shadowBlur = 11;
+  ctx.shadowColor = e.color;
+
+  const r = e.width / 2;
+
+  if (e.shape === 'hex') {
+    ctx.beginPath();
+    for (let j = 0; j < 6; j++) {
+      const a = (j / 6) * Math.PI * 2;
+      ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    ctx.closePath();
+    ctx.fill();
+  } else if (e.shape === 'tri') {
+    ctx.beginPath();
+    ctx.moveTo(0, -r);
+    ctx.lineTo(r * 0.9, r * 0.7);
+    ctx.lineTo(-r * 0.9, r * 0.7);
+    ctx.closePath();
+    ctx.fill();
+  } else if (e.shape === 'diamond') {
+    ctx.beginPath();
+    ctx.moveTo(0, -r);
+    ctx.lineTo(r, 0);
+    ctx.lineTo(0, r);
+    ctx.lineTo(-r, 0);
+    ctx.closePath();
+    ctx.fill();
+  } else if (e.shape === 'circle') {
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.arc(-r * 0.3, -r * 0.3, r * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (e.shape === 'star') {
+    ctx.beginPath();
+    for (let j = 0; j < 5; j++) {
+      const a = (j / 5) * Math.PI * 2 - Math.PI / 2;
+      const a2 = a + Math.PI / 5;
+      ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+      ctx.lineTo(Math.cos(a2) * r * 0.45, Math.sin(a2) * r * 0.45);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  ctx.restore();
 }
 
 function drawEnemies() {
   for (let i = enemies.length - 1; i >= 0; i--) {
     const e = enemies[i];
-    ctx.save();
-    ctx.translate(e.x + e.width / 2, e.y + e.height / 2);
-    ctx.rotate(frame * 0.03);
-    ctx.fillStyle = e.color;
-    ctx.shadowBlur = 12;
-    ctx.shadowColor = e.color;
-    ctx.beginPath();
-    for (let j = 0; j < 6; j++) {
-      const a = (j / 6) * Math.PI * 2;
-      ctx.lineTo(Math.cos(a) * e.width / 2, Math.sin(a) * e.width / 2);
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-
+    drawEnemyShape(e);
     e.y += e.speed;
-    if (e.y > canvas.height + 40) enemies.splice(i, 1);
+    if (e.y > canvas.height + 50) enemies.splice(i, 1);
   }
   ctx.shadowBlur = 0;
 }
@@ -408,45 +524,54 @@ function drawBoss() {
   const b = boss;
   ctx.save();
   ctx.translate(b.x + b.width / 2, b.y + b.height / 2);
-  ctx.rotate(Math.sin(frame * 0.02) * 0.1);
+  ctx.rotate(Math.sin(frame * 0.018) * 0.08);
 
-  // 身體
-  ctx.fillStyle = '#ff2244';
-  ctx.shadowBlur = 25;
+  const grad = ctx.createRadialGradient(0, 0, 10, 0, 0, 70);
+  grad.addColorStop(0, '#ff6666');
+  grad.addColorStop(0.6, '#cc0022');
+  grad.addColorStop(1, '#660011');
+  ctx.fillStyle = grad;
+  ctx.shadowBlur = 28;
   ctx.shadowColor = '#ff0000';
+
   ctx.beginPath();
   ctx.moveTo(0, -b.height / 2);
-  ctx.lineTo(b.width / 2, 0);
-  ctx.lineTo(b.width / 3, b.height / 2);
-  ctx.lineTo(-b.width / 3, b.height / 2);
-  ctx.lineTo(-b.width / 2, 0);
+  ctx.lineTo(b.width / 2, -10);
+  ctx.lineTo(b.width / 2.5, b.height / 2);
+  ctx.lineTo(-b.width / 2.5, b.height / 2);
+  ctx.lineTo(-b.width / 2, -10);
   ctx.closePath();
   ctx.fill();
 
   // 眼睛
-  ctx.fillStyle = '#ffff00';
+  ctx.fillStyle = '#ffff44';
+  ctx.shadowBlur = 8;
   ctx.beginPath();
-  ctx.arc(-15, -10, 8, 0, Math.PI * 2);
-  ctx.arc(15, -10, 8, 0, Math.PI * 2);
+  ctx.arc(-18, -12, 9, 0, Math.PI * 2);
+  ctx.arc(18, -12, 9, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.arc(-18, -12, 4, 0, Math.PI * 2);
+  ctx.arc(18, -12, 4, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();
   ctx.shadowBlur = 0;
 
-  // 移動
   b.x += b.vx;
   if (b.x <= 0 || b.x + b.width >= canvas.width) b.vx *= -1;
-  b.y += Math.sin(frame * 0.03) * 0.8;
+  b.y += Math.sin(frame * 0.028) * 0.7;
 
-  // 發射
-  if (frame % 40 === 0) {
+  if (frame % 38 === 0) {
     enemies.push({
-      x: b.x + b.width / 2 - 15,
-      y: b.y + b.height,
-      width: 30,
-      height: 30,
-      speed: 3.5,
-      color: '#ff6600'
+      x: b.x + b.width / 2 - 14,
+      y: b.y + b.height - 10,
+      width: 28, height: 28,
+      speed: 3.6,
+      color: '#ff5500',
+      shape: 'tri',
+      rotSpeed: 0.08
     });
   }
 }
@@ -456,21 +581,20 @@ function drawPowerups() {
     const p = powerups[i];
     ctx.save();
     ctx.translate(p.x + 15, p.y + 15);
-    ctx.rotate(frame * 0.05);
+    ctx.rotate(frame * 0.06);
     ctx.fillStyle = p.color;
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 14;
     ctx.shadowColor = p.color;
     ctx.beginPath();
-    ctx.arc(0, 0, 14, 0, Math.PI * 2);
+    ctx.arc(0, 0, 15, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 14px sans-serif';
+    ctx.font = 'bold 15px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(p.icon, 0, 0);
+    ctx.fillText(p.icon, 0, 1);
     ctx.restore();
-
-    p.y += 2.2;
+    p.y += 2.3;
     if (p.y > canvas.height) powerups.splice(i, 1);
   }
   ctx.shadowBlur = 0;
@@ -479,7 +603,7 @@ function drawPowerups() {
 function drawParticles() {
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
-    ctx.globalAlpha = p.life / 40;
+    ctx.globalAlpha = p.life / 38;
     ctx.fillStyle = p.color;
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
@@ -495,38 +619,65 @@ function drawParticles() {
 /* ========== 邏輯 ========== */
 function shoot() {
   if (shootCooldown > 0) return;
-  shootCooldown = doubleShot ? 8 : 14;
+  shootCooldown = doubleShot ? 7 : 13;
   sfxShoot();
 
   const cx = player.x + player.width / 2;
-  bullets.push({ x: cx - 3, y: player.y, width: 6, height: 16, speed: 13 });
-  if (doubleShot) {
-    bullets.push({ x: cx - 18, y: player.y + 8, width: 5, height: 12, speed: 12 });
-    bullets.push({ x: cx + 12, y: player.y + 8, width: 5, height: 12, speed: 12 });
+  const baseY = player.y;
+
+  if (shotLevel === 1) {
+    bullets.push({ x: cx - 3, y: baseY, width: 6, height: 16, speed: 13.5, color: '#ffff00' });
+  } else if (shotLevel === 2) {
+    bullets.push({ x: cx - 14, y: baseY + 4, width: 5, height: 14, speed: 13, color: '#00ffaa' });
+    bullets.push({ x: cx + 8, y: baseY + 4, width: 5, height: 14, speed: 13, color: '#00ffaa' });
+  } else {
+    // 三向散射
+    bullets.push({ x: cx - 3, y: baseY, width: 6, height: 15, speed: 13.5, color: '#ff66ff', vx: 0 });
+    bullets.push({ x: cx - 16, y: baseY + 6, width: 5, height: 13, speed: 12.5, color: '#ff66ff', vx: -1.8 });
+    bullets.push({ x: cx + 10, y: baseY + 6, width: 5, height: 13, speed: 12.5, color: '#ff66ff', vx: 1.8 });
+  }
+}
+
+function getEnemyType() {
+  // 依分數決定敵人種類與難度
+  const s = score;
+  if (s < 800) {
+    return { shape: 'hex', color: `hsl(${20 + Math.random()*30}, 80%, 55%)`, rotSpeed: 0.025 };
+  } else if (s < 2000) {
+    const shapes = ['hex', 'tri', 'diamond'];
+    return { shape: shapes[Math.floor(Math.random()*3)], color: `hsl(${Math.random()*60}, 85%, 55%)`, rotSpeed: 0.04 };
+  } else if (s < 4000) {
+    const shapes = ['tri', 'diamond', 'circle', 'star'];
+    return { shape: shapes[Math.floor(Math.random()*4)], color: `hsl(${Math.random()*100 + 20}, 90%, 55%)`, rotSpeed: 0.055 };
+  } else {
+    const shapes = ['star', 'circle', 'diamond', 'tri'];
+    return { shape: shapes[Math.floor(Math.random()*4)], color: `hsl(${Math.random()*120 + 180}, 90%, 60%)`, rotSpeed: 0.07 };
   }
 }
 
 function spawnEnemy() {
-  const size = 28 + Math.random() * 22;
+  const size = 26 + Math.random() * 24;
+  const type = getEnemyType();
+  const speedBonus = Math.floor(score / 900) * 0.35;
   enemies.push({
     x: Math.random() * (canvas.width - size),
     y: -size,
     width: size,
     height: size,
-    speed: 2 + Math.random() * 2.2 + Math.floor(score / 800) * 0.4,
-    color: `hsl(${Math.random() * 50 + 10}, 85%, 55%)`
+    speed: 1.9 + Math.random() * 2.1 + speedBonus,
+    ...type
   });
 }
 
 function spawnBoss() {
   boss = {
     x: canvas.width / 2 - 60,
-    y: 60,
+    y: 55,
     width: 120,
-    height: 80,
-    hp: 40 + Math.floor(score / 1000) * 15,
-    maxHp: 40 + Math.floor(score / 1000) * 15,
-    vx: 2.5
+    height: 78,
+    hp: 42 + Math.floor(score / 1000) * 16,
+    maxHp: 42 + Math.floor(score / 1000) * 16,
+    vx: 2.4
   };
   document.getElementById('boss-bar').style.display = 'block';
   updateBossBar();
@@ -545,15 +696,15 @@ function createExplosion(x, y, color, count = 12) {
       x, y,
       vx: (Math.random() - 0.5) * 9,
       vy: (Math.random() - 0.5) * 9,
-      life: 25 + Math.random() * 20,
-      size: 2 + Math.random() * 3,
+      life: 22 + Math.random() * 22,
+      size: 2 + Math.random() * 3.2,
       color
     });
   }
 }
 
 function dropPowerup(x, y) {
-  if (Math.random() > 0.28) return;
+  if (Math.random() > 0.32) return;
   const types = [
     { type: 'double', icon: '⚡', color: '#00ffaa' },
     { type: 'shield', icon: '🛡', color: '#00ccff' },
@@ -564,43 +715,45 @@ function dropPowerup(x, y) {
 }
 
 function activatePower(type) {
-  sfxPower();
   if (type === 'double') {
+    sfxPowerDouble();
+    if (shotLevel < 3) shotLevel++;
     doubleShot = true;
-    doubleShotTimer = 420; // 約7秒
+    doubleShotTimer = 480;
   } else if (type === 'shield') {
+    sfxPowerShield();
     shield = true;
-    shieldTimer = 360;
+    shieldTimer = 380;
   } else if (type === 'bomb') {
-    // 清場
+    sfxPowerBomb();
     enemies.forEach(e => createExplosion(e.x + e.width/2, e.y + e.height/2, e.color));
     enemies = [];
     if (boss) {
-      boss.hp -= 12;
+      boss.hp -= 14;
       updateBossBar();
-      createExplosion(boss.x + 60, boss.y + 40, '#ff0000', 20);
+      createExplosion(boss.x + 60, boss.y + 40, '#ff0000', 22);
       if (boss.hp <= 0) defeatBoss();
     }
-    score += 200;
+    score += 220;
   }
   updatePowerStatus();
 }
 
 function updatePowerStatus() {
   let text = '';
-  if (doubleShot) text += '⚡雙倍射擊 ';
+  if (shotLevel >= 2) text += `⚡Lv${shotLevel} `;
   if (shield) text += '🛡護盾';
   document.getElementById('power-status').textContent = text;
 }
 
 function defeatBoss() {
-  createExplosion(boss.x + 60, boss.y + 40, '#ff0000', 40);
+  createExplosion(boss.x + 60, boss.y + 40, '#ff0000', 45);
   sfxExplosion();
-  score += 800;
+  score += 900;
   document.getElementById('score').textContent = score;
   boss = null;
   document.getElementById('boss-bar').style.display = 'none';
-  nextBossScore = score + 1800 + Math.floor(Math.random() * 500);
+  nextBossScore = score + 1700 + Math.floor(Math.random() * 600);
 }
 
 function checkCollisions() {
@@ -631,7 +784,7 @@ function checkCollisions() {
           b.y < boss.y + boss.height && b.y + b.height > boss.y) {
         bullets.splice(i, 1);
         boss.hp--;
-        createExplosion(b.x, b.y, '#ffaa00', 5);
+        createExplosion(b.x, b.y, '#ffaa00', 6);
         sfxHit();
         updateBossBar();
         if (boss.hp <= 0) defeatBoss();
@@ -649,7 +802,7 @@ function checkCollisions() {
       if (shield) {
         shield = false;
         shieldTimer = 0;
-        sfxPower();
+        sfxPowerShield();
       } else {
         lives--;
         sfxHurt();
@@ -672,8 +825,7 @@ function checkCollisions() {
       updateLives();
       if (lives <= 0) endGame();
     }
-    // 把玩家推開一點
-    player.y = Math.min(player.y + 40, canvas.height - 80);
+    player.y = Math.min(player.y + 45, canvas.height - 80);
     updatePowerStatus();
   }
 
@@ -705,6 +857,7 @@ function updateTimers() {
     doubleShotTimer--;
     if (doubleShotTimer <= 0) {
       doubleShot = false;
+      shotLevel = 1;
       updatePowerStatus();
     }
   }
@@ -733,20 +886,16 @@ function gameLoop() {
   checkCollisions();
   updateTimers();
 
-  // 生成敵人
   if (!boss) {
     enemySpawnTimer++;
     if (enemySpawnTimer >= enemySpawnInterval) {
       spawnEnemy();
       enemySpawnTimer = 0;
-      enemySpawnInterval = Math.max(28, 80 - Math.floor(score / 400) * 4);
+      enemySpawnInterval = Math.max(26, 78 - Math.floor(score / 380) * 4);
     }
   }
 
-  // Boss 觸發
-  if (!boss && score >= nextBossScore) {
-    spawnBoss();
-  }
+  if (!boss && score >= nextBossScore) spawnBoss();
 
   frame++;
   requestAnimationFrame(gameLoop);
@@ -755,7 +904,7 @@ function gameLoop() {
 /* ========== 遊戲流程 ========== */
 function startGame() {
   initAudio();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
   startBGM();
 
   document.getElementById('start-screen').classList.add('hidden');
@@ -772,10 +921,11 @@ function startGame() {
   boss = null;
   doubleShot = false;
   shield = false;
+  shotLevel = 1;
   doubleShotTimer = 0;
   shieldTimer = 0;
   enemySpawnTimer = 0;
-  enemySpawnInterval = 80;
+  enemySpawnInterval = 78;
   nextBossScore = 1500;
   player.x = canvas.width / 2 - 25;
   frame = 0;
@@ -803,11 +953,8 @@ function endGame() {
 
 /* ========== 排行榜 ========== */
 function getLeaderboard() {
-  try {
-    return JSON.parse(localStorage.getItem('spaceShooterLB') || '[]');
-  } catch {
-    return [];
-  }
+  try { return JSON.parse(localStorage.getItem('spaceShooterLB') || '[]'); }
+  catch { return []; }
 }
 
 function saveScore() {
@@ -838,7 +985,7 @@ function showLeaderboard() {
   document.getElementById('leaderboard-screen').classList.remove('hidden');
 }
 
-/* ========== 事件 ========== */
+/* ========== 事件（強化觸控） ========== */
 document.addEventListener('keydown', e => {
   keys[e.key] = true;
   if (e.key === ' ' && gameRunning) {
@@ -848,18 +995,42 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('keyup', e => keys[e.key] = false);
 
-// 觸控
-function bindTouch(btn, key) {
-  const el = document.getElementById(btn);
-  el.addEventListener('touchstart', e => { e.preventDefault(); keys[key] = true; if (key === 'touchShoot') shoot(); });
-  el.addEventListener('touchend', e => { e.preventDefault(); keys[key] = false; });
-  el.addEventListener('touchcancel', e => { e.preventDefault(); keys[key] = false; });
+// 強化觸控綁定（支援長按 + active 視覺回饋）
+function bindTouch(id, keyName, isShoot = false) {
+  const el = document.getElementById(id);
+
+  const start = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    keys[keyName] = true;
+    el.classList.add('active');
+    if (isShoot) shoot();
+  };
+  const end = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    keys[keyName] = false;
+    el.classList.remove('active');
+  };
+
+  el.addEventListener('touchstart', start, { passive: false });
+  el.addEventListener('touchend', end, { passive: false });
+  el.addEventListener('touchcancel', end, { passive: false });
+  // 同時支援滑鼠（方便測試）
+  el.addEventListener('mousedown', start);
+  el.addEventListener('mouseup', end);
+  el.addEventListener('mouseleave', end);
 }
+
 bindTouch('btn-left', 'touchLeft');
 bindTouch('btn-right', 'touchRight');
-bindTouch('btn-shoot', 'touchShoot');
+bindTouch('btn-shoot', 'touchShoot', true);
 
-// 按鈕
+// 防止頁面滾動
+document.body.addEventListener('touchmove', e => {
+  if (gameRunning) e.preventDefault();
+}, { passive: false });
+
 document.getElementById('start-btn').addEventListener('click', startGame);
 document.getElementById('restart-btn').addEventListener('click', startGame);
 document.getElementById('save-score-btn').addEventListener('click', saveScore);
@@ -869,7 +1040,6 @@ document.getElementById('back-btn').addEventListener('click', () => {
   document.getElementById('start-screen').classList.remove('hidden');
 });
 
-// 初始化
 initStars();
 </script>
 </body>
