@@ -73,7 +73,6 @@
         .step-enter-from, .step-leave-to { opacity: 0; transform: translateY(-10px); max-height: 0; overflow: hidden; margin: 0; padding: 0; }
         .step-enter-to, .step-leave-from { opacity: 1; transform: translateY(1000px); max-height: 2000px; }
 
-        /* 公告彈窗專用精美動畫與細節 */
         .swal2-popup.custom-announcement-popup {
             border-radius: 1.25rem !important;
             padding: 1.5rem !important;
@@ -441,18 +440,18 @@
                     <div class="py-2 border-r">三</div><div class="py-2 border-r">四</div><div class="py-2 border-r">五</div><div class="py-2">六</div>
                 </div>
                 <div class="grid grid-cols-7 flex-grow auto-rows-[minmax(120px,auto)]">
-<comment-tag id="1" text="Added click event to calendar cells to open the new admin booking modal, and added cursor styling to indicate it's clickable." type="suggestion">                    <div v-for="(day, index) in calendarDays" :key="index" 
+                    <div v-for="(day, index) in calendarDays" :key="index" 
                          @click="day.date ? openAdminNewBookingModal(day.fullDate) : null"
                          class="border-r border-b p-1 h-32 flex flex-col transition-colors"
-                         :class="[!day.isCurrentMonth ? 'bg-gray-50 text-gray-400 cursor-default' : (day.hasCustomSchedule ? 'bg-pink-50 cursor-pointer hover:bg-pink-100' : 'bg-white cursor-pointer hover:bg-gray-50')]"></comment-tag>
+                         :class="[!day.isCurrentMonth ? 'bg-gray-50 text-gray-400 cursor-default' : (day.hasCustomSchedule ? 'bg-pink-50 cursor-pointer hover:bg-pink-100' : 'bg-white cursor-pointer hover:bg-gray-50')]">
                         <div class="text-right text-xs mb-1" :class="[day.isToday ? 'font-bold text-white bg-admin-600 w-5 h-5 rounded-full flex items-center justify-center ml-auto shadow-sm' : 'mr-1']">
                             {{ day.date }}
                         </div>
                         <div class="flex-grow flex flex-col gap-1 overflow-y-auto scrollbar-hide pt-1 px-1">
                             <div v-if="day.bookings && day.bookings.length > 0" class="flex flex-col gap-1">
-<comment-tag id="2" text="Added `.stop` to the click event modifier (`@click.stop`) to prevent the new day cell click handler from triggering when an existing booking pill is clicked." type="suggestion">                                <div v-for="b in day.bookings" :key="b.id" class="text-[10px] px-1.5 py-1 rounded shadow-sm leading-tight truncate flex items-center gap-1 cursor-pointer transition-transform hover:scale-[1.02]"
+                                <div v-for="b in day.bookings" :key="b.id" class="text-[10px] px-1.5 py-1 rounded shadow-sm leading-tight truncate flex items-center gap-1 cursor-pointer transition-transform hover:scale-[1.02]"
                                      :class="getBookingColorClass(b)"
-                                     @click.stop="openEditBookingModal(b); adminTab='bookings'" :title="`${b.time} - ${b.name} (${b.service})`"></comment-tag>
+                                     @click.stop="openEditBookingModal(b); adminTab='bookings'" :title="`${b.time} - ${b.name} (${b.service})`">
                                      <i :class="b.therapistGender === 'male' ? 'fa-solid fa-person' : 'fa-solid fa-person-dress'" class="text-[9px]"></i>
                                      {{ b.time }} {{ b.name }}
                                 </div>
@@ -686,19 +685,18 @@
             </div>
         </main>
 
-<comment-tag id="3" text="Added a new `isAdminNewBookingModalOpen` modal template here to allow backend users to create a new booking for a customer. The UI exactly matches the layout style of the existing edit modal but adds sections to search for a member and select services." type="suggestion">        <div v-if="isAdminNewBookingModalOpen" class="fixed inset-0 bg-black/50 z-[120] flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div v-if="isAdminNewBookingModalOpen" class="fixed inset-0 bg-black/50 z-[120] flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
                 <div class="flex justify-between items-center mb-5 border-b pb-3 sticky top-0 bg-white z-10">
                     <h3 class="text-lg font-bold text-gray-900">新增預約 - {{ adminNewBookingForm.date }}</h3>
                     <button @click="closeAdminNewBookingModal" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
                 <form @submit.prevent="saveAdminNewBooking" class="space-y-5">
-                    <!-- Section 1: Customer -->
                     <div>
                         <h4 class="text-sm font-bold text-gray-800 mb-2 border-l-4 border-admin-500 pl-2">1. 客戶資料</h4>
                         <div class="flex gap-2 mb-3">
                             <input type="tel" v-model="adminNewBookingForm.phone" placeholder="輸入手機號碼帶入..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
-                            <button type="button" @click="searchMemberForAdmin" class="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition-colors">搜尋會員</button>
+                            <button type="button" @click="searchMemberForAdmin" class="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition-colors whitespace-nowrap shadow-sm">搜尋會員</button>
                         </div>
                         <div class="grid grid-cols-2 gap-3 mb-3">
                             <div>
@@ -728,7 +726,6 @@
                         </div>
                     </div>
 
-                    <!-- Section 2: Booking Info -->
                     <div>
                         <h4 class="text-sm font-bold text-gray-800 mb-2 border-l-4 border-admin-500 pl-2">2. 預約內容</h4>
                         <div class="grid grid-cols-2 gap-3 mb-3">
@@ -740,7 +737,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-gray-500 mb-1">時間 *</label>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">時間 (HH:mm) *</label>
                                 <input type="time" v-model="adminNewBookingForm.time" required class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
                             </div>
                         </div>
@@ -748,9 +745,9 @@
                         <div class="mb-3">
                             <label class="block text-xs font-medium text-gray-500 mb-1">服務項目 (可多選) *</label>
                             <div class="max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50 space-y-1">
-                                <label v-for="s in services.filter(srv => srv.isActive && (srv.genderTarget === 'all' || srv.genderTarget === adminNewBookingForm.customerGender))" :key="s.id" class="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                <label v-for="s in services.filter(srv => srv.isActive && (srv.genderTarget === 'all' || srv.genderTarget === adminNewBookingForm.customerGender))" :key="s.id" class="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer transition-colors">
                                     <input type="checkbox" :value="s.name" v-model="adminNewBookingForm.service" class="w-4 h-4 text-admin-600 focus:ring-admin-500 border-gray-300 rounded">
-                                    <span class="text-sm text-gray-700">{{ s.name }} ({{ s.duration }}分)</span>
+                                    <span class="text-sm text-gray-700">{{ s.name }} <span class="text-xs text-gray-400">({{ s.duration }}分)</span></span>
                                 </label>
                             </div>
                         </div>
@@ -764,25 +761,26 @@
                                 <label class="block text-xs font-medium text-gray-500 mb-1">預約狀態 *</label>
                                 <select v-model="adminNewBookingForm.status" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
                                     <option value="pending">待確認</option>
-                                    <option value="completed">已完成(預約成功)</option>
+                                    <option value="completed">已完成(排程成功)</option>
                                 </select>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-medium text-gray-500 mb-1">備註</label>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">備註 (選填)</label>
                             <textarea v-model="adminNewBookingForm.notes" rows="2" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm" placeholder="輸入備註..."></textarea>
                         </div>
                     </div>
 
                     <div class="pt-4 flex gap-3 sticky bottom-0 bg-white border-t mt-4 pb-2">
                         <button type="button" @click="closeAdminNewBookingModal" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">取消</button>
-                        <button type="submit" class="flex-1 px-4 py-2 bg-admin-500 text-white rounded-lg hover:bg-admin-600 font-medium">確認新增</button>
+                        <button type="submit" class="flex-1 px-4 py-2 bg-admin-500 text-white rounded-lg hover:bg-admin-600 font-medium shadow-sm">確認新增</button>
                     </div>
                 </form>
             </div>
         </div>
-</comment-tag>        <div v-if="isBookingModalOpen" class="fixed inset-0 bg-black/50 z-[120] flex items-center justify-center p-4">
+
+        <div v-if="isBookingModalOpen" class="fixed inset-0 bg-black/50 z-[120] flex items-center justify-center p-4">
             <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
                 <div class="flex justify-between items-center mb-5 border-b pb-3">
                     <h3 class="text-lg font-bold text-gray-900">修改排程時間</h3>
@@ -958,11 +956,9 @@
                 const isSuperAdmin = ref(false);
                 
                 const showVipInfo = ref(false);
-
                 const serviceSearch = ref('');
                 const serviceFilterGender = ref('all');
 
-                // 精美系統公告彈窗
                 const showAnnouncementNotice = () => {
                     Swal.fire({
                         title: '<div class="flex items-center justify-center gap-2 text-brand-800 text-lg font-bold"><i class="fa-solid fa-bell text-brand-500"></i> 預約系統優化升級公告</div>',
@@ -979,19 +975,12 @@
                         `,
                         confirmButtonText: '我知道了，開始預約',
                         confirmButtonColor: '#c5a89c',
-                        customClass: {
-                            popup: 'custom-announcement-popup'
-                        },
-                        showClass: {
-                            popup: 'animate-[fadeInDown_0.3s_ease-out]'
-                        },
-                        hideClass: {
-                            popup: 'animate-[fadeOutUp_0.2s_ease-in]'
-                        }
+                        customClass: { popup: 'custom-announcement-popup' },
+                        showClass: { popup: 'animate-[fadeInDown_0.3s_ease-out]' },
+                        hideClass: { popup: 'animate-[fadeOutUp_0.2s_ease-in]' }
                     });
                 };
 
-                // === SVG 象形圖庫 ===
                 const customSvgIcons = {
                     'svg-face': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M12 21a8 8 0 0 0 8-8c0-5.5-4-11-8-11S4 7.5 4 13a8 8 0 0 0 8 8z"/><path d="M12 14v3"/></svg>',
                     'svg-arm': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M14 3l-3 9-3-2-2 7 4 3 6-11z"/></svg>',
@@ -1073,4 +1062,587 @@
                 
                 const scrollToNext = (targetId) => {
                     setTimeout(() => {
-                        const el = document.getElementById(targetIdI encountered an error doing what you asked. Could you try again?
+                        const el = document.getElementById(targetId);
+                        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+                    }, 300); 
+                };
+
+                const checkMember = async () => {
+                    if (!verifyPhone.value) { Swal.fire('提示', '請輸入手機號碼', 'warning'); return; }
+                    if (!isDbReady.value) { Swal.fire('系統錯誤', '資料庫連線中，請稍後再試。', 'error'); return; }
+                    
+                    isLoading.value = true;
+                    try {
+                        const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'beauty_members'), where('phone', '==', verifyPhone.value));
+                        const snap = await getDocs(q);
+                        
+                        if (!snap.empty) {
+                            const data = snap.docs[0].data();
+                            bookingForm.value.name = data.name || '';
+                            bookingForm.value.phone = data.phone || verifyPhone.value;
+                            
+                            let bd = data.birthday || '';
+                            if (bd) {
+                                const parts = bd.split(/[-/]/);
+                                if (parts.length >= 2) bd = `${parts[parts.length - 2]}/${parts[parts.length - 1]}`;
+                            }
+                            bookingForm.value.birthday = bd;
+                            isVerified.value = true;
+                            
+                            Swal.fire({
+                                icon: 'success', title: '驗證成功',
+                                html: `歡迎回來，<strong>${bookingForm.value.name}</strong>！<br><span style="font-size: 0.9em; color: #d33;">※ 送出後需待美容師回覆才算預約成功唷~<br>請耐心等候！</span>`,
+                                confirmButtonColor: '#c5a89c'
+                            }).then(() => { scrollToNext('step2'); });
+                        } else {
+                            let timerInterval;
+                            Swal.fire({
+                                icon: 'error', title: '查無會員資料',
+                                html: '系統中找不到您的手機號碼。<br>將在 <b></b> 秒後為您導向註冊頁面...',
+                                timer: 2500, timerProgressBar: true, showConfirmButton: false,
+                                didOpen: () => {
+                                    const b = Swal.getHtmlContainer().querySelector('b');
+                                    timerInterval = setInterval(() => { b.textContent = Math.ceil(Swal.getTimerLeft() / 1000); }, 100);
+                                },
+                                willClose: () => { clearInterval(timerInterval); }
+                            }).then(() => { window.location.href = 'https://check-balance-jbiy.vercel.app/'; });
+                        }
+                    } catch(e) { console.error(e); Swal.fire('錯誤', '驗證時發生錯誤，請稍後再試', 'error'); }
+                    isLoading.value = false;
+                };
+
+                const goToRegister = () => {
+                    Swal.fire({
+                        icon: 'info', title: '前往註冊', text: '註冊完成後，請重新回到此頁面進行預約唷！',
+                        confirmButtonText: '我知道了，前往註冊', confirmButtonColor: '#c5a89c'
+                    }).then((result) => {
+                        if (result.isConfirmed) window.location.href = 'https://check-balance-jbiy.vercel.app/';
+                    });
+                };
+
+                const resetVerification = () => {
+                    isVerified.value = false; verifyPhone.value = '';
+                    bookingForm.value = { therapistGender: '', isVip: null, customerGender: '', service: [], date: '', time: '', name: '', phone: '', birthday: '', notes: '' };
+                };
+
+                const activeServices = computed(() => {
+                    return services.value.filter(s => {
+                        if (!s.isActive) return false;
+                        if (!bookingForm.value.customerGender) return true;
+                        return !s.genderTarget || s.genderTarget === 'all' || s.genderTarget === bookingForm.value.customerGender;
+                    }).sort((a, b) => {
+                        const orderA = a.sortOrder || 0; const orderB = b.sortOrder || 0;
+                        if (orderA !== orderB) return orderA - orderB;
+                        const priceA = Number(a.regularPrice || a.price || 0); const priceB = Number(b.regularPrice || b.price || 0);
+                        return priceB - priceA;
+                    });
+                });
+
+                const estimatedTotal = computed(() => {
+                    if (!bookingForm.value.service.length) return 0;
+                    return bookingForm.value.service.reduce((sum, name) => {
+                        const s = activeServices.value.find(service => service.name === name);
+                        if (!s) return sum;
+                        const price = bookingForm.value.isVip ? Number(s.vipPrice || s.price || 0) : Number(s.regularPrice || s.price || 0);
+                        return sum + price;
+                    }, 0);
+                });
+
+                const estimatedDuration = computed(() => {
+                    if (!bookingForm.value.service.length) return 0;
+                    return bookingForm.value.service.reduce((sum, name) => {
+                        const s = activeServices.value.find(service => service.name === name);
+                        return sum + (s ? Number(s.duration) : 0);
+                    }, 0);
+                });
+                
+                const hiddenSubmitBtn = ref(null);
+                let frontDatePicker = null;
+
+                const initFrontDatePicker = () => {
+                    if (frontDatePicker) frontDatePicker.destroy();
+                    const el = document.getElementById('date');
+                    if (!el) return;
+
+                    frontDatePicker = flatpickr(el, {
+                        locale: "zh_tw", minDate: new Date(), dateFormat: "Y-m-d",
+                        disable: [ (date) => { return closedDatesMap.value[flatpickr.formatDate(date, "Y-m-d")]?.isClosed === true; } ],
+                        onChange: (selectedDates, dateStr) => {
+                            bookingForm.value.date = dateStr; bookingForm.value.time = ''; scrollToNext('step7');
+                        }
+                    });
+                };
+
+                const availableSlots = computed(() => {
+                    if (!bookingForm.value.date || bookingForm.value.service.length === 0 || !bookingForm.value.therapistGender) return [];
+                    const duration = estimatedDuration.value; const date = bookingForm.value.date; const gender = bookingForm.value.therapistGender;
+                    const dateSettings = closedDatesMap.value[date] || { isClosed: false, start: '12:00', end: '21:00' };
+                    if (dateSettings.isClosed) return [];
+
+                    const dayBookings = bookings.value.filter(b => b.date === date && b.therapistGender === gender && b.status !== 'cancelled');
+                    const slots = [];
+                    const startMin = timeToMins(dateSettings.start || '12:00'); const endMin = timeToMins(dateSettings.end || '21:00');
+                    const stepMin = 30; const now = new Date();
+                    const isToday = (date === flatpickr.formatDate(now, "Y-m-d"));
+                    const currentMins = now.getHours() * 60 + now.getMinutes();
+
+                    for (let m = startMin; m < endMin; m += stepMin) {
+                        const slotStart = m; const slotEnd = m + duration;
+                        let isAvailable = true;
+                        if (isToday && slotStart <= currentMins + 30) isAvailable = false;
+                        if (slotEnd > endMin) isAvailable = false;
+                        if (isAvailable) {
+                            for (const b of dayBookings) {
+                                const bStart = timeToMins(b.time); const bEnd = bStart + Number(b.duration);
+                                if (slotStart < bEnd && slotEnd > bStart) { isAvailable = false; break; }
+                            }
+                        }
+                        slots.push({ time: minsToTime(m), available: isAvailable });
+                    }
+                    return slots;
+                });
+
+                watch(() => bookingForm.value.therapistGender, () => { bookingForm.value.isVip = null; bookingForm.value.customerGender = ''; bookingForm.value.service = []; bookingForm.value.date = ''; });
+                watch(() => bookingForm.value.isVip, () => { bookingForm.value.customerGender = ''; bookingForm.value.service = []; bookingForm.value.date = ''; });
+                watch(() => bookingForm.value.customerGender, () => { bookingForm.value.service = []; bookingForm.value.date = ''; });
+                watch(() => bookingForm.value.service.length, (newLen, oldLen) => {
+                    if (newLen > 0 && oldLen === 0) nextTick(() => { initFrontDatePicker(); scrollToNext('step6'); });
+                    bookingForm.value.time = '';
+                });
+                watch(() => bookingForm.value.date, () => { bookingForm.value.time = ''; });
+
+                const triggerSubmit = () => { if (hiddenSubmitBtn.value) hiddenSubmitBtn.value.click(); };
+
+                const submitBooking = async () => {
+                    isLoading.value = true;
+                    try {
+                        const duration = estimatedDuration.value; const price = estimatedTotal.value;
+                        const serviceString = bookingForm.value.service.join(' + ');
+
+                        if (isDbReady.value) {
+                            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'bookings'), {
+                                therapistGender: bookingForm.value.therapistGender, isVip: bookingForm.value.isVip, customerGender: bookingForm.value.customerGender, 
+                                service: serviceString, duration: duration, date: bookingForm.value.date, time: bookingForm.value.time, status: 'pending',
+                                name: bookingForm.value.name, phone: bookingForm.value.phone, birthday: bookingForm.value.birthday || '', notes: bookingForm.value.notes,
+                                createdAt: new Date().toISOString()
+                            });
+                        }
+
+                        const tGenderText = bookingForm.value.therapistGender === 'male' ? '男師' : '女師';
+                        const cGenderText = bookingForm.value.customerGender === 'male' ? '男生' : '女生';
+                        const vipText = bookingForm.value.isVip ? '✅ 是 (享VIP價)' : '❌ 否 (原價)';
+                        
+                        const messageText = `✨【預約需求確認】✨\n\n` +
+                                          `指定：${tGenderText}\n` + `客戶性別：${cGenderText}\n` + `VIP會員：${vipText}\n` +
+                                          `姓名：${bookingForm.value.name}\n` + `電話：${bookingForm.value.phone}\n` +
+                                          `項目：${serviceString}\n` + `價格：NT$ ${price}\n` + `日期：${bookingForm.value.date}\n` +
+                                          `時段：${bookingForm.value.time}\n` + `備註：${bookingForm.value.notes || '無'}\n\n` +
+                                          `💡 請幫我確認此預約是否成立，謝謝！`;
+
+                        setTimeout(() => {
+                            isLoading.value = false;
+                            if (typeof liff !== 'undefined' && liff.isInClient()) {
+                                liff.sendMessages([{ type: 'text', text: messageText }]).then(() => { liff.closeWindow(); })
+                                    .catch(err => {
+                                        alert(`⚠️ LINE 自動傳送攔截\n\n原因: ${err.message}\n\n系統將為您跳轉，請「手動選擇本官方帳號」貼上發送！`);
+                                        window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(messageText)}`;
+                                        resetVerification();
+                                    });
+                            } else {
+                                window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(messageText)}`;
+                                resetVerification();
+                            }
+                        }, 800);
+                    } catch(e) { console.error(e); Swal.fire('錯誤', '預約送出失敗，請稍後再試。', 'error'); isLoading.value = false; }
+                };
+
+                const goToAdminLogin = () => { currentView.value = 'admin_login'; window.location.hash = 'admin'; };
+                
+                const verifyAdminLogin = () => {
+                    isLoading.value = true; loginError.value = '';
+                    setTimeout(() => {
+                        let authSuccess = false; let isSuper = false;
+                        if (adminAccount.value === '信吉' && adminPassword.value === '7310168888') { authSuccess = true; isSuper = true; }
+                        else {
+                            const found = admins.value.find(a => a.account === adminAccount.value && a.password === adminPassword.value);
+                            if (found) { authSuccess = true; if (found.account === '信吉') isSuper = true; }
+                        }
+                        
+                        if (authSuccess) {
+                            isAdminAuthenticated.value = true; isSuperAdmin.value = isSuper;
+                            currentView.value = 'admin'; adminTab.value = 'calendar'; 
+                            adminAccount.value = ''; adminPassword.value = '';
+                        } else { loginError.value = '帳號或密碼錯誤'; }
+                        isLoading.value = false;
+                    }, 500);
+                };
+
+                const logoutAdmin = () => { isAdminAuthenticated.value = false; isSuperAdmin.value = false; currentView.value = 'front'; window.location.hash = ''; };
+
+                let adminCalendar = null;
+                const isDateSettingModalOpen = ref(false);
+                const editingDate = ref('');
+                const dateSettingForm = ref({ isClosed: false, start: '12:00', end: '21:00' });
+
+                const initAdminCalendar = () => {
+                    const el = document.getElementById('admin-calendar-container');
+                    if (!el) return;
+                    if (adminCalendar) adminCalendar.destroy();
+
+                    adminCalendar = flatpickr(el, {
+                        inline: true, locale: "zh_tw", dateFormat: "Y-m-d",
+                        onChange: (selectedDates, dateStr) => {
+                            if (dateStr) {
+                                editingDate.value = dateStr;
+                                const existing = closedDatesMap.value[dateStr];
+                                if (existing) dateSettingForm.value = { ...existing };
+                                else dateSettingForm.value = { isClosed: false, start: '12:00', end: '21:00' };
+                                isDateSettingModalOpen.value = true;
+                            }
+                        }
+                    });
+                };
+                
+                const saveDateSetting = async () => {
+                    if (!isDbReady.value) return;
+                    const newDates = { ...closedDatesMap.value, [editingDate.value]: dateSettingForm.value };
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'schedule'), { dates: newDates });
+                    isDateSettingModalOpen.value = false;
+                    if (adminCalendar) adminCalendar.clear();
+                };
+
+                const removeDateSetting = async (date) => {
+                    if (!isDbReady.value) return;
+                    const newDates = { ...closedDatesMap.value }; delete newDates[date];
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'schedule'), { dates: newDates });
+                };
+
+                watch(adminTab, (newTab) => { if (newTab === 'schedule') nextTick(() => { initAdminCalendar(); }); });
+
+                const calendarDate = ref(new Date());
+                const currentYear = computed(() => calendarDate.value.getFullYear());
+                const currentMonth = computed(() => calendarDate.value.getMonth());
+
+                const monthlyStats = computed(() => {
+                    const currentMonthStr = `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, '0')}`;
+                    const monthBookings = bookings.value.filter(b => b.date.startsWith(currentMonthStr));
+                    return {
+                        total: monthBookings.length,
+                        pending: monthBookings.filter(b => b.status === 'pending' || !b.status).length,
+                        completed: monthBookings.filter(b => b.status === 'completed').length,
+                        cancelled: monthBookings.filter(b => b.status === 'cancelled').length
+                    };
+                });
+
+                const calendarDays = computed(() => {
+                    const year = currentYear.value; const month = currentMonth.value;
+                    const firstDay = new Date(year, month, 1).getDay(); 
+                    const daysInMonth = new Date(year, month + 1, 0).getDate();
+                    const days = []; const todayStr = flatpickr.formatDate(new Date(), "Y-m-d");
+
+                    for (let i = 0; i < firstDay; i++) days.push({ date: '', isCurrentMonth: false });
+                    for (let i = 1; i <= daysInMonth; i++) {
+                        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                        const dayBookings = bookings.value.filter(b => b.date === dateStr);
+                        days.push({ 
+                            date: i, fullDate: dateStr, isCurrentMonth: true, isToday: dateStr === todayStr,
+                            bookings: dayBookings, hasCustomSchedule: !!closedDatesMap.value[dateStr] 
+                        });
+                    }
+                    const totalCells = days.length;
+                    const remainingCells = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+                    for (let i = 0; i < remainingCells; i++) days.push({ date: '', isCurrentMonth: false });
+                    return days;
+                });
+
+                const prevMonth = () => { calendarDate.value = new Date(currentYear.value, currentMonth.value - 1, 1); };
+                const nextMonth = () => { calendarDate.value = new Date(currentYear.value, currentMonth.value + 1, 1); };
+                const goToToday = () => { calendarDate.value = new Date(); };
+
+                // === 修改現有預約 Modal ===
+                const isBookingModalOpen = ref(false);
+                const editBookingForm = ref({});
+                
+                const getBookingColorClass = (b) => {
+                    if (b.status === 'pending' || !b.status) return 'bg-yellow-200 text-yellow-800 border border-yellow-400 font-medium';
+                    if (b.status === 'cancelled') return 'bg-gray-100 text-gray-400 border border-gray-200 opacity-60';
+                    if (b.status === 'completed') return 'bg-green-100 text-green-700 border border-green-200';
+                    return b.therapistGender === 'female' ? 'bg-pink-100 text-pink-700 border border-pink-200' : 'bg-blue-100 text-blue-700 border border-blue-200';
+                };
+
+                const updateBookingStatus = async (b) => {
+                    if (!isDbReady.value) return;
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', b.id), { status: b.status });
+                };
+
+                const openEditBookingModal = (b) => { editBookingForm.value = { ...b }; isBookingModalOpen.value = true; };
+                const closeBookingModal = () => isBookingModalOpen.value = false;
+                
+                const saveBookingEdit = async () => {
+                    if (!isDbReady.value) return;
+                    try {
+                        const bRef = doc(db, 'artifacts', appId, 'public', 'data', 'bookings', editBookingForm.value.id);
+                        await updateDoc(bRef, {
+                            date: editBookingForm.value.date, time: editBookingForm.value.time,
+                            duration: Number(editBookingForm.value.duration), notes: editBookingForm.value.notes || ''
+                        });
+                        closeBookingModal(); Swal.fire('成功', '預約時間及備註已更新', 'success');
+                    } catch(e) { Swal.fire('錯誤', '更新失敗', 'error'); }
+                };
+
+                const deleteBooking = (id) => {
+                    Swal.fire({
+                        title: '確認刪除', text: '確定要刪除這筆紀錄嗎？此動作無法復原！', icon: 'warning',
+                        showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#9ca3af', confirmButtonText: '確定刪除', cancelButtonText: '取消'
+                    }).then(async (result) => {
+                        if (result.isConfirmed && isDbReady.value) {
+                            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', id));
+                            Swal.fire('已刪除', '紀錄已成功刪除', 'success');
+                        }
+                    });
+                };
+
+                const copyStatusMessage = (b) => {
+                    let msg = "";
+                    if (b.status === 'completed') {
+                        msg = `您好 ${b.name}！\n您於 ${b.date} ${b.time} 預約的【${b.service}】已經確認完成囉！\n屆時請準時抵達，期待為您服務！✨`;
+                    } else if (b.status === 'cancelled') {
+                        msg = `您好 ${b.name}！\n不好意思，您於 ${b.date} ${b.time} 預約的【${b.service}】因故已為您取消。\n如需重新預約，歡迎隨時與我們聯繫！`;
+                    } else {
+                        msg = `您好 ${b.name}！\n您於 ${b.date} ${b.time} 預約的【${b.service}】目前正在為您確認排程中，請稍候片刻！`;
+                    }
+                    
+                    const tempInput = document.createElement("textarea"); tempInput.value = msg;
+                    document.body.appendChild(tempInput); tempInput.select(); document.execCommand("copy"); document.body.removeChild(tempInput);
+                    
+                    Swal.fire({ title: '文字已複製！', text: '請直接切換至 LINE 聊天室，將文字「貼上」傳送給客人', icon: 'success', confirmButtonColor: '#22c55e', confirmButtonText: '好的' });
+                };
+
+                // === 新增後台專屬「建立新預約」 Modal ===
+                const isAdminNewBookingModalOpen = ref(false);
+                const adminNewBookingForm = ref({
+                    date: '', time: '', phone: '', name: '', birthday: '', customerGender: 'female',
+                    isVip: false, therapistGender: 'female', service: [], duration: 60, status: 'completed', notes: ''
+                });
+
+                const openAdminNewBookingModal = (dateStr) => {
+                    adminNewBookingForm.value = {
+                        date: dateStr, time: '', phone: '', name: '', birthday: '', customerGender: 'female',
+                        isVip: false, therapistGender: 'female', service: [], duration: 60, status: 'completed', notes: ''
+                    };
+                    isAdminNewBookingModalOpen.value = true;
+                };
+
+                const closeAdminNewBookingModal = () => { isAdminNewBookingModalOpen.value = false; };
+
+                const searchMemberForAdmin = async () => {
+                    if (!adminNewBookingForm.value.phone) { Swal.fire('提示', '請先輸入手機號碼進行搜尋', 'warning'); return; }
+                    isLoading.value = true;
+                    try {
+                        const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'beauty_members'), where('phone', '==', adminNewBookingForm.value.phone));
+                        const snap = await getDocs(q);
+                        if (!snap.empty) {
+                            const data = snap.docs[0].data();
+                            adminNewBookingForm.value.name = data.name || '';
+                            let bd = data.birthday || '';
+                            if (bd) {
+                                const parts = bd.split(/[-/]/);
+                                if (parts.length >= 2) bd = `${parts[parts.length - 2]}/${parts[parts.length - 1]}`;
+                            }
+                            adminNewBookingForm.value.birthday = bd;
+                            Swal.fire({ icon: 'success', title: '成功帶入會員', text: `已找到會員：${data.name}`, timer: 1500, showConfirmButton: false });
+                        } else {
+                            Swal.fire({ icon: 'info', title: '查無此人', text: '系統中沒有此手機號碼，請手動輸入新客資料' });
+                        }
+                    } catch (e) { console.error(e); }
+                    isLoading.value = false;
+                };
+
+                const saveAdminNewBooking = async () => {
+                    if (!isDbReady.value) return;
+                    if (adminNewBookingForm.value.service.length === 0) { Swal.fire('提示', '請至少選擇一項服務項目', 'warning'); return; }
+                    
+                    isLoading.value = true;
+                    try {
+                        const serviceString = adminNewBookingForm.value.service.join(' + ');
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'bookings'), {
+                            ...adminNewBookingForm.value,
+                            service: serviceString,
+                            duration: Number(adminNewBookingForm.value.duration),
+                            createdAt: new Date().toISOString()
+                        });
+                        closeAdminNewBookingModal();
+                        Swal.fire('成功', '預約建立完成！', 'success');
+                    } catch(e) { console.error(e); Swal.fire('錯誤', '新增失敗', 'error'); }
+                    isLoading.value = false;
+                };
+
+                // 自動計算後台新增預約時的時長 (選用)
+                watch(() => adminNewBookingForm.value.service, (newServices) => {
+                    let totalMin = 0;
+                    newServices.forEach(name => {
+                        const s = services.value.find(srv => srv.name === name);
+                        if(s) totalMin += Number(s.duration);
+                    });
+                    if (totalMin > 0) adminNewBookingForm.value.duration = totalMin;
+                }, { deep: true });
+
+                const filteredServices = computed(() => {
+                    return services.value.filter(s => {
+                        const matchSearch = s.name.toLowerCase().includes(serviceSearch.value.toLowerCase());
+                        const matchGender = serviceFilterGender.value === 'all' || s.genderTarget === serviceFilterGender.value;
+                        return matchSearch && matchGender;
+                    }).sort((a, b) => {
+                        const orderA = a.sortOrder || 0; const orderB = b.sortOrder || 0;
+                        if (orderA !== orderB) return orderA - orderB;
+                        const priceA = Number(a.regularPrice || a.price || 0); const priceB = Number(b.regularPrice || b.price || 0);
+                        return priceB - priceA;
+                    });
+                });
+
+                const updateServiceOrder = async (service) => {
+                    if (!isDbReady.value) return;
+                    try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'services', service.id), { sortOrder: Number(service.sortOrder) || 0 }); } catch(e) { console.error(e); }
+                };
+
+                const isServiceModalOpen = ref(false);
+                const editingService = ref(null);
+                const formService = ref({ name: '', duration: 60, regularPrice: 0, vipPrice: 0, icon: 'svg-face', isActive: true, genderTarget: 'all', sortOrder: 0 });
+                
+                const availableIcons = [
+                    'svg-face', 'svg-arm', 'svg-leg', 'svg-body', 'svg-vio', 'svg-underarm',
+                    'fa-solid fa-leaf', 'fa-solid fa-droplet', 'fa-solid fa-hand-sparkles', 'fa-solid fa-heart'
+                ];
+
+                const openServiceModal = (service = null) => {
+                    editingService.value = service;
+                    formService.value = service ? { ...service, regularPrice: service.regularPrice || service.price || 0, vipPrice: service.vipPrice || service.price || 0, sortOrder: service.sortOrder || 0 } : { name: '', duration: 60, regularPrice: 0, vipPrice: 0, icon: 'svg-face', isActive: true, genderTarget: 'all', sortOrder: 0 };
+                    isServiceModalOpen.value = true;
+                };
+                const copyService = (service) => {
+                    editingService.value = null; 
+                    formService.value = { ...service, name: service.name + ' (複製)', id: undefined, regularPrice: service.regularPrice || service.price || 0, vipPrice: service.vipPrice || service.price || 0, sortOrder: service.sortOrder || 0 };
+                    isServiceModalOpen.value = true;
+                };
+                const closeServiceModal = () => isServiceModalOpen.value = false;
+
+                const saveServiceData = async () => {
+                    if(!isDbReady.value) return;
+                    try {
+                        const payload = { ...formService.value, duration: Number(formService.value.duration), regularPrice: Number(formService.value.regularPrice || 0), vipPrice: Number(formService.value.vipPrice || 0), sortOrder: Number(formService.value.sortOrder || 0), genderTarget: formService.value.genderTarget || 'all' };
+                        delete payload.price; 
+                        
+                        if (editingService.value && editingService.value.id) { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'services', editingService.value.id), payload); } 
+                        else { await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'services'), payload); }
+                        closeServiceModal();
+                    } catch(e) { console.error(e); }
+                };
+
+                const toggleServiceStatus = async (service) => {
+                    if(isDbReady.value) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'services', service.id), { isActive: service.isActive });
+                };
+
+                const deleteService = (id) => {
+                    Swal.fire({
+                        title: '確認刪除', text: '確定要刪除這個服務品項嗎？', icon: 'warning',
+                        showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#9ca3af', confirmButtonText: '確定刪除'
+                    }).then(async (result) => { if (result.isConfirmed && isDbReady.value) { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'services', id)); } });
+                };
+
+                const importDefaultServices = async () => {
+                    if (!isDbReady.value) return;
+                    Swal.fire({
+                        title: '確認匯入', text: '即將自動為您匯入小部位、中部位、大部位及私密處預設品項。確定要匯入嗎？', icon: 'warning',
+                        showCancelButton: true, confirmButtonColor: '#c5a89c', cancelButtonColor: '#9ca3af', confirmButtonText: '確定匯入'
+                    }).then(async (result) => {
+                        if (result.isConfirmed) {
+                            isLoading.value = true;
+                            try {
+                                const defaults = [
+                                    ...['腋下'].map(n => ({name: n, duration: 20, regularPrice: 399, vipPrice: 320, genderTarget: 'female', icon: 'svg-underarm', isActive: true})),
+                                    ...['腋下'].map(n => ({name: n, duration: 20, regularPrice: 599, vipPrice: 480, genderTarget: 'male', icon: 'svg-underarm', isActive: true})),
+                                    ...['唇周','下巴','鬢角'].map(n => ({name: n, duration: 20, regularPrice: 399, vipPrice: 320, genderTarget: 'female', icon: 'svg-face', isActive: true})),
+                                    ...['唇周','下巴','鬢角'].map(n => ({name: n, duration: 20, regularPrice: 599, vipPrice: 480, genderTarget: 'male', icon: 'svg-face', isActive: true})),
+                                    ...['乳暈','後頸','肚臍'].map(n => ({name: n, duration: 20, regularPrice: 399, vipPrice: 320, genderTarget: 'female', icon: 'svg-body', isActive: true})),
+                                    ...['乳暈','後頸','肚臍'].map(n => ({name: n, duration: 20, regularPrice: 599, vipPrice: 480, genderTarget: 'male', icon: 'svg-body', isActive: true})),
+                                    ...['膝蓋'].map(n => ({name: n, duration: 20, regularPrice: 399, vipPrice: 320, genderTarget: 'female', icon: 'svg-leg', isActive: true})),
+                                    ...['膝蓋'].map(n => ({name: n, duration: 20, regularPrice: 599, vipPrice: 480, genderTarget: 'male', icon: 'svg-leg', isActive: true})),
+                                    ...['指頭'].map(n => ({name: n, duration: 20, regularPrice: 399, vipPrice: 320, genderTarget: 'female', icon: 'svg-arm', isActive: true})),
+                                    ...['指頭'].map(n => ({name: n, duration: 20, regularPrice: 599, vipPrice: 480, genderTarget: 'male', icon: 'svg-arm', isActive: true})),
+                                    ...['上手','下手'].map(n => ({name: n, duration: 30, regularPrice: 699, vipPrice: 560, genderTarget: 'female', icon: 'svg-arm', isActive: true})),
+                                    ...['上手','下手'].map(n => ({name: n, duration: 30, regularPrice: 899, vipPrice: 720, genderTarget: 'male', icon: 'svg-arm', isActive: true})),
+                                    ...['全臉','落腮鬍'].map(n => ({name: n, duration: 30, regularPrice: 699, vipPrice: 560, genderTarget: 'female', icon: 'svg-face', isActive: true})),
+                                    ...['全臉','落腮鬍'].map(n => ({name: n, duration: 30, regularPrice: 899, vipPrice: 720, genderTarget: 'male', icon: 'svg-face', isActive: true})),
+                                    ...['上腹','下腹','上背','下背'].map(n => ({name: n, duration: 30, regularPrice: 699, vipPrice: 560, genderTarget: 'female', icon: 'svg-body', isActive: true})),
+                                    ...['上腹','下腹','上背','下背'].map(n => ({name: n, duration: 30, regularPrice: 899, vipPrice: 720, genderTarget: 'male', icon: 'svg-body', isActive: true})),
+                                    ...['大腿','小腿'].map(n => ({name: n, duration: 40, regularPrice: 899, vipPrice: 720, genderTarget: 'female', icon: 'svg-leg', isActive: true})),
+                                    ...['大腿','小腿'].map(n => ({name: n, duration: 40, regularPrice: 1099, vipPrice: 880, genderTarget: 'male', icon: 'svg-leg', isActive: true})),
+                                    ...['臀部'].map(n => ({name: n, duration: 40, regularPrice: 899, vipPrice: 720, genderTarget: 'female', icon: 'svg-vio', isActive: true})),
+                                    ...['臀部'].map(n => ({name: n, duration: 40, regularPrice: 1099, vipPrice: 880, genderTarget: 'male', icon: 'svg-vio', isActive: true})),
+                                    {name: 'V / I / O (單部位)', duration: 30, regularPrice: 699, vipPrice: 560, genderTarget: 'female', icon: 'svg-vio', isActive: true},
+                                    {name: 'V + I', duration: 40, regularPrice: 1299, vipPrice: 1040, genderTarget: 'female', icon: 'svg-vio', isActive: true},
+                                    {name: 'V + I + O', duration: 50, regularPrice: 1799, vipPrice: 1440, genderTarget: 'female', icon: 'svg-vio', isActive: true},
+                                    {name: 'V / I / O (單部位)', duration: 30, regularPrice: 899, vipPrice: 720, genderTarget: 'male', icon: 'svg-vio', isActive: true},
+                                    {name: 'V + I', duration: 40, regularPrice: 1799, vipPrice: 1440, genderTarget: 'male', icon: 'svg-vio', isActive: true},
+                                    {name: 'V + I + O', duration: 60, regularPrice: 2599, vipPrice: 2080, genderTarget: 'male', icon: 'svg-vio', isActive: true},
+                                ];
+                                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'services');
+                                for (let i = 0; i < defaults.length; i++) { await addDoc(colRef, { ...defaults[i], sortOrder: 0 }); }
+                                Swal.fire('成功', '預設品項已全部匯入完畢！', 'success');
+                            } catch(e) { console.error(e); Swal.fire('錯誤', '匯入失敗', 'error'); }
+                            isLoading.value = false;
+                        }
+                    });
+                };
+
+                const formAdmin = ref({ account: '', password: '' });
+                const saveAdminUser = async () => {
+                    if (!isDbReady.value) return;
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'admins'), formAdmin.value);
+                    formAdmin.value = { account: '', password: '' };
+                    Swal.fire('成功', '已新增管理員帳號', 'success');
+                };
+                const deleteAdminUser = (id) => {
+                    Swal.fire({
+                        title: '確認移除', text: '確定要移除此管理員權限嗎？', icon: 'warning',
+                        showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#9ca3af', confirmButtonText: '確定移除'
+                    }).then(async (result) => {
+                        if (result.isConfirmed && isDbReady.value) { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'admins', id)); }
+                    });
+                };
+
+                onMounted(() => {
+                    initFirebase();
+                    
+                    if (typeof liff !== 'undefined') {
+                        liff.init({ liffId: "2010909434-eVswjkpc" }).catch(err => console.error('LIFF init failed', err));
+                    }
+                    
+                    window.addEventListener('hashchange', () => {
+                        currentView.value = (window.location.hash === '#admin' && !isAdminAuthenticated.value) ? 'admin_login' : (window.location.hash === '#admin' ? 'admin' : 'front');
+                    });
+                    if (window.location.hash === '#admin') currentView.value = 'admin_login';
+
+                    if (window.location.hash !== '#admin') { setTimeout(() => { showAnnouncementNotice(); }, 500); }
+                });
+
+                return {
+                    currentView, adminTab, isLoading, services, activeServices, bookings, closedDatesMap, admins, isSuperAdmin,
+                    adminAccount, adminPassword, loginError, goToAdminLogin, verifyAdminLogin, logoutAdmin,
+                    verifyPhone, isVerified, checkMember, goToRegister, resetVerification, renderIcon,
+                    bookingForm, availableSlots, hiddenSubmitBtn, triggerSubmit, submitBooking, scrollToNext,
+                    estimatedTotal, estimatedDuration, showVipInfo, serviceSearch, serviceFilterGender, filteredServices, updateServiceOrder,
+                    isBookingModalOpen, editBookingForm, openEditBookingModal, closeBookingModal, saveBookingEdit, deleteBooking, getBookingColorClass, updateBookingStatus, copyStatusMessage,
+                    isAdminNewBookingModalOpen, adminNewBookingForm, openAdminNewBookingModal, closeAdminNewBookingModal, searchMemberForAdmin, saveAdminNewBooking,
+                    isServiceModalOpen, editingService, formService, availableIcons,
+                    openServiceModal, copyService, closeServiceModal, saveServiceData, toggleServiceStatus, deleteService, importDefaultServices,
+                    isDateSettingModalOpen, editingDate, dateSettingForm, saveDateSetting, removeDateSetting,
+                    formAdmin, saveAdminUser, deleteAdminUser,
+                    calendarDate, currentYear, currentMonth, calendarDays, prevMonth, nextMonth, goToToday, monthlyStats, showAnnouncementNotice
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
+```eof
