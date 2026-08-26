@@ -1,630 +1,1076 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>一人公司 AI員工辦公室｜互動模擬</title>
-  <style>
-    :root {
-      --bg: #0f172a;
-      --floor: #1e293b;
-      --desk: #334155;
-      --accent: #38bdf8;
-      --accent2: #a78bfa;
-      --text: #e2e8f0;
-      --muted: #94a3b8;
-      --success: #4ade80;
-      --warning: #fbbf24;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Corin 專業日式無痛除毛</title>
+    
+    <meta name="description" content="Corin Beauty預約系統">
+    <meta property="og:title" content="Corin Beauty預約系統">
+    <meta property="og:description" content="Corin Beauty預約系統">
+    <meta property="og:type" content="website">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/airbnb.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/zh-tw.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Noto Sans TC"', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#fdf8f6', 100: '#f2e8e5', 200: '#eaddd7', 300: '#e0cec7',
+                            400: '#d2bab0', 500: '#c5a89c', 600: '#b09489', 700: '#9b8075',
+                            800: '#866c62', 900: '#72584e',
+                        },
+                        admin: {
+                            50: '#f0fdf4', 500: '#22c55e', 600: '#16a34a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+    <style>
+        body { background-color: #fcfcfc; -ms-overflow-style: none; scrollbar-width: none; }
+        body::-webkit-scrollbar { display: none; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-    header {
-      text-align: center;
-      padding: 24px 16px 12px;
-    }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(197, 168, 156, 0.15);
+        }
 
-    header h1 {
-      font-size: 1.8rem;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 6px;
-    }
+        .service-radio + label { transition: all 0.3s ease; }
 
-    header p { color: var(--muted); font-size: 0.95rem; }
+        .loader {
+            border-top-color: #c5a89c;
+            animation: spinner 1.5s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        input, select, textarea { font-size: 16px !important; }
+        [v-cloak] { display: none !important; }
 
-    .controls {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      padding: 12px;
-      margin-bottom: 8px;
-    }
+        .step-enter-active, .step-leave-active { transition: all 0.4s ease; }
+        .step-enter-from, .step-leave-to { opacity: 0; transform: translateY(-10px); max-height: 0; overflow: hidden; margin: 0; padding: 0; }
+        .step-enter-to, .step-leave-from { opacity: 1; transform: translateY(1000px); max-height: 2000px; }
 
-    .btn {
-      background: var(--desk);
-      border: 1px solid #475569;
-      color: var(--text);
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: all 0.2s;
-    }
-
-    .btn:hover { background: #475569; border-color: var(--accent); }
-    .btn.active { background: var(--accent); color: #0f172a; border-color: var(--accent); }
-
-    /* 辦公室容器 */
-    .office-wrapper {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 16px 40px;
-    }
-
-    .office {
-      position: relative;
-      width: 100%;
-      height: 620px;
-      background: 
-        linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px),
-        linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-      background-color: var(--floor);
-      border: 2px solid #334155;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 0 40px rgba(0,0,0,0.4);
-    }
-
-    /* 作業區 */
-    .zone {
-      position: absolute;
-      border: 2px dashed rgba(56,189,248,0.25);
-      border-radius: 12px;
-      background: rgba(56,189,248,0.04);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding-top: 8px;
-      transition: background 0.3s, border-color 0.3s;
-    }
-
-    .zone.highlight {
-      background: rgba(56,189,248,0.12);
-      border-color: var(--accent);
-    }
-
-    .zone-label {
-      font-size: 0.75rem;
-      color: var(--accent);
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
-    }
-
-    /* 桌子 + 電腦 */
-    .desk {
-      width: 110px;
-      height: 70px;
-      background: linear-gradient(180deg, #475569, #334155);
-      border-radius: 8px;
-      position: relative;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      border: 1px solid #64748b;
-    }
-
-    .monitor {
-      position: absolute;
-      top: -28px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 70px;
-      height: 42px;
-      background: #0f172a;
-      border: 3px solid #64748b;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.7rem;
-      color: var(--success);
-      box-shadow: 0 0 12px rgba(56,189,248,0.3);
-    }
-
-    .monitor::after {
-      content: '';
-      position: absolute;
-      bottom: -10px;
-      width: 16px;
-      height: 8px;
-      background: #64748b;
-      border-radius: 0 0 3px 3px;
-    }
-
-    .keyboard {
-      position: absolute;
-      bottom: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60px;
-      height: 12px;
-      background: #1e293b;
-      border-radius: 3px;
-      border: 1px solid #475569;
-    }
-
-    .chair {
-      width: 36px;
-      height: 36px;
-      background: #1e293b;
-      border: 2px solid #475569;
-      border-radius: 50% 50% 40% 40%;
-      margin-top: 6px;
-      position: relative;
-    }
-
-    .chair::before {
-      content: '';
-      position: absolute;
-      top: -8px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 28px;
-      height: 10px;
-      background: #334155;
-      border-radius: 4px;
-    }
-
-    /* 人物 */
-    .person {
-      position: absolute;
-      width: 56px;
-      height: 72px;
-      cursor: grab;
-      z-index: 20;
-      transition: transform 0.15s;
-      user-select: none;
-      touch-action: none;
-    }
-
-    .person:active { cursor: grabbing; }
-    .person.dragging { z-index: 50; transform: scale(1.08); }
-
-    .avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      margin: 0 auto;
-      border: 3px solid;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-      background: #1e293b;
-    }
-
-    .person-name {
-      text-align: center;
-      font-size: 0.7rem;
-      font-weight: 600;
-      margin-top: 4px;
-      white-space: nowrap;
-      background: rgba(15,23,42,0.85);
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
-
-    .person-role {
-      text-align: center;
-      font-size: 0.65rem;
-      color: var(--muted);
-      margin-top: 1px;
-    }
-
-    /* 狀態指示 */
-    .status {
-      position: absolute;
-      top: -4px;
-      right: -4px;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      border: 2px solid var(--floor);
-    }
-
-    .status.working { background: var(--success); box-shadow: 0 0 8px var(--success); }
-    .status.idle { background: var(--warning); }
-    .status.offline { background: #64748b; }
-
-    /* 資訊面板 */
-    .info-panel {
-      position: absolute;
-      bottom: 12px;
-      left: 12px;
-      right: 12px;
-      background: rgba(15,23,42,0.92);
-      border: 1px solid #334155;
-      border-radius: 10px;
-      padding: 12px 16px;
-      font-size: 0.85rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      z-index: 30;
-    }
-
-    .info-panel strong { color: var(--accent); }
-
-    .legend {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-
-    .legend span::before {
-      content: '';
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-right: 4px;
-    }
-
-    .legend .working::before { background: var(--success); }
-    .legend .idle::before { background: var(--warning); }
-
-    /* 右側任務提示 */
-    .task-tip {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: rgba(15,23,42,0.9);
-      border: 1px solid var(--accent2);
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 0.8rem;
-      max-width: 200px;
-      z-index: 25;
-    }
-
-    .task-tip h4 {
-      color: var(--accent2);
-      margin-bottom: 4px;
-      font-size: 0.85rem;
-    }
-
-    footer {
-      text-align: center;
-      padding: 20px;
-      color: var(--muted);
-      font-size: 0.85rem;
-    }
-
-    @media (max-width: 700px) {
-      .office { height: 520px; }
-      .desk { width: 90px; height: 60px; }
-      .monitor { width: 58px; height: 36px; font-size: 0.6rem; }
-      .person { width: 48px; height: 64px; }
-      .avatar { width: 40px; height: 40px; font-size: 1.2rem; }
-    }
-  </style>
+        /* 公告彈窗專用精美動畫與細節 */
+        .swal2-popup.custom-announcement-popup {
+            border-radius: 1.25rem !important;
+            padding: 1.5rem !important;
+            font-family: 'Noto Sans TC', sans-serif !important;
+        }
+    </style>
 </head>
-<body>
-  <header>
-    <h1>一人公司 · AI員工辦公室</h1>
-    <p>拖曳人物到不同作業區 · 模擬真實協作</p>
-  </header>
+<body class="text-gray-800 antialiased selection:bg-brand-200 selection:text-brand-900 bg-[#fcfcfc]">
 
-  <div class="controls">
-    <button class="btn" onclick="resetPositions()">重置位置</button>
-    <button class="btn" onclick="randomWork()">隨機分配工作</button>
-    <button class="btn" id="toggleStatus" onclick="toggleAllStatus()">全部設為工作中</button>
-  </div>
+  <div id="app" v-cloak class="min-h-screen flex flex-col">
 
-  <div class="office-wrapper">
-    <div class="office" id="office">
+    <template v-if="currentView === 'front'">
+        <header class="sticky top-0 z-50 glass-panel border-b border-gray-100">
+            <div class="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="flex-shrink-0 flex items-center justify-center mr-1">
+                        <svg viewBox="0 0 150 120" class="h-10 w-auto" xmlns="http://www.w3.org/2000/svg">
+                            <text x="5" y="90" font-family="'Playfair Display', serif" font-weight="700" font-size="100px" fill="#D6B6A1">C</text>
+                            <text x="70" y="90" font-family="'Playfair Display', serif" font-weight="700" font-size="100px" fill="#A8836B">R</text>
+                            <text x="72" y="112" font-family="'Noto Sans TC', sans-serif" font-weight="400" font-size="11px" fill="#A8836B" letter-spacing="0.35em" text-anchor="middle">HAIR REMOVAL</text>
+                        </svg>
+                    </div>
+                    <h1 class="text-lg font-bold text-gray-800 tracking-wider">Corin 專業日式無痛除毛</h1>
+                </div>
+                <button @click="goToAdminLogin" class="text-gray-300 hover:text-gray-400 focus:outline-none">
+                    <i class="fa-solid fa-lock text-xs"></i>
+                </button>
+            </div>
+        </header>
 
-      <!-- 作業區 -->
-      <div class="zone" id="zone-pm" style="left:30px; top:40px; width:180px; height:160px;">
-        <div class="zone-label">📋 產品規劃區</div>
-        <div class="desk">
-          <div class="monitor">PRD</div>
-          <div class="keyboard"></div>
+        <main class="flex-grow max-w-md mx-auto w-full px-4 py-6 pb-28">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">預約諮詢</h2>
+                
+                <div class="bg-red-50 border-l-4 border-red-400 p-4 rounded-r-xl shadow-sm mb-6">
+                    <h3 class="text-red-800 font-bold mb-2 flex items-center gap-1"><i class="fa-solid fa-bullhorn"></i> 預約注意事項</h3>
+                    <p class="text-sm text-red-700 font-bold mb-1">預約完成後請等待美容師回覆確認</p>
+                    <p class="text-xs text-red-600 mb-3 leading-relaxed">※重要提醒：預約需提前2-3天才有辦法安排理想的時段，恕不接受當天預約操作，謝謝您的配合！</p>
+                    
+                    <h4 class="text-sm font-bold text-gray-800 mb-1">溫馨提醒 :</h4>
+                    <ol class="text-xs text-gray-700 list-decimal pl-4 space-y-1.5">
+                        <li>因無淋浴設備，麻煩預約私密處課程的您，先自行在家清潔完再前往店內。</li>
+                        <li>工作室空間有限，盡量以不攜伴為主。</li>
+                        <li>課程前一天請先將毛髮刮除，避免肌膚敏感，效果也最好。</li>
+                        <li>預約完成請準時赴約，現場保留10分鐘，逾時視同取消，並列入黑名單。</li>
+                        <li>為維護會員預約品質，二次預約不到或當月更改時間達二次，下次預約將酌收訂金$500。</li>
+                    </ol>
+                </div>
+            </div>
+
+            <form id="bookingForm" class="space-y-6" @submit.prevent="submitBooking">
+                
+                <div class="space-y-3 bg-white p-5 rounded-2xl shadow-sm border border-brand-100" id="step1">
+                    <div class="flex justify-between items-end mb-2">
+                        <label class="block text-sm font-bold text-gray-800">1. 會員驗證 <span class="text-red-400">*</span></label>
+                        <button type="button" @click="goToRegister" class="text-xs text-brand-600 hover:text-brand-800 font-medium underline underline-offset-2 flex items-center gap-1">
+                            <i class="fa-solid fa-user-plus"></i>我還不是會員？註冊
+                        </button>
+                    </div>
+                    
+                    <div v-if="!isVerified" class="flex gap-2">
+                        <input type="tel" v-model="verifyPhone" placeholder="請輸入手機號碼" class="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:ring-brand-500 focus:border-brand-500 bg-gray-50 focus:bg-white transition-colors" pattern="[0-9]*" required>
+                        <button type="button" @click="checkMember" class="bg-gray-800 hover:bg-gray-900 text-white px-5 py-3 rounded-lg text-sm font-bold transition-colors whitespace-nowrap shadow-sm">驗證</button>
+                    </div>
+                    
+                    <div v-else class="bg-green-50 p-4 rounded-xl border border-green-200 flex justify-between items-center shadow-inner">
+                        <div>
+                            <p class="text-sm font-bold text-green-800 mb-1">{{ bookingForm.name }}，歡迎回來！</p>
+                            <p class="text-xs text-green-700 font-medium"><i class="fa-solid fa-phone mr-1"></i>{{ bookingForm.phone }}</p>
+                            <p v-if="bookingForm.birthday" class="text-xs text-green-700 font-medium mt-0.5"><i class="fa-solid fa-cake-candles mr-1"></i>生日: {{ bookingForm.birthday }}</p>
+                        </div>
+                        <button type="button" @click="resetVerification" class="text-xs bg-white text-gray-500 hover:text-gray-700 px-3 py-1.5 rounded border border-gray-200 shadow-sm transition-colors">更換</button>
+                    </div>
+                </div>
+
+                <transition name="step">
+                    <div v-show="isVerified" id="step2" class="space-y-3 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                        <label class="block text-sm font-bold text-gray-800">2. 選擇指定美容師 <span class="text-red-400">*</span></label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="relative">
+                                <input type="radio" name="therapist_gender" id="therapist_female" value="female" v-model="bookingForm.therapistGender" @change="scrollToNext('step3')" class="service-radio hidden" required>
+                                <label for="therapist_female" :class="bookingForm.therapistGender === 'female' ? 'border-pink-300 bg-pink-50 text-pink-700 shadow-inner' : 'border-gray-100 hover:bg-gray-50 text-gray-500'" class="flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer h-full transition-all">
+                                    <i class="fa-solid fa-person-dress text-3xl mb-2" :class="bookingForm.therapistGender === 'female' ? 'text-pink-500' : 'text-gray-300'"></i>
+                                    <span class="text-sm font-medium">女師</span>
+                                </label>
+                            </div>
+                            <div class="relative">
+                                <input type="radio" name="therapist_gender" id="therapist_male" value="male" v-model="bookingForm.therapistGender" @change="scrollToNext('step3')" class="service-radio hidden" required>
+                                <label for="therapist_male" :class="bookingForm.therapistGender === 'male' ? 'border-blue-300 bg-blue-50 text-blue-700 shadow-inner' : 'border-gray-100 hover:bg-gray-50 text-gray-500'" class="flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer h-full transition-all">
+                                    <i class="fa-solid fa-person text-3xl mb-2" :class="bookingForm.therapistGender === 'male' ? 'text-blue-500' : 'text-gray-300'"></i>
+                                    <span class="text-sm font-medium">男師</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </transition>
+
+                <transition name="step">
+                    <div v-show="isVerified && bookingForm.therapistGender" id="step3" class="space-y-3 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                        <label class="block text-sm font-bold text-gray-800">3. 是否為 VIP 會員 <span class="text-red-400">*</span></label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="relative">
+                                <input type="radio" name="vip" id="vip_yes" :value="true" v-model="bookingForm.isVip" @change="scrollToNext('step4')" class="service-radio hidden" required>
+                                <label for="vip_yes" :class="bookingForm.isVip === true ? 'border-amber-400 bg-amber-50 text-amber-700 shadow-inner' : 'border-gray-100 hover:bg-gray-50 text-gray-500'" class="flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer h-full transition-all">
+                                    <i class="fa-solid fa-crown text-3xl mb-2" :class="bookingForm.isVip === true ? 'text-amber-500' : 'text-gray-300'"></i>
+                                    <span class="text-sm font-medium">我是 VIP</span>
+                                </label>
+                            </div>
+                            <div class="relative">
+                                <input type="radio" name="vip" id="vip_no" :value="false" v-model="bookingForm.isVip" @change="scrollToNext('step4')" class="service-radio hidden" required>
+                                <label for="vip_no" :class="bookingForm.isVip === false ? 'border-gray-400 bg-gray-100 text-gray-700 shadow-inner' : 'border-gray-100 hover:bg-gray-50 text-gray-500'" class="flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer h-full transition-all">
+                                    <i class="fa-solid fa-user text-3xl mb-2" :class="bookingForm.isVip === false ? 'text-gray-500' : 'text-gray-300'"></i>
+                                    <span class="text-sm font-medium">我不是 VIP</span>
+                                </label>
+                                <button type="button" @click.stop="showVipInfo = true" class="absolute top-2 right-2 w-7 h-7 rounded border border-gray-200 flex items-center justify-center bg-white text-gray-400 hover:text-brand-500 hover:border-brand-300 transition-colors shadow-sm">
+                                    <i class="fa-solid fa-question text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </transition>
+
+                <transition name="step">
+                    <div v-show="bookingForm.isVip !== null" id="step4" class="space-y-3 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                        <label class="block text-sm font-bold text-gray-800">4. 請選擇您的性別 <span class="text-red-400">*</span></label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="relative">
+                                <input type="radio" name="customer_gender" id="cust_female" value="female" v-model="bookingForm.customerGender" @change="scrollToNext('step5')" class="service-radio hidden" required>
+                                <label for="cust_female" :class="bookingForm.customerGender === 'female' ? 'border-pink-300 bg-pink-50 text-pink-700 shadow-inner' : 'border-gray-100 hover:bg-gray-50 text-gray-500'" class="flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer h-full transition-all">
+                                    <i class="fa-solid fa-venus text-3xl mb-2" :class="bookingForm.customerGender === 'female' ? 'text-pink-500' : 'text-gray-300'"></i>
+                                    <span class="text-sm font-medium">我是女生</span>
+                                </label>
+                            </div>
+                            <div class="relative">
+                                <input type="radio" name="customer_gender" id="cust_male" value="male" v-model="bookingForm.customerGender" @change="scrollToNext('step5')" class="service-radio hidden" required>
+                                <label for="cust_male" :class="bookingForm.customerGender === 'male' ? 'border-blue-300 bg-blue-50 text-blue-700 shadow-inner' : 'border-gray-100 hover:bg-gray-50 text-gray-500'" class="flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer h-full transition-all">
+                                    <i class="fa-solid fa-mars text-3xl mb-2" :class="bookingForm.customerGender === 'male' ? 'text-blue-500' : 'text-gray-300'"></i>
+                                    <span class="text-sm font-medium">我是男生</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </transition>
+
+                <transition name="step">
+                    <div v-show="bookingForm.customerGender" id="step5" class="space-y-3 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                        <label class="block text-sm font-bold text-gray-800 mb-2">5. 選擇服務項目 (可多選) <span class="text-red-400">*</span></label>
+                        
+                        <div v-if="activeServices.length === 0" class="text-center py-4 bg-gray-50 rounded-xl text-gray-500 text-sm">
+                            目前沒有符合您選擇的服務項目。
+                        </div>
+
+                        <div v-else class="grid grid-cols-2 gap-3">
+                            <div v-for="service in activeServices" :key="service.id" class="relative">
+                                <input type="checkbox" name="service" :id="'srv_' + service.id" :value="service.name" v-model="bookingForm.service" class="service-radio hidden">
+                                <label :for="'srv_' + service.id" :class="bookingForm.service.includes(service.name) ? 'border-brand-400 bg-brand-50 text-brand-800 shadow-inner' : 'border-gray-200 hover:bg-gray-50'" class="flex flex-col items-center justify-center p-4 border rounded-xl cursor-pointer h-full transition-all">
+                                    
+                                    <!-- 專屬象形圖渲染 -->
+                                    <div v-html="renderIcon(service.icon)" :class="[bookingForm.service.includes(service.name) ? 'text-brand-500' : 'text-gray-400']" class="w-10 h-10 mb-2 flex items-center justify-center"></div>
+                                    
+                                    <span class="text-sm font-medium text-center">{{ service.name }}</span>
+                                    <div class="flex flex-col items-center mt-1">
+                                        <span class="text-xs" :class="bookingForm.service.includes(service.name) ? 'text-brand-600' : 'text-gray-400'">{{ service.duration }} mins</span>
+                                        <span class="text-sm font-bold mt-0.5" :class="bookingForm.service.includes(service.name) ? 'text-brand-700' : 'text-gray-700'">NT$ {{ bookingForm.isVip ? (service.vipPrice || service.price || 0) : (service.regularPrice || service.price || 0) }}</span>
+                                    </div>
+                                    <div v-if="bookingForm.service.includes(service.name)" class="absolute top-2 right-2 text-brand-500">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div v-if="bookingForm.service.length > 0" class="mt-4 p-4 bg-brand-50 rounded-xl border border-brand-200 shadow-sm transition-all">
+                            <div class="flex justify-between items-center mb-2 border-b border-brand-200/50 pb-2">
+                                <span class="text-sm font-bold text-gray-700">已選擇 {{ bookingForm.service.length }} 項服務</span>
+                                <span class="text-sm text-gray-600 font-medium"><i class="fa-regular fa-clock"></i> 約 {{ estimatedDuration }} 分鐘</span>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <span class="text-sm font-bold text-gray-700">預計消費金額</span>
+                                <span class="text-xl font-bold text-brand-700">NT$ {{ estimatedTotal }}</span>
+                            </div>
+                            <p class="text-[10px] text-gray-500 mt-2 text-right">※ 實際消費金額以現場美容師核銷計算</p>
+                        </div>
+                    </div>
+                </transition>
+
+                <transition name="step">
+                    <div v-show="bookingForm.service.length > 0" id="step6" class="space-y-4 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                        <label class="block text-sm font-bold text-gray-800 border-b pb-2">6. 選擇預約日期 <span class="text-red-400">*</span></label>
+                        <div>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fa-regular fa-calendar text-gray-400"></i>
+                                </div>
+                                <input type="text" id="date" v-model="bookingForm.date" class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:ring-brand-500 focus:border-brand-500 bg-gray-50 focus:bg-white transition-colors cursor-pointer" placeholder="請點擊選擇日期" readonly required>
+                            </div>
+                        </div>
+                    </div>
+                </transition>
+
+                <transition name="step">
+                    <div v-show="bookingForm.date" id="step7" class="space-y-4 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="flex items-center justify-between border-b pb-2">
+                            <label class="block text-sm font-bold text-gray-800">7. 選擇預約時段 <span class="text-red-400">*</span></label>
+                        </div>
+                        
+                        <div v-if="availableSlots.length > 0" class="grid grid-cols-3 gap-2 mt-2">
+                            <button
+                                v-for="slot in availableSlots"
+                                :key="slot.time"
+                                type="button"
+                                @click="slot.available && (bookingForm.time = slot.time); slot.available && scrollToNext('step8')"
+                                :disabled="!slot.available"
+                                :class="[
+                                    'py-2.5 px-2 rounded-lg text-sm font-medium transition-colors border',
+                                    bookingForm.time === slot.time ? 'bg-brand-500 text-white border-brand-500 shadow-sm' :
+                                    !slot.available ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed' :
+                                    'bg-white text-gray-700 border-gray-200 hover:border-brand-300 hover:bg-brand-50'
+                                ]"
+                            >
+                                {{ slot.time }}
+                            </button>
+                        </div>
+                        <div v-else class="text-center py-6 bg-gray-50 rounded-xl text-gray-500 text-sm">
+                            <i class="fa-regular fa-face-frown mb-2 text-xl block"></i>
+                            該日已無可滿足此服務時間的空檔<br>或未在營業時間內
+                        </div>
+                    </div>
+                </transition>
+
+                <transition name="step">
+                    <div v-show="bookingForm.time" id="step8" class="space-y-4 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                        <h3 class="text-sm font-bold text-gray-800 border-b pb-2">8. 顧客備註 <span class="text-gray-400 text-xs font-normal">(選填)</span></h3>
+                        
+                        <div>
+                            <textarea id="notes" v-model="bookingForm.notes" rows="3" class="block w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-brand-500 focus:border-brand-500 bg-gray-50 focus:bg-white transition-colors resize-none" placeholder="是否有特殊需求？"></textarea>
+                        </div>
+                    </div>
+                </transition>
+                
+                <button type="submit" ref="hiddenSubmitBtn" class="hidden"></button>
+            </form>
+            <div class="text-center text-xs text-gray-400 mt-10 pb-6">原點數位科技 © 2026 All rights reserved.</div>
+        </main>
+
+        <transition name="step">
+            <div v-show="bookingForm.time" class="fixed bottom-0 left-0 right-0 p-4 glass-panel border-t border-gray-100 z-40 pb-safe">
+                <div class="max-w-md mx-auto">
+                    <button type="button" @click="triggerSubmit" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-brand-500/30 transition duration-300 flex items-center justify-center gap-2 transform active:scale-[0.98]">
+                        <span>確認送出，前往 LINE</span>
+                        <i class="fa-brands fa-line text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </transition>
+
+        <div v-if="showVipInfo" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity" @click="showVipInfo = false">
+            <div class="bg-white rounded-2xl p-6 max-w-xs w-full shadow-2xl relative animate-[bounce_0.3s_ease-out]" @click.stop>
+                <button @click="showVipInfo = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+                <div class="flex items-start gap-4 mt-2">
+                    <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 text-amber-500">
+                        <i class="fa-solid fa-crown text-lg"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-800 mb-1">VIP 專屬優惠</h4>
+                        <p class="text-sm text-gray-600 leading-relaxed">VIP 享原價 8 折優惠及點數累積回饋，詳情請洽詢美容師。</p>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="chair"></div>
-      </div>
+    </template>
 
-      <div class="zone" id="zone-arch" style="left:240px; top:40px; width:180px; height:160px;">
-        <div class="zone-label">🏗️ 架構設計區</div>
-        <div class="desk">
-          <div class="monitor">ARCH</div>
-          <div class="keyboard"></div>
+    <template v-else-if="currentView === 'admin_login'">
+        <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+            <div class="max-w-sm w-full bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-admin-100 text-admin-600 mb-4">
+                        <i class="fa-solid fa-lock text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900">後台管理登入</h2>
+                </div>
+                <form @submit.prevent="verifyAdminLogin" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">管理員帳號</label>
+                        <input type="text" v-model="adminAccount" class="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-admin-500 focus:border-admin-500 text-lg" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">登入密碼</label>
+                        <input type="password" v-model="adminPassword" class="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-admin-500 focus:border-admin-500 font-mono text-lg" required>
+                        <p v-if="loginError" class="text-red-500 text-xs text-center mt-2">{{ loginError }}</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button type="button" @click="currentView = 'front'" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-4 rounded-xl transition duration-300">
+                            返回前台
+                        </button>
+                        <button type="submit" class="flex-1 bg-admin-500 hover:bg-admin-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition duration-300">
+                            登入
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="chair"></div>
-      </div>
+    </template>
 
-      <div class="zone" id="zone-dev" style="left:450px; top:40px; width:200px; height:160px;">
-        <div class="zone-label">💻 程式開發區</div>
-        <div class="desk">
-          <div class="monitor">CODE</div>
-          <div class="keyboard"></div>
+    <template v-else-if="currentView === 'admin'">
+        <header class="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+            <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-admin-500 flex items-center justify-center text-white shadow-md">
+                        <i class="fa-solid fa-gear text-sm"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold text-gray-800">Corin 無痛除毛 - 系統後台</h1>
+                        <p v-if="isSuperAdmin" class="text-[10px] text-admin-600 font-bold">👑 最高權限模式</p>
+                    </div>
+                </div>
+                <button @click="logoutAdmin" class="text-sm text-gray-500 hover:text-red-500 transition-colors flex items-center gap-1">
+                    <i class="fa-solid fa-right-from-bracket"></i> 登出
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-grow max-w-5xl mx-auto w-full px-4 py-6">
+            <div class="flex space-x-2 border-b border-gray-200 mb-6 overflow-x-auto whitespace-nowrap pb-1">
+                <button @click="adminTab = 'calendar'" :class="{'border-admin-500 text-admin-600 border-b-2': adminTab === 'calendar', 'text-gray-500 hover:text-gray-700': adminTab !== 'calendar'}" class="px-4 py-2 font-medium text-sm transition-colors">
+                    <i class="fa-regular fa-calendar-days mr-1"></i> 預約總表
+                </button>
+                <button @click="adminTab = 'bookings'" :class="{'border-admin-500 text-admin-600 border-b-2': adminTab === 'bookings', 'text-gray-500 hover:text-gray-700': adminTab !== 'bookings'}" class="px-4 py-2 font-medium text-sm transition-colors">
+                    <i class="fa-solid fa-list-check mr-1"></i> 列表管理
+                </button>
+                <button @click="adminTab = 'schedule'" :class="{'border-admin-500 text-admin-600 border-b-2': adminTab === 'schedule', 'text-gray-500 hover:text-gray-700': adminTab !== 'schedule'}" class="px-4 py-2 font-medium text-sm transition-colors">
+                    <i class="fa-regular fa-calendar-xmark mr-1"></i> 可預約時間設定
+                </button>
+                <button v-if="isSuperAdmin" @click="adminTab = 'services'" :class="{'border-admin-500 text-admin-600 border-b-2': adminTab === 'services', 'text-gray-500 hover:text-gray-700': adminTab !== 'services'}" class="px-4 py-2 font-medium text-sm transition-colors">
+                    <i class="fa-solid fa-list mr-1"></i> 品項管理
+                </button>
+                <button v-if="isSuperAdmin" @click="adminTab = 'admins'" :class="{'border-admin-500 text-admin-600 border-b-2': adminTab === 'admins', 'text-gray-500 hover:text-gray-700': adminTab !== 'admins'}" class="px-4 py-2 font-medium text-sm transition-colors">
+                    <i class="fa-solid fa-users-gear mr-1"></i> 權限管理
+                </button>
+            </div>
+
+            <div v-show="adminTab === 'calendar'" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+                <div class="flex flex-col md:flex-row md:items-center justify-between p-4 border-b gap-4">
+                    <div class="flex flex-col md:flex-row md:items-center gap-4">
+                        <h2 class="text-xl font-bold text-gray-800 whitespace-nowrap">{{ currentYear }} 年 {{ currentMonth + 1 }} 月</h2>
+                        <div class="flex gap-2">
+                            <span class="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-md font-medium">總人數: {{ monthlyStats.total }}</span>
+                            <span class="text-xs bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-md font-medium">待確認: {{ monthlyStats.pending }}</span>
+                            <span class="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-md font-medium">已完成: {{ monthlyStats.completed }}</span>
+                            <span class="text-xs bg-red-100 text-red-700 px-2.5 py-1 rounded-md font-medium">已取消: {{ monthlyStats.cancelled }}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button @click="goToToday" class="px-3 py-1 text-sm border rounded hover:bg-gray-50 transition-colors">今天</button>
+                        <div class="flex border rounded overflow-hidden">
+                            <button @click="prevMonth" class="px-3 py-1 hover:bg-gray-50 border-r transition-colors"><i class="fa-solid fa-chevron-left"></i></button>
+                            <button @click="nextMonth" class="px-3 py-1 hover:bg-gray-50 transition-colors"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-7 border-b bg-gray-50 text-center text-sm font-medium text-gray-600">
+                    <div class="py-2 border-r">日</div><div class="py-2 border-r">一</div><div class="py-2 border-r">二</div>
+                    <div class="py-2 border-r">三</div><div class="py-2 border-r">四</div><div class="py-2 border-r">五</div><div class="py-2">六</div>
+                </div>
+                <div class="grid grid-cols-7 flex-grow auto-rows-[minmax(120px,auto)]">
+<comment-tag id="1" text="Added click event to calendar cells to open the new admin booking modal, and added cursor styling to indicate it's clickable." type="suggestion">                    <div v-for="(day, index) in calendarDays" :key="index" 
+                         @click="day.date ? openAdminNewBookingModal(day.fullDate) : null"
+                         class="border-r border-b p-1 h-32 flex flex-col transition-colors"
+                         :class="[!day.isCurrentMonth ? 'bg-gray-50 text-gray-400 cursor-default' : (day.hasCustomSchedule ? 'bg-pink-50 cursor-pointer hover:bg-pink-100' : 'bg-white cursor-pointer hover:bg-gray-50')]"></comment-tag>
+                        <div class="text-right text-xs mb-1" :class="[day.isToday ? 'font-bold text-white bg-admin-600 w-5 h-5 rounded-full flex items-center justify-center ml-auto shadow-sm' : 'mr-1']">
+                            {{ day.date }}
+                        </div>
+                        <div class="flex-grow flex flex-col gap-1 overflow-y-auto scrollbar-hide pt-1 px-1">
+                            <div v-if="day.bookings && day.bookings.length > 0" class="flex flex-col gap-1">
+<comment-tag id="2" text="Added `.stop` to the click event modifier (`@click.stop`) to prevent the new day cell click handler from triggering when an existing booking pill is clicked." type="suggestion">                                <div v-for="b in day.bookings" :key="b.id" class="text-[10px] px-1.5 py-1 rounded shadow-sm leading-tight truncate flex items-center gap-1 cursor-pointer transition-transform hover:scale-[1.02]"
+                                     :class="getBookingColorClass(b)"
+                                     @click.stop="openEditBookingModal(b); adminTab='bookings'" :title="`${b.time} - ${b.name} (${b.service})`"></comment-tag>
+                                     <i :class="b.therapistGender === 'male' ? 'fa-solid fa-person' : 'fa-solid fa-person-dress'" class="text-[9px]"></i>
+                                     {{ b.time }} {{ b.name }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-show="adminTab === 'bookings'">
+                <div class="flex justify-between items-end mb-4">
+                    <p class="text-sm text-gray-500">查看並管理所有客人的預約紀錄與施作狀態。</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-4 py-3 w-28">日期 / 時間</th>
+                                    <th class="px-4 py-3 w-24">狀態</th>
+                                    <th class="px-4 py-3 w-20">美容師</th>
+                                    <th class="px-4 py-3 w-32">客戶姓名 (電話/生日)</th>
+                                    <th class="px-4 py-3 min-w-[120px]">服務項目</th>
+                                    <th class="px-4 py-3 min-w-[100px]">顧客備註</th>
+                                    <th class="px-4 py-3 w-16">時長</th>
+                                    <th class="px-4 py-3 w-28 text-right">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-if="bookings.length === 0" class="bg-white border-b">
+                                    <td colspan="8" class="px-4 py-8 text-center text-gray-400">尚無預約紀錄。</td>
+                                </tr>
+                                <tr v-for="b in bookings" :key="b.id" class="bg-white border-b hover:bg-gray-50" :class="{'opacity-60 bg-gray-50': b.status === 'cancelled'}">
+                                    <td class="px-4 py-3 font-medium text-gray-900">
+                                        <div class="text-sm">{{ b.date }}</div>
+                                        <div class="text-xs text-admin-600 bg-admin-50 inline-block px-2 py-0.5 rounded mt-1">{{ b.time }}</div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <select v-model="b.status" @change="updateBookingStatus(b)" class="text-xs border border-gray-300 rounded focus:ring-admin-500 focus:border-admin-500 font-medium px-2 py-1" :class="{'text-yellow-700 bg-yellow-50 border-yellow-200': b.status === 'pending' || !b.status, 'text-green-700 bg-green-50 border-green-200': b.status === 'completed', 'text-gray-600 bg-gray-200 border-gray-300': b.status === 'cancelled'}">
+                                            <option value="pending">待確認</option>
+                                            <option value="completed">已完成</option>
+                                            <option value="cancelled">已取消</option>
+                                        </select>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span class="inline-flex items-center gap-1">
+                                            <i :class="b.therapistGender === 'male' ? 'fa-solid fa-person' : 'fa-solid fa-person-dress'" class="text-gray-400"></i>
+                                            {{ b.therapistGender === 'male' ? '男師' : '女師' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="font-medium text-gray-800 flex items-center gap-1">
+                                            {{ b.name }}
+                                            <i v-if="b.customerGender === 'female'" class="fa-solid fa-venus text-pink-500 text-xs" title="女性客戶"></i>
+                                            <i v-else-if="b.customerGender === 'male'" class="fa-solid fa-mars text-blue-500 text-xs" title="男性客戶"></i>
+                                        </div>
+                                        <div class="text-xs text-gray-400">{{ b.phone }}</div>
+                                        <div v-if="b.birthday" class="text-[10px] text-gray-400">生日: {{ b.birthday }}</div>
+                                    </td>
+                                    <td class="px-4 py-3 text-gray-700">
+                                        <div class="flex items-start gap-1">
+                                            <i v-if="b.isVip" class="fa-solid fa-crown text-amber-500 text-xs mt-1" title="VIP"></i>
+                                            <span class="text-sm line-clamp-2" :title="b.service">{{ b.service }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div v-if="b.notes" class="text-sm text-gray-600 whitespace-pre-wrap line-clamp-2" :title="b.notes">{{ b.notes }}</div>
+                                        <div v-else class="text-xs text-gray-300">-</div>
+                                    </td>
+                                    <td class="px-4 py-3">{{ b.duration }} 分</td>
+                                    <td class="px-4 py-3 text-right space-x-1 whitespace-nowrap">
+                                        <button @click="copyStatusMessage(b)" class="text-green-600 hover:text-green-900 px-2 py-1.5 rounded hover:bg-green-50 text-xs font-medium border border-green-200" title="複製通知文字貼給客人">
+                                            <i class="fa-brands fa-line"></i> 通知
+                                        </button>
+                                        <button @click="openEditBookingModal(b)" class="text-blue-600 hover:text-blue-900 px-2 py-1.5 rounded hover:bg-blue-50 text-xs font-medium border border-blue-200">
+                                            修改
+                                        </button>
+                                        <button @click="deleteBooking(b.id)" class="text-red-600 hover:text-red-900 p-1.5 rounded hover:bg-red-50" title="刪除紀錄">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div v-show="adminTab === 'schedule'" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <h3 class="text-lg font-bold text-gray-800 mb-2">可預約時間與休假設定</h3>
+                <p class="text-sm text-gray-500 mb-6">點擊日曆上的日期，可將其設定為「全天公休」或「自訂營業時間」。預設營業時間為 12:00 - 21:00。</p>
+                <div class="flex flex-col md:flex-row gap-8">
+                    <div class="flex justify-center md:justify-start">
+                        <div id="admin-calendar-container" class="shadow-sm rounded-lg overflow-hidden border border-gray-100"></div>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">已設定的特殊日期</h4>
+                        <div class="space-y-2 max-h-[350px] overflow-y-auto pr-2">
+                            <div v-for="(setting, date) in closedDatesMap" :key="date" class="p-3 border border-gray-200 bg-gray-50 rounded-lg flex justify-between items-center">
+                                <div>
+                                    <span class="font-bold text-gray-800">{{date}}</span>
+                                    <span v-if="setting.isClosed" class="ml-2 px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full font-medium">全天公休</span>
+                                    <span v-else class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">營業: {{setting.start}} - {{setting.end}}</span>
+                                </div>
+                                <button @click="removeDateSetting(date)" class="text-red-500 hover:bg-red-100 p-1.5 rounded transition-colors" title="移除設定"><i class="fa-solid fa-trash text-sm"></i></button>
+                            </div>
+                            <p v-if="Object.keys(closedDatesMap).length === 0" class="text-gray-400 text-sm py-4 text-center border-2 border-dashed border-gray-200 rounded-lg">目前無特殊日期設定</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="isSuperAdmin" v-show="adminTab === 'services'">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 gap-3">
+                    <p class="text-sm text-gray-500">管理所有預約服務的項目與預設時間。您可手動修改排序號碼以決定前台顯示順序。</p>
+                    <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <input type="text" v-model="serviceSearch" placeholder="搜尋品項名稱..." class="block w-full md:w-48 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                            <select v-model="serviceFilterGender" class="block w-full md:w-36 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                                <option value="all">所有適用對象</option>
+                                <option value="female">限女性客戶</option>
+                                <option value="male">限男性客戶</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-2">
+                            <button @click="importDefaultServices" class="flex-1 md:flex-none bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">
+                                <i class="fa-solid fa-download"></i> 匯入預設
+                            </button>
+                            <button @click="openServiceModal()" class="flex-1 md:flex-none bg-admin-500 hover:bg-admin-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 shadow-sm transition-colors">
+                                <i class="fa-solid fa-plus"></i> 新增品項
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-4 py-3 w-16">排序</th>
+                                    <th class="px-4 py-3 w-16 text-center">上架</th>
+                                    <th class="px-4 py-3">品項名稱</th>
+                                    <th class="px-4 py-3">原價 / VIP價</th>
+                                    <th class="px-4 py-3">預設時間</th>
+                                    <th class="px-4 py-3 text-right">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-if="filteredServices.length === 0" class="bg-white border-b">
+                                    <td colspan="6" class="px-4 py-8 text-center text-gray-400">查無符合篩選條件的服務品項。</td>
+                                </tr>
+                                <tr v-for="service in filteredServices" :key="service.id" class="bg-white border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3">
+                                        <input type="number" v-model="service.sortOrder" @change="updateServiceOrder(service)" class="w-14 px-1 py-1 border border-gray-300 rounded text-center text-sm focus:ring-admin-500 focus:border-admin-500" title="修改後點擊其他地方即可儲存">
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" v-model="service.isActive" @change="toggleServiceStatus(service)" class="sr-only peer">
+                                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-admin-500"></div>
+                                        </label>
+                                    </td>
+                                    <td class="px-4 py-3 font-medium text-gray-900">
+                                        <div class="flex items-center gap-2">
+                                            <span v-html="renderIcon(service.icon)" class="text-gray-400 w-5 h-5 inline-block text-center flex-shrink-0"></span>
+                                            {{ service.name }}
+                                        </div>
+                                        <div class="text-[10px] text-gray-500 ml-7 mt-0.5">
+                                            客戶性別: <span :class="{'text-pink-600': service.genderTarget === 'female', 'text-blue-600': service.genderTarget === 'male'}">{{ service.genderTarget === 'female' ? '限女性' : (service.genderTarget === 'male' ? '限男性' : '男女客皆可') }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 font-medium text-brand-600">
+                                        <div class="text-gray-500">原價: ${{ service.regularPrice || service.price || 0 }}</div>
+                                        <div class="text-amber-600 font-bold">VIP: ${{ service.vipPrice || service.price || 0 }}</div>
+                                    </td>
+                                    <td class="px-4 py-3">{{ service.duration }} 分</td>
+                                    <td class="px-4 py-3 text-right space-x-1 whitespace-nowrap">
+                                        <button @click="copyService(service)" class="text-green-600 hover:text-green-900 p-1.5 rounded hover:bg-green-50" title="複製"><i class="fa-regular fa-copy"></i></button>
+                                        <button @click="openServiceModal(service)" class="text-blue-600 hover:text-blue-900 p-1.5 rounded hover:bg-blue-50" title="編輯"><i class="fa-solid fa-pen"></i></button>
+                                        <button @click="deleteService(service.id)" class="text-red-600 hover:text-red-900 p-1.5 rounded hover:bg-red-50" title="刪除"><i class="fa-solid fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="isSuperAdmin" v-show="adminTab === 'admins'">
+                <div class="flex justify-between items-end mb-4">
+                    <p class="text-sm text-gray-500">新增或移除可登入後台的美容師帳號（一般帳號登入時將無法查看此頁面與品項管理）。</p>
+                </div>
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="w-full md:w-1/3">
+                        <form @submit.prevent="saveAdminUser" class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 space-y-4">
+                            <h3 class="font-bold text-gray-800 border-b pb-2">新增美容師帳號</h3>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">登入帳號</label>
+                                <input type="text" v-model="formAdmin.account" required class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">登入密碼</label>
+                                <input type="text" v-model="formAdmin.password" required class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm font-mono">
+                            </div>
+                            <button type="submit" class="w-full px-4 py-2 bg-admin-500 text-white rounded-lg hover:bg-admin-600 font-medium transition-colors">新增</button>
+                        </form>
+                    </div>
+                    <div class="w-full md:w-2/3 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <table class="w-full text-left text-sm text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+                                <tr>
+                                    <th class="px-4 py-3">帳號</th>
+                                    <th class="px-4 py-3">密碼</th>
+                                    <th class="px-4 py-3 text-right">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-if="admins.length === 0" class="bg-white border-b">
+                                    <td colspan="3" class="px-4 py-8 text-center text-gray-400">尚無其他美容師帳號。</td>
+                                </tr>
+                                <tr v-for="admin in admins" :key="admin.id" class="bg-white border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3 font-medium text-gray-900">{{ admin.account }}</td>
+                                    <td class="px-4 py-3 font-mono text-gray-600">{{ admin.password }}</td>
+                                    <td class="px-4 py-3 text-right">
+                                        <button @click="deleteAdminUser(admin.id)" class="text-red-600 hover:text-red-900 p-1.5 rounded hover:bg-red-50" title="移除權限"><i class="fa-solid fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+<comment-tag id="3" text="Added a new `isAdminNewBookingModalOpen` modal template here to allow backend users to create a new booking for a customer. The UI exactly matches the layout style of the existing edit modal but adds sections to search for a member and select services." type="suggestion">        <div v-if="isAdminNewBookingModalOpen" class="fixed inset-0 bg-black/50 z-[120] flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-5 border-b pb-3 sticky top-0 bg-white z-10">
+                    <h3 class="text-lg font-bold text-gray-900">新增預約 - {{ adminNewBookingForm.date }}</h3>
+                    <button @click="closeAdminNewBookingModal" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                <form @submit.prevent="saveAdminNewBooking" class="space-y-5">
+                    <!-- Section 1: Customer -->
+                    <div>
+                        <h4 class="text-sm font-bold text-gray-800 mb-2 border-l-4 border-admin-500 pl-2">1. 客戶資料</h4>
+                        <div class="flex gap-2 mb-3">
+                            <input type="tel" v-model="adminNewBookingForm.phone" placeholder="輸入手機號碼帶入..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                            <button type="button" @click="searchMemberForAdmin" class="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 transition-colors">搜尋會員</button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">姓名 *</label>
+                                <input type="text" v-model="adminNewBookingForm.name" required class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">生日 (選填)</label>
+                                <input type="text" v-model="adminNewBookingForm.birthday" placeholder="MM/DD" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">客戶性別 *</label>
+                                <select v-model="adminNewBookingForm.customerGender" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                                    <option value="female">女生</option>
+                                    <option value="male">男生</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">VIP 身分 *</label>
+                                <select v-model="adminNewBookingForm.isVip" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                                    <option :value="false">一般會員</option>
+                                    <option :value="true">VIP 會員</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Booking Info -->
+                    <div>
+                        <h4 class="text-sm font-bold text-gray-800 mb-2 border-l-4 border-admin-500 pl-2">2. 預約內容</h4>
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">指定美容師 *</label>
+                                <select v-model="adminNewBookingForm.therapistGender" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                                    <option value="female">女師</option>
+                                    <option value="male">男師</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">時間 *</label>
+                                <input type="time" v-model="adminNewBookingForm.time" required class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="block text-xs font-medium text-gray-500 mb-1">服務項目 (可多選) *</label>
+                            <div class="max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50 space-y-1">
+                                <label v-for="s in services.filter(srv => srv.isActive && (srv.genderTarget === 'all' || srv.genderTarget === adminNewBookingForm.customerGender))" :key="s.id" class="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer">
+                                    <input type="checkbox" :value="s.name" v-model="adminNewBookingForm.service" class="w-4 h-4 text-admin-600 focus:ring-admin-500 border-gray-300 rounded">
+                                    <span class="text-sm text-gray-700">{{ s.name }} ({{ s.duration }}分)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">總長度 (分鐘) *</label>
+                                <input type="number" v-model="adminNewBookingForm.duration" required min="10" step="10" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">預約狀態 *</label>
+                                <select v-model="adminNewBookingForm.status" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                                    <option value="pending">待確認</option>
+                                    <option value="completed">已完成(預約成功)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">備註</label>
+                            <textarea v-model="adminNewBookingForm.notes" rows="2" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm" placeholder="輸入備註..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 flex gap-3 sticky bottom-0 bg-white border-t mt-4 pb-2">
+                        <button type="button" @click="closeAdminNewBookingModal" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">取消</button>
+                        <button type="submit" class="flex-1 px-4 py-2 bg-admin-500 text-white rounded-lg hover:bg-admin-600 font-medium">確認新增</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="chair"></div>
-      </div>
-
-      <div class="zone" id="zone-qa" style="left:30px; top:230px; width:180px; height:160px;">
-        <div class="zone-label">🔍 測試品管區</div>
-        <div class="desk">
-          <div class="monitor">TEST</div>
-          <div class="keyboard"></div>
+</comment-tag>        <div v-if="isBookingModalOpen" class="fixed inset-0 bg-black/50 z-[120] flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+                <div class="flex justify-between items-center mb-5 border-b pb-3">
+                    <h3 class="text-lg font-bold text-gray-900">修改排程時間</h3>
+                    <button @click="closeBookingModal" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                <form @submit.prevent="saveBookingEdit" class="space-y-4">
+                    <div class="bg-gray-50 p-3 rounded-lg text-sm text-gray-600 mb-4">
+                        <p><strong>客戶：</strong>{{ editBookingForm.name }} ({{ editBookingForm.phone }})</p>
+                        <p v-if="editBookingForm.birthday"><strong>生日：</strong>{{ editBookingForm.birthday }}</p>
+                        <p><strong>項目：</strong>{{ editBookingForm.service }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">施作日期</label>
+                        <input type="date" v-model="editBookingForm.date" required class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">時間 (HH:mm)</label>
+                            <input type="time" v-model="editBookingForm.time" required class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">總長度 (分鐘)</label>
+                            <input type="number" v-model="editBookingForm.duration" required min="10" step="10" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">顧客備註</label>
+                        <textarea v-model="editBookingForm.notes" rows="2" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm" placeholder="手動輸入或編輯客人的備註需求..."></textarea>
+                    </div>
+                    <div class="pt-2 flex gap-3">
+                        <button type="button" @click="closeBookingModal" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">取消</button>
+                        <button type="submit" class="flex-1 px-4 py-2 bg-admin-500 text-white rounded-lg hover:bg-admin-600 font-medium">儲存變更</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="chair"></div>
-      </div>
 
-      <div class="zone" id="zone-ops" style="left:240px; top:230px; width:180px; height:160px;">
-        <div class="zone-label">🚀 部署維運區</div>
-        <div class="desk">
-          <div class="monitor">OPS</div>
-          <div class="keyboard"></div>
+        <div v-if="isDateSettingModalOpen" class="fixed inset-0 bg-black/50 z-[120] flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+                <div class="flex justify-between items-center mb-5 border-b pb-3">
+                    <h3 class="text-lg font-bold text-gray-900">設定日期: {{ editingDate }}</h3>
+                    <button @click="isDateSettingModalOpen = false" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                <div class="space-y-5">
+                    <label class="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors" :class="{'border-red-300 bg-red-50': dateSettingForm.isClosed}">
+                        <input type="checkbox" v-model="dateSettingForm.isClosed" class="w-4 h-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                        <span class="text-sm font-medium text-gray-700">設定為全天公休 (不開放預約)</span>
+                    </label>
+                    
+                    <div v-if="!dateSettingForm.isClosed" class="p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-3">
+                        <h4 class="text-sm font-bold text-gray-700 mb-2"><i class="fa-regular fa-clock"></i> 自訂營業時間</h4>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">開始時間</label>
+                            <input type="time" v-model="dateSettingForm.start" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">結束時間</label>
+                            <input type="time" v-model="dateSettingForm.end" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 text-sm">
+                        </div>
+                    </div>
+
+                    <div class="pt-2 flex gap-3">
+                        <button type="button" @click="isDateSettingModalOpen = false" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">取消</button>
+                        <button type="button" @click="saveDateSetting" class="flex-1 px-4 py-2 bg-admin-500 text-white rounded-lg hover:bg-admin-600 font-medium">儲存設定</button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="chair"></div>
-      </div>
 
-      <div class="zone" id="zone-ceo" style="left:450px; top:230px; width:200px; height:160px;">
-        <div class="zone-label">👑 決策中樞</div>
-        <div class="desk" style="border-color: var(--accent2);">
-          <div class="monitor" style="border-color: var(--accent2); color: var(--accent2);">CEO</div>
-          <div class="keyboard"></div>
+        <div v-if="isServiceModalOpen" class="fixed inset-0 bg-black/50 z-[120] flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+                <div class="flex justify-between items-center mb-5 border-b pb-3">
+                    <h3 class="text-lg font-bold text-gray-900">{{ editingService ? '編輯品項' : '新增品項' }}</h3>
+                    <button @click="closeServiceModal" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                <form @submit.prevent="saveServiceData" class="space-y-4">
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">品項名稱 *</label>
+                            <input type="text" v-model="formService.name" required class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">排序碼</label>
+                            <input type="number" v-model="formService.sortOrder" required class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">客戶性別 *</label>
+                        <select v-model="formService.genderTarget" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                            <option value="all">男女客皆可</option>
+                            <option value="female">限女性客戶</option>
+                            <option value="male">限男性客戶</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">原價 (NT$) *</label>
+                            <input type="number" v-model="formService.regularPrice" required min="0" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">VIP價 (NT$) *</label>
+                            <input type="number" v-model="formService.vipPrice" required min="0" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">預設施作時間 (分鐘) *</label>
+                            <input type="number" v-model="formService.duration" required min="10" step="10" class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-admin-500 focus:border-admin-500 text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">選擇圖標 *</label>
+                        <div class="grid grid-cols-5 gap-2">
+                            <label v-for="icon in availableIcons" :key="icon" class="cursor-pointer">
+                                <input type="radio" name="icon" :value="icon" v-model="formService.icon" class="sr-only peer">
+                                <div class="flex items-center justify-center p-3 border rounded-lg peer-checked:border-admin-500 peer-checked:bg-admin-50 peer-checked:text-admin-600 text-gray-400 hover:bg-gray-50 transition-colors">
+                                    <div v-html="renderIcon(icon)" class="w-6 h-6"></div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="pt-4 flex gap-3">
+                        <button type="button" @click="closeServiceModal" class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium">取消</button>
+                        <button type="submit" class="flex-1 px-4 py-2 bg-admin-500 text-white rounded-lg hover:bg-admin-600 font-medium">儲存</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="chair"></div>
-      </div>
+    </template>
 
-      <!-- 人物（可拖曳） -->
-      <div class="person" id="p1" data-name="小艾" data-role="產品經理" style="left:70px; top:130px;">
-        <div class="avatar" style="border-color:#38bdf8;">🧠</div>
-        <div class="status working"></div>
-        <div class="person-name">小艾</div>
-        <div class="person-role">產品經理</div>
-      </div>
-
-      <div class="person" id="p2" data-name="阿圖" data-role="架構師" style="left:280px; top:130px;">
-        <div class="avatar" style="border-color:#a78bfa;">🗺️</div>
-        <div class="status working"></div>
-        <div class="person-name">阿圖</div>
-        <div class="person-role">架構師</div>
-      </div>
-
-      <div class="person" id="p3" data-name="碼哥" data-role="資深工程師" style="left:500px; top:130px;">
-        <div class="avatar" style="border-color:#4ade80;">💻</div>
-        <div class="status working"></div>
-        <div class="person-name">碼哥</div>
-        <div class="person-role">資深工程師</div>
-      </div>
-
-      <div class="person" id="p4" data-name="測測" data-role="QA" style="left:70px; top:320px;">
-        <div class="avatar" style="border-color:#fbbf24;">🔍</div>
-        <div class="status idle"></div>
-        <div class="person-name">測測</div>
-        <div class="person-role">QA</div>
-      </div>
-
-      <div class="person" id="p5" data-name="運維君" data-role="DevOps" style="left:280px; top:320px;">
-        <div class="avatar" style="border-color:#f472b6;">🚀</div>
-        <div class="status working"></div>
-        <div class="person-name">運維君</div>
-        <div class="person-role">DevOps</div>
-      </div>
-
-      <div class="person" id="p6" data-name="你" data-role="CEO" style="left:510px; top:320px;">
-        <div class="avatar" style="border-color:#c084fc; background:#2e1065;">👑</div>
-        <div class="status working"></div>
-        <div class="person-name">你</div>
-        <div class="person-role">CEO</div>
-      </div>
-
-      <!-- 任務提示 -->
-      <div class="task-tip">
-        <h4>目前任務</h4>
-        <div id="currentTask">拖曳人物到對應作業區開始協作</div>
-      </div>
-
-      <!-- 底部資訊 -->
-      <div class="info-panel">
-        <div>
-          <strong>操作：</strong>滑鼠拖曳人物移動 · 點擊人物可切換工作狀態
-        </div>
-        <div class="legend">
-          <span class="working">工作中</span>
-          <span class="idle">待命中</span>
-        </div>
-      </div>
+    <div v-if="isLoading" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-[150] flex flex-col items-center justify-center">
+        <div class="loader ease-linear rounded-full border-4 border-t-4 h-12 w-12 mb-4" :class="currentView === 'admin' ? 'border-admin-200 border-t-admin-500' : 'border-gray-200 border-t-brand-500'"></div>
+        <p class="text-gray-600 font-medium">處理中...</p>
     </div>
+
   </div>
 
-  <footer>
-    一人公司 AI員工辦公室模擬器 · 可自由命名與移動角色
-  </footer>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-  <script>
-    // ===== 拖曳功能 =====
-    const office = document.getElementById('office');
-    let activePerson = null;
-    let offsetX = 0, offsetY = 0;
+        const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
 
-    document.querySelectorAll('.person').forEach(person => {
-      person.addEventListener('mousedown', startDrag);
-      person.addEventListener('touchstart', startDrag, { passive: false });
+        createApp({
+            setup() {
+                const userFirebaseConfig = {
+                    apiKey: "AIzaSyCe0KE7va2H4-A6XECdzhTUCjhTeT6FOJM",
+                    authDomain: "check-balance-13da9.firebaseapp.com",
+                    projectId: "check-balance-13da9",
+                    storageBucket: "check-balance-13da9.firebasestorage.app",
+                    messagingSenderId: "827416952029",
+                    appId: "1:827416952029:web:e18ac89b984c8351e36f34",
+                    measurementId: "G-J4KY08ECZR"
+                };
+                
+                const appId = userFirebaseConfig.projectId; 
+                let db = null;
+                let auth = null;
+                const isDbReady = ref(false);
 
-      // 點擊切換狀態
-      person.addEventListener('click', (e) => {
-        if (person.dataset.dragged === 'true') {
-          person.dataset.dragged = 'false';
-          return;
-        }
-        const status = person.querySelector('.status');
-        if (status.classList.contains('working')) {
-          status.classList.remove('working');
-          status.classList.add('idle');
-        } else {
-          status.classList.remove('idle');
-          status.classList.add('working');
-        }
-        updateTaskTip();
-      });
-    });
+                const currentView = ref('front'); 
+                const adminTab = ref('calendar'); 
+                const isLoading = ref(false);
+                
+                const services = ref([]);
+                const bookings = ref([]);
+                const closedDatesMap = ref({}); 
+                const admins = ref([]);
 
-    function startDrag(e) {
-      e.preventDefault();
-      activePerson = e.currentTarget;
-      activePerson.classList.add('dragging');
-      activePerson.dataset.dragged = 'false';
+                const adminAccount = ref('');
+                const adminPassword = ref('');
+                const loginError = ref('');
+                const isAdminAuthenticated = ref(false);
+                const isSuperAdmin = ref(false);
+                
+                const showVipInfo = ref(false);
 
-      const rect = activePerson.getBoundingClientRect();
-      const officeRect = office.getBoundingClientRect();
+                const serviceSearch = ref('');
+                const serviceFilterGender = ref('all');
 
-      if (e.type === 'mousedown') {
-        offsetX = e.clientX - rect.left;
-        offsetY = e.clientY - rect.top;
-      } else {
-        offsetX = e.touches[0].clientX - rect.left;
-        offsetY = e.touches[0].clientY - rect.top;
-      }
+                // 精美系統公告彈窗
+                const showAnnouncementNotice = () => {
+                    Swal.fire({
+                        title: '<div class="flex items-center justify-center gap-2 text-brand-800 text-lg font-bold"><i class="fa-solid fa-bell text-brand-500"></i> 預約系統優化升級公告</div>',
+                        html: `
+                            <div class="text-left text-sm text-gray-700 leading-relaxed space-y-3 py-2">
+                                <div class="bg-brand-50/80 p-3.5 rounded-xl border border-brand-100 text-brand-900 text-xs font-medium">
+                                    <p class="font-bold text-sm mb-1 text-brand-800">親愛的貴賓 您好：</p>
+                                    <p>即日起，因本館預約系統正在進行優化與轉換升級，若您在預約操作上有任何疑問或遇到問題，請隨時透過我們的 <strong class="text-brand-700">官方 LINE 帳號</strong> 傳送訊息。</p>
+                                </div>
+                                <p class="text-xs text-gray-600 pl-1">
+                                    收到您的訊息後，美容師與工程團隊將會第一時間協助您確認預約狀態並為您解答，感謝您的包容與配合！
+                                </p>
+                            </div>
+                        `,
+                        confirmButtonText: '我知道了，開始預約',
+                        confirmButtonColor: '#c5a89c',
+                        customClass: {
+                            popup: 'custom-announcement-popup'
+                        },
+                        showClass: {
+                            popup: 'animate-[fadeInDown_0.3s_ease-out]'
+                        },
+                        hideClass: {
+                            popup: 'animate-[fadeOutUp_0.2s_ease-in]'
+                        }
+                    });
+                };
 
-      document.addEventListener('mousemove', onDrag);
-      document.addEventListener('mouseup', endDrag);
-      document.addEventListener('touchmove', onDrag, { passive: false });
-      document.addEventListener('touchend', endDrag);
-    }
+                // === SVG 象形圖庫 ===
+                const customSvgIcons = {
+                    'svg-face': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M12 21a8 8 0 0 0 8-8c0-5.5-4-11-8-11S4 7.5 4 13a8 8 0 0 0 8 8z"/><path d="M12 14v3"/></svg>',
+                    'svg-arm': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M14 3l-3 9-3-2-2 7 4 3 6-11z"/></svg>',
+                    'svg-leg': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M10 3v12a2 2 0 0 0 1 1.73V21a1 1 0 0 0 2 0v-4.27A2 2 0 0 0 14 15V3"/></svg>',
+                    'svg-body': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M8 4h8v7c0 3-1.5 5-4 5s-4-2-4-5V4z"/><path d="M12 12v.01"/></svg>',
+                    'svg-vio': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M4 8l8 10 8-10c-5-2-11-2-16 0z"/><circle cx="12" cy="11" r="1.5"/></svg>',
+                    'svg-underarm': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full"><path d="M5 8c3-1.5 6-1.5 9 0M5 16c3-1.5 6-1.5 9 0M10 4v16"/></svg>'
+                };
 
-    function onDrag(e) {
-      if (!activePerson) return;
-      e.preventDefault();
-      activePerson.dataset.dragged = 'true';
+                const renderIcon = (iconClass) => {
+                    if (!iconClass) return '';
+                    if (customSvgIcons[iconClass]) return customSvgIcons[iconClass];
+                    return `<i class="${iconClass}"></i>`;
+                };
 
-      const officeRect = office.getBoundingClientRect();
-      let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-      let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                const timeToMins = (timeStr) => {
+                    if(!timeStr) return 0;
+                    const [h, m] = timeStr.split(':').map(Number);
+                    return h * 60 + m;
+                };
+                const minsToTime = (mins) => {
+                    const h = Math.floor(mins / 60).toString().padStart(2, '0');
+                    const m = (mins % 60).toString().padStart(2, '0');
+                    return `${h}:${m}`;
+                };
 
-      let x = clientX - officeRect.left - offsetX;
-      let y = clientY - officeRect.top - offsetY;
+                const initFirebase = async () => {
+                    try {
+                        const app = initializeApp(userFirebaseConfig);
+                        db = getFirestore(app);
+                        auth = getAuth(app);
+                        await signInAnonymously(auth);
 
-      // 邊界限制
-      x = Math.max(0, Math.min(x, office.clientWidth - activePerson.offsetWidth));
-      y = Math.max(0, Math.min(y, office.clientHeight - activePerson.offsetHeight - 60));
+                        setupFirestoreListeners();
+                        isDbReady.value = true;
+                    } catch(e) {
+                        Swal.fire('系統錯誤', '驗證連線失敗，請稍後再試。', 'error');
+                    }
+                };
 
-      activePerson.style.left = x + 'px';
-      activePerson.style.top = y + 'px';
+                const setupFirestoreListeners = () => {
+                    if (!auth.currentUser) return;
 
-      // 高亮所在區域
-      highlightZone(x + activePerson.offsetWidth / 2, y + 30);
-    }
+                    onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'services'), (snap) => {
+                        let data = snap.docs.map(d => ({ id: d.id, sortOrder: 0, ...d.data() }));
+                        data.sort((a, b) => {
+                            const orderA = a.sortOrder || 0;
+                            const orderB = b.sortOrder || 0;
+                            if (orderA !== orderB) return orderA - orderB;
+                            const priceA = Number(a.regularPrice || a.price || 0);
+                            const priceB = Number(b.regularPrice || b.price || 0);
+                            return priceB - priceA;
+                        });
+                        services.value = data;
+                    });
 
-    function endDrag() {
-      if (activePerson) {
-        activePerson.classList.remove('dragging');
-        document.querySelectorAll('.zone').forEach(z => z.classList.remove('highlight'));
-        updateTaskTip();
-      }
-      activePerson = null;
-      document.removeEventListener('mousemove', onDrag);
-      document.removeEventListener('mouseup', endDrag);
-      document.removeEventListener('touchmove', onDrag);
-      document.removeEventListener('touchend', endDrag);
-    }
+                    onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'bookings'), (snap) => {
+                        let data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                        data.sort((a, b) => {
+                            if(a.date !== b.date) return a.date.localeCompare(b.date);
+                            return a.time.localeCompare(b.time);
+                        });
+                        bookings.value = data;
+                    });
 
-    function highlightZone(x, y) {
-      document.querySelectorAll('.zone').forEach(zone => {
-        const r = zone.getBoundingClientRect();
-        const officeRect = office.getBoundingClientRect();
-        const zx = r.left - officeRect.left;
-        const zy = r.top - officeRect.top;
-        if (x >= zx && x <= zx + r.width && y >= zy && y <= zy + r.height) {
-          zone.classList.add('highlight');
-        } else {
-          zone.classList.remove('highlight');
-        }
-      });
-    }
+                    onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'schedule'), (snap) => {
+                        if (snap.exists()) closedDatesMap.value = snap.data().dates || {};
+                        else closedDatesMap.value = {};
+                    });
 
-    // ===== 工具功能 =====
-    function resetPositions() {
-      const positions = [
-        { id: 'p1', left: 70, top: 130 },
-        { id: 'p2', left: 280, top: 130 },
-        { id: 'p3', left: 500, top: 130 },
-        { id: 'p4', left: 70, top: 320 },
-        { id: 'p5', left: 280, top: 320 },
-        { id: 'p6', left: 510, top: 320 }
-      ];
-      positions.forEach(p => {
-        const el = document.getElementById(p.id);
-        el.style.left = p.left + 'px';
-        el.style.top = p.top + 'px';
-      });
-      updateTaskTip();
-    }
+                    onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'admins'), (snap) => {
+                        admins.value = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    });
+                };
 
-    function randomWork() {
-      const zones = [
-        { left: 70, top: 130 },
-        { left: 280, top: 130 },
-        { left: 500, top: 130 },
-        { left: 70, top: 320 },
-        { left: 280, top: 320 },
-        { left: 510, top: 320 }
-      ];
-      // 打亂
-      for (let i = zones.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [zones[i], zones[j]] = [zones[j], zones[i]];
-      }
-      document.querySelectorAll('.person').forEach((p, i) => {
-        p.style.left = zones[i].left + 'px';
-        p.style.top = zones[i].top + 'px';
-        const status = p.querySelector('.status');
-        status.className = 'status ' + (Math.random() > 0.3 ? 'working' : 'idle');
-      });
-      updateTaskTip();
-    }
-
-    let allWorking = true;
-    function toggleAllStatus() {
-      allWorking = !allWorking;
-      document.querySelectorAll('.status').forEach(s => {
-        s.className = 'status ' + (allWorking ? 'working' : 'idle');
-      });
-      document.getElementById('toggleStatus').textContent = allWorking ? '全部設為待命' : '全部設為工作中';
-      updateTaskTip();
-    }
-
-    function updateTaskTip() {
-      const working = [...document.querySelectorAll('.person')].filter(p => 
-        p.querySelector('.status').classList.contains('working')
-      );
-      const names = working.map(p => p.dataset.name).join('、');
-      document.getElementById('currentTask').textContent = 
-        working.length ? `${names} 正在處理任務中` : '目前沒有人在工作，拖曳人物開始吧';
-    }
-
-    // 初始化
-    updateTaskTip();
-  </script>
-</body>
-</html>
+                const verifyPhone = ref('');
+                const isVerified = ref(false);
+                const bookingForm = ref({ therapistGender: '', isVip: null, customerGender: '', service: [], date: '', time: '', name: '', phone: '', birthday: '', notes: '' });
+                
+                const scrollToNext = (targetId) => {
+                    setTimeout(() => {
+                        const el = document.getElementById(targetIdI encountered an error doing what you asked. Could you try again?
